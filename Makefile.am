@@ -6,6 +6,10 @@ AUTOMAKE_OPTIONS = foreign
 
 SUBDIRS = include
 
+pkgconfigdir = $(libdir)/pkgconfig
+
+pkgconfig_DATA = stout.pc
+
 EXTRA_DIST =					\
   include/stout/bytes.hpp			\
   include/stout/cache.hpp			\
