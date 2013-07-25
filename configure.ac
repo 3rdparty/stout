@@ -9,6 +9,6 @@ AC_LANG([C++])
 # Initialize automake.
 AM_INIT_AUTOMAKE([1.10])
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile include/Makefile])
 
 AC_OUTPUT
