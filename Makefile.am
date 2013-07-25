@@ -6,7 +6,7 @@ AUTOMAKE_OPTIONS = foreign
 
 SUBDIRS = include
 
-pkgconfigdir = $(libdir)/pkgconfig
+pkgconfigdir = $(datadir)/pkgconfig
 
 pkgconfig_DATA = stout.pc
 
