@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef __PROC_HPP__
-#define __PROC_HPP__
+#ifndef __STOUT_PROC_HPP__
+#define __STOUT_PROC_HPP__
 
 // This file contains linux-only utilities for /proc.
 #ifndef __linux__
@@ -475,4 +475,4 @@ inline Try<std::list<CPU> > cpus()
 
 } // namespace proc {
 
-#endif // __PROC_HPP__
+#endif // __STOUT_PROC_HPP__
