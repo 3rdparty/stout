@@ -8,9 +8,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#ifdef HAVE_LIBCURL
 #include <curl/curl.h>
-#endif
 
 #include <string>
 
@@ -26,9 +24,6 @@ namespace net {
 // specified HTTP or FTP URL into a file at the specified path.
 inline Try<int> download(const std::string& url, const std::string& path)
 {
-#ifndef HAVE_LIBCURL
-  return Error("libcurl is not available");
-#else
   Try<int> fd = os::open(
       path, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IRWXO);
 
@@ -70,7 +65,6 @@ inline Try<int> download(const std::string& url, const std::string& path)
   }
 
   return Try<int>::some(code);
-#endif // HAVE_LIBCURL
 }
 
 // Returns a Try of the hostname for the provided IP. If the hostname cannot

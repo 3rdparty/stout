@@ -9,6 +9,12 @@ AC_LANG([C++])
 # Initialize automake.
 AM_INIT_AUTOMAKE([1.10])
 
+AC_CHECK_LIB([z], [deflate, gzread, gzwrite, inflate], [],
+               [AC_MSG_ERROR([cannot find libz])])
+               
+AC_CHECK_LIB([curl], [curl_easy_init], [],
+               [AC_MSG_ERROR([cannot find libcurl])])
+
 AC_CONFIG_FILES([Makefile include/Makefile stout.pc])
 
 AC_OUTPUT
