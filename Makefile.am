@@ -40,6 +40,13 @@ EXTRA_DIST =					\
   include/stout/numify.hpp			\
   include/stout/option.hpp			\
   include/stout/os.hpp				\
+  include/stout/os/exists.hpp			\
+  include/stout/os/killtree.hpp			\
+  include/stout/os/linux.hpp			\
+  include/stout/os/ls.hpp			\
+  include/stout/os/osx.hpp			\
+  include/stout/os/process.hpp			\
+  include/stout/os/sysctl.hpp			\
   include/stout/owned.hpp			\
   include/stout/path.hpp			\
   include/stout/preprocessor.hpp		\
@@ -65,6 +72,10 @@ EXTRA_DIST =					\
   tests/none_tests.cpp				\
   tests/os_tests.cpp				\
   tests/proc_tests.cpp				\
+  tests/protobuf_tests.cpp			\
+  tests/protobuf_tests.pb.cc			\
+  tests/protobuf_tests.pb.h			\
+  tests/protobuf_tests.proto			\
   tests/strings_tests.cpp			\
   tests/thread_tests.cpp			\
   tests/uuid_tests.cpp
