@@ -79,3 +79,5 @@ EXTRA_DIST =					\
   tests/strings_tests.cpp			\
   tests/thread_tests.cpp			\
   tests/uuid_tests.cpp
+
+# We should add a check target against the tests which are there.

@@ -1,6 +1,6 @@
 # Makefile for stout.
 
-nobase_include_HEADERS =			\
+nobase_include_HEADERS =		\
   stout/bytes.hpp			\
   stout/cache.hpp			\
   stout/check.hpp			\
@@ -42,4 +42,11 @@ nobase_include_HEADERS =			\
   stout/thread.hpp			\
   stout/try.hpp				\
   stout/utils.hpp			\
-  stout/uuid.hpp
+  stout/uuid.hpp			\
+  stout/os/exists.hpp			\
+  stout/os/killtree.hpp			\
+  stout/os/linux.hpp			\
+  stout/os/ls.hpp			\
+  stout/os/osx.hpp			\
+  stout/os/process.hpp			\
+  stout/os/sysctl.hpp
