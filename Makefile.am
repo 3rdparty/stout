@@ -11,6 +11,9 @@ pkgconfigdir = $(datadir)/pkgconfig
 pkgconfig_DATA = stout.pc
 
 EXTRA_DIST =					\
+  LICENSE					\
+  README.md					\
+  m4/acx_pthread.m4				\
   include/stout/bytes.hpp			\
   include/stout/cache.hpp			\
   include/stout/check.hpp			\
