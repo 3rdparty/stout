@@ -49,4 +49,11 @@ nobase_include_HEADERS =		\
   stout/os/ls.hpp			\
   stout/os/osx.hpp			\
   stout/os/process.hpp			\
-  stout/os/sysctl.hpp
+  stout/os/sysctl.hpp			\
+  stout/os/fork.hpp			\
+  stout/os/pstree.hpp			\
+  stout/os/read.hpp			\
+  stout/os/sendfile.hpp			\
+  stout/os/signals.hpp			\
+  stout/linkedhashmap.hpp
+  

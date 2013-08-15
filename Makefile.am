@@ -35,6 +35,7 @@ EXTRA_DIST =					\
   include/stout/hashset.hpp			\
   include/stout/json.hpp			\
   include/stout/lambda.hpp			\
+  include/stout/linkedhashmap.hpp		\
   include/stout/multihashmap.hpp		\
   include/stout/multimap.hpp			\
   include/stout/net.hpp				\
@@ -44,11 +45,16 @@ EXTRA_DIST =					\
   include/stout/option.hpp			\
   include/stout/os.hpp				\
   include/stout/os/exists.hpp			\
+  include/stout/os/fork.hpp			\
   include/stout/os/killtree.hpp			\
   include/stout/os/linux.hpp			\
   include/stout/os/ls.hpp			\
   include/stout/os/osx.hpp			\
   include/stout/os/process.hpp			\
+  include/stout/os/read.hpp			\
+  include/stout/os/sendfile.hpp			\
+  include/stout/os/signals.hpp			\
+  include/stout/os/pstree.hpp			\
   include/stout/os/sysctl.hpp			\
   include/stout/owned.hpp			\
   include/stout/path.hpp			\
@@ -70,10 +76,13 @@ EXTRA_DIST =					\
   tests/gzip_tests.cpp				\
   tests/hashset_tests.cpp			\
   tests/json_tests.cpp				\
+  tests/linkedhashmap_tests.cpp			\
   tests/main.cpp				\
   tests/multimap_tests.cpp			\
   tests/none_tests.cpp				\
   tests/os_tests.cpp				\
+  tests/os/sendfile_tests.cpp			\
+  tests/os/signals_tests.cpp			\
   tests/proc_tests.cpp				\
   tests/protobuf_tests.cpp			\
   tests/protobuf_tests.pb.cc			\
