@@ -12,7 +12,7 @@ pkgconfig_DATA = stout.pc
 
 EXTRA_DIST =					\
   LICENSE					\
-  README.md					\
+  README					\
   m4/acx_pthread.m4				\
   include/stout/bytes.hpp			\
   include/stout/cache.hpp			\
@@ -93,3 +93,34 @@ EXTRA_DIST =					\
   tests/uuid_tests.cpp
 
 # We should add a check target against the tests which are there.
+check_PROGRAMS = stests
+
+stests_SOURCES= 				\
+	tests/uuid_tests.cpp		\
+	tests/thread_tests.cpp		\
+	tests/multimap_tests.cpp	\
+	tests/bytes_tests.cpp		\
+	tests/duration_tests.cpp	\
+	tests/flags_tests.cpp		\
+	tests/json_tests.cpp		\
+	tests/main.cpp			\
+	tests/hashset_tests.cpp		\
+	tests/linkedhashmap_tests.cpp	\
+	tests/gzip_tests.cpp		\
+	tests/os_tests.cpp		\
+	tests/strings_tests.cpp		\
+	tests/error_tests.cpp		\
+	tests/none_tests.cpp		\
+	tests/proc_tests.cpp		\
+	tests/os/signals_tests.cpp	\
+	tests/os/sendfile_tests.cpp	\
+	/usr/src/gmock/gmock-all.cc
+
+stests_CPPFLAGS = 			\
+	-I$(top_srcdir)/include 	\
+	-I/usr/src/gmock		\
+	-I$(GTEST)/include	
+	
+stests_LDADD = -lpthread -lrt -lglog -lgtest 
+
+TESTS = stests
