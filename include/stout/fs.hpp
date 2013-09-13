@@ -12,17 +12,18 @@
 #include "nothing.hpp"
 #include "try.hpp"
 
-// TODO(bmahler): Migrate the appropriate 'os' namespace funtions here.
+// TODO(bmahler): Merge available() and usage() into df() that returns
+// a struct, and move this back into os.hpp.
 namespace fs {
 
-// Returns the total available disk size in bytes.
-inline Try<Bytes> available(const std::string& path = "/")
+// Returns the total disk size in bytes.
+inline Try<Bytes> size(const std::string& path = "/")
 {
   struct statvfs buf;
   if (::statvfs(path.c_str(), &buf) < 0) {
     return ErrnoError();
   }
-  return Bytes(buf.f_bavail * buf.f_frsize);
+  return Bytes(buf.f_blocks * buf.f_frsize);
 }
 
 

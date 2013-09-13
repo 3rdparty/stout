@@ -1,9 +1,7 @@
 #ifndef __STOUT_GZIP_HPP__
 #define __STOUT_GZIP_HPP__
 
-#ifdef HAVE_LIBZ
 #include <zlib.h>
-#endif
 
 #include <string>
 
@@ -26,15 +24,8 @@ namespace gzip {
 //   #define Z_DEFAULT_COMPRESSION  (-1)
 inline Try<std::string> compress(
     const std::string& decompressed,
-#ifdef HAVE_LIBZ
     int level = Z_DEFAULT_COMPRESSION)
-#else
-    int level = -1)
-#endif
 {
-#ifndef HAVE_LIBZ
-  return Error("libz is not available");
-#else
   // Verify the level is within range.
   if (!(level == Z_DEFAULT_COMPRESSION ||
       (level >= Z_NO_COMPRESSION && level <= Z_BEST_COMPRESSION))) {
@@ -88,16 +79,12 @@ inline Try<std::string> compress(
     return Error("Failed to clean up zlib: " + std::string(stream.msg));
   }
   return result;
-#endif // HAVE_LIBZ
 }
 
 
 // Returns a gzip decompressed version of the provided string.
 inline Try<std::string> decompress(const std::string& compressed)
 {
-#ifndef HAVE_LIBZ
-  return Error("libz is not available");
-#else
   z_stream_s stream;
   stream.next_in =
     const_cast<Bytef*>(reinterpret_cast<const Bytef*>(compressed.data()));
@@ -141,7 +128,6 @@ inline Try<std::string> decompress(const std::string& compressed)
     return Error("Failed to clean up zlib: " + std::string(stream.msg));
   }
   return result;
-#endif // HAVE_LIBZ
 }
 
 } // namespace gzip {

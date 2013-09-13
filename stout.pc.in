@@ -1,0 +1,13 @@
+#############################
+# Pkg-Config file for stout #
+#############################
+
+Name: stout
+Description: C++ library for building sturdy software
+URL: https://github.com/3rdparty/stout
+Version: @VERSION@
+
+prefix=@prefix@
+includedir=@includedir@
+
+Cflags: -I${includedir}/stout

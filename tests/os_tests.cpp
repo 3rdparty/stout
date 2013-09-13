@@ -1,10 +1,13 @@
-#include <gtest/gtest.h>
-
 #include <gmock/gmock.h>
 
+#include <gtest/gtest.h>
+
 #include <cstdlib> // For rand.
+#include <list>
+#include <set>
 #include <string>
 
+#include <stout/duration.hpp>
 #include <stout/foreach.hpp>
 #include <stout/gtest.hpp>
 #include <stout/hashset.hpp>
@@ -13,6 +16,17 @@
 #include <stout/try.hpp>
 #include <stout/uuid.hpp>
 
+#ifdef __APPLE__
+#include <stout/os/sysctl.hpp>
+#endif
+
+using os::Exec;
+using os::Fork;
+using os::Process;
+using os::ProcessTree;
+
+using std::list;
+using std::set;
 using std::string;
 
 
@@ -31,7 +45,7 @@ class OsTest : public ::testing::Test
 protected:
   virtual void SetUp()
   {
-    Try<string> mkdtemp = os::mkdtemp();
+    const Try<string>& mkdtemp = os::mkdtemp();
     ASSERT_SOME(mkdtemp);
     tmpdir = mkdtemp.get();
   }
@@ -119,7 +133,7 @@ TEST_F(OsTest, touch)
 TEST_F(OsTest, readWriteString)
 {
   const string& testfile  = tmpdir + "/" + UUID::random().toString();
-  const string& teststr = "test";
+  const string& teststr = "line1\nline2";
 
   ASSERT_SOME(os::write(testfile, teststr));
 
@@ -162,7 +176,7 @@ TEST_F(OsTest, find)
 
 TEST_F(OsTest, uname)
 {
-  Try<os::UTSInfo> info = os::uname();
+  const Try<os::UTSInfo>& info = os::uname();
 
   ASSERT_SOME(info);
 #ifdef __linux__
@@ -176,7 +190,7 @@ TEST_F(OsTest, uname)
 
 TEST_F(OsTest, sysname)
 {
-  Try<string> name = os::sysname();
+  const Try<string>& name = os::sysname();
 
   ASSERT_SOME(name);
 #ifdef __linux__
@@ -190,7 +204,7 @@ TEST_F(OsTest, sysname)
 
 TEST_F(OsTest, release)
 {
-  Try<os::Release> info = os::release();
+  const Try<os::Release>& info = os::release();
 
   ASSERT_SOME(info);
 }
@@ -205,4 +219,316 @@ TEST_F(OsTest, sleep)
   ASSERT_LE(duration, stopwatch.elapsed());
 
   ASSERT_ERROR(os::sleep(Milliseconds(-10)));
+}
+
+
+#ifdef __APPLE__
+TEST_F(OsTest, sysctl)
+{
+  Try<os::UTSInfo> uname = os::uname();
+
+  ASSERT_SOME(uname);
+
+  Try<string> release = os::sysctl(CTL_KERN, KERN_OSRELEASE).string();
+
+  ASSERT_SOME(release);
+  EXPECT_EQ(uname.get().release, release.get());
+
+  Try<string> type = os::sysctl(CTL_KERN, KERN_OSTYPE).string();
+
+  ASSERT_SOME(type);
+  EXPECT_EQ(uname.get().sysname, type.get());
+
+  Try<int> maxproc = os::sysctl(CTL_KERN, KERN_MAXPROC).integer();
+
+  ASSERT_SOME(maxproc);
+
+  Try<std::vector<kinfo_proc> > processes =
+    os::sysctl(CTL_KERN, KERN_PROC, KERN_PROC_ALL).table(maxproc.get());
+
+  ASSERT_SOME(processes);
+
+  std::set<pid_t> pids;
+
+  foreach (const kinfo_proc& process, processes.get()) {
+    pids.insert(process.kp_proc.p_pid);
+  }
+
+  EXPECT_EQ(1, pids.count(getpid()));
+}
+#endif // __APPLE__
+
+
+TEST_F(OsTest, pids)
+{
+  Try<set<pid_t> > pids = os::pids();
+  ASSERT_SOME(pids);
+  EXPECT_NE(0u, pids.get().size());
+  EXPECT_EQ(1u, pids.get().count(getpid()));
+  EXPECT_EQ(1u, pids.get().count(1));
+
+  pids = os::pids(getpgid(0), None());
+  EXPECT_SOME(pids);
+  EXPECT_GE(pids.get().size(), 1u);
+  EXPECT_EQ(1u, pids.get().count(getpid()));
+
+  EXPECT_ERROR(os::pids(-1, None()));
+
+  pids = os::pids(None(), getsid(0));
+  EXPECT_SOME(pids);
+  EXPECT_GE(pids.get().size(), 1u);
+  EXPECT_EQ(1u, pids.get().count(getpid()));
+
+  EXPECT_ERROR(os::pids(None(), -1));
+}
+
+
+TEST_F(OsTest, children)
+{
+  Try<set<pid_t> > children = os::children(getpid());
+
+  ASSERT_SOME(children);
+  EXPECT_EQ(0u, children.get().size());
+
+  Try<ProcessTree> tree =
+    Fork(None(),                   // Child.
+         Fork(Exec("sleep 10")),   // Grandchild.
+         Exec("sleep 10"))();
+
+  ASSERT_SOME(tree);
+  ASSERT_EQ(1u, tree.get().children.size());
+
+  pid_t child = tree.get().process.pid;
+  pid_t grandchild = tree.get().children.front().process.pid;
+
+  // Ensure the non-recursive children does not include the
+  // grandchild.
+  children = os::children(getpid(), false);
+
+  ASSERT_SOME(children);
+  EXPECT_EQ(1u, children.get().size());
+  EXPECT_EQ(1u, children.get().count(child));
+
+  children = os::children(getpid());
+
+  ASSERT_SOME(children);
+
+  // Depending on whether or not the shell has fork/exec'ed in each
+  // above 'Exec', we could have 2 or 4 children. That is, some shells
+  // might simply for exec the command above (i.e., 'sleep 10') while
+  // others might fork/exec the command, keeping around a 'sh -c'
+  // process as well.
+  EXPECT_LE(2u, children.get().size());
+  EXPECT_GE(4u, children.get().size());
+
+  EXPECT_EQ(1u, children.get().count(child));
+  EXPECT_EQ(1u, children.get().count(grandchild));
+
+  // Cleanup by killing the descendant processes.
+  EXPECT_EQ(0, kill(grandchild, SIGKILL));
+  EXPECT_EQ(0, kill(child, SIGKILL));
+
+  // We have to reap the child for running the tests in repetition.
+  ASSERT_EQ(child, waitpid(child, NULL, 0));
+}
+
+
+TEST_F(OsTest, process)
+{
+  const Result<Process>& process = os::process(getpid());
+
+  ASSERT_SOME(process);
+  EXPECT_EQ(getpid(), process.get().pid);
+  EXPECT_EQ(getppid(), process.get().parent);
+  ASSERT_SOME(process.get().session);
+  EXPECT_EQ(getsid(getpid()), process.get().session.get());
+
+  ASSERT_SOME(process.get().rss);
+  EXPECT_GT(process.get().rss.get(), 0);
+
+  // NOTE: On Linux /proc is a bit slow to update the CPU times,
+  // hence we allow 0 in this test.
+  ASSERT_SOME(process.get().utime);
+  EXPECT_GE(process.get().utime.get(), Nanoseconds(0));
+  ASSERT_SOME(process.get().stime);
+  EXPECT_GE(process.get().stime.get(), Nanoseconds(0));
+
+  EXPECT_FALSE(process.get().command.empty());
+}
+
+
+TEST_F(OsTest, processes)
+{
+  const Try<list<Process> >& processes = os::processes();
+
+  ASSERT_SOME(processes);
+  ASSERT_GT(processes.get().size(), 2);
+
+  // Look for ourselves in the table.
+  bool found = false;
+  foreach (const Process& process, processes.get()) {
+    if (process.pid == getpid()) {
+      found = true;
+      EXPECT_EQ(getpid(), process.pid);
+      EXPECT_EQ(getppid(), process.parent);
+      ASSERT_SOME(process.session);
+      EXPECT_EQ(getsid(getpid()), process.session.get());
+
+      ASSERT_SOME(process.rss);
+      EXPECT_GT(process.rss.get(), 0);
+
+      // NOTE: On linux /proc is a bit slow to update the cpu times,
+      // hence we allow 0 in this test.
+      ASSERT_SOME(process.utime);
+      EXPECT_GE(process.utime.get(), Nanoseconds(0));
+      ASSERT_SOME(process.stime);
+      EXPECT_GE(process.stime.get(), Nanoseconds(0));
+
+      EXPECT_FALSE(process.command.empty());
+
+      break;
+    }
+  }
+
+  EXPECT_TRUE(found);
+}
+
+
+void dosetsid(void)
+{
+  if (::setsid() == -1) {
+    perror("Failed to setsid");
+    abort();
+  }
+}
+
+
+TEST_F(OsTest, killtree)
+{
+  Try<ProcessTree> tree =
+    Fork(dosetsid,                         // Child.
+         Fork(None(),                      // Grandchild.
+              Fork(None(),                 // Great-grandchild.
+                   Fork(dosetsid,          // Great-great-granchild.
+                        Exec("sleep 10")),
+                   Exec("sleep 10")),
+              Exec("exit 0")),
+         Exec("sleep 10"))();
+
+  ASSERT_SOME(tree);
+
+  // The process tree we instantiate initially looks like this:
+  //
+  //  -+- child sleep 10
+  //   \-+- grandchild exit 0
+  //     \-+- greatGrandchild sleep 10
+  //       \--- greatGreatGrandchild sleep 10
+  //
+  // But becomes two process trees after the grandchild exits:
+  //
+  //  -+- child sleep 10
+  //   \--- grandchild (exit 0)
+  //
+  //  -+- greatGrandchild sleep 10
+  //   \--- greatGreatGrandchild sleep 10
+
+  // Grab the pids from the instantiated process tree.
+  ASSERT_EQ(1u, tree.get().children.size());
+  ASSERT_EQ(1u, tree.get().children.front().children.size());
+  ASSERT_EQ(1u, tree.get().children.front().children.front().children.size());
+
+  pid_t child = tree.get();
+  pid_t grandchild = tree.get().children.front();
+  pid_t greatGrandchild = tree.get().children.front().children.front();
+  pid_t greatGreatGrandchild =
+    tree.get().children.front().children.front().children.front();
+
+  // Now wait for the grandchild to exit splitting the process tree.
+  os::sleep(Milliseconds(50));
+
+  // Kill the process tree and follow sessions and groups to make sure
+  // we cross the broken link due to the grandchild.
+  Try<std::list<ProcessTree> > trees =
+    os::killtree(child, SIGKILL, true, true);
+
+  ASSERT_SOME(trees);
+
+  EXPECT_EQ(2u, trees.get().size()) << stringify(trees.get());
+
+  foreach (const ProcessTree& tree, trees.get()) {
+    if (tree.process.pid == child) {
+      // The 'grandchild' _might_ still be in the tree, just zombied,
+      // unless the 'child' reaps the 'grandchild', which may happen
+      // if the shell "sticks around" (i.e., some invocations of 'sh
+      // -c' will 'exec' the command which will likely not do any
+      // reaping, but in other cases an invocation of 'sh -c' will not
+      // 'exec' the command, for example when the command is a
+      // sequence of commands separated by ';').
+      EXPECT_FALSE(tree.contains(greatGrandchild)) << tree;
+      EXPECT_FALSE(tree.contains(greatGreatGrandchild)) << tree;
+    } else if (tree.process.pid == greatGrandchild) {
+      EXPECT_TRUE(tree.contains(greatGreatGrandchild)) << tree;
+    } else {
+      FAIL()
+        << "Not expecting a process tree rooted at "
+        << tree.process.pid << "\n" << tree;
+    }
+  }
+
+  // There is a delay for processes to move into the zombie state.
+  os::sleep(Milliseconds(50));
+
+  // Expect the pids to be wiped!
+  EXPECT_NONE(os::process(greatGreatGrandchild));
+  EXPECT_NONE(os::process(greatGrandchild));
+  EXPECT_NONE(os::process(grandchild));
+  EXPECT_SOME(os::process(child));
+  EXPECT_TRUE(os::process(child).get().zombie);
+
+  // We have to reap the child for running the tests in repetition.
+  ASSERT_EQ(child, waitpid(child, NULL, 0));
+}
+
+
+TEST_F(OsTest, pstree)
+{
+  Try<ProcessTree> tree = os::pstree(getpid());
+
+  ASSERT_SOME(tree);
+  EXPECT_EQ(0u, tree.get().children.size()) << stringify(tree.get());
+
+  tree =
+    Fork(None(),                   // Child.
+         Fork(Exec("sleep 10")),   // Grandchild.
+         Exec("sleep 10"))();
+
+  ASSERT_SOME(tree);
+
+  // Depending on whether or not the shell has fork/exec'ed,
+  // we could have 1 or 2 direct children. That is, some shells
+  // might simply exec the command above (i.e., 'sleep 10') while
+  // others might fork/exec the command, keeping around a 'sh -c'
+  // process as well.
+  ASSERT_LE(1u, tree.get().children.size());
+  ASSERT_GE(2u, tree.get().children.size());
+
+  pid_t child = tree.get().process.pid;
+  pid_t grandchild = tree.get().children.front().process.pid;
+
+  // Now check pstree again.
+  tree = os::pstree(child);
+
+  ASSERT_SOME(tree);
+  EXPECT_EQ(child, tree.get().process.pid);
+
+  ASSERT_LE(1u, tree.get().children.size());
+  ASSERT_GE(2u, tree.get().children.size());
+  EXPECT_EQ(grandchild, tree.get().children.front().process.pid);
+
+  // Cleanup by killing the descendant processes.
+  EXPECT_EQ(0, kill(grandchild, SIGKILL));
+  EXPECT_EQ(0, kill(child, SIGKILL));
+
+  // We have to reap the child for running the tests in repetition.
+  ASSERT_EQ(child, waitpid(child, NULL, 0));
 }

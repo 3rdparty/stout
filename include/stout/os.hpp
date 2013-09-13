@@ -23,16 +23,13 @@
 
 #ifdef __linux__
 #include <linux/version.h>
-#endif
+#endif // __linux__
 
 #include <sys/stat.h>
 #include <sys/statvfs.h>
-#ifdef __APPLE__
-#include <sys/sysctl.h>
-#endif
 #ifdef __linux__
 #include <sys/sysinfo.h>
-#endif
+#endif // __linux__
 #include <sys/types.h>
 #include <sys/utsname.h>
 
@@ -41,16 +38,35 @@
 #include <sstream>
 #include <string>
 
-#include "bytes.hpp"
-#include "duration.hpp"
-#include "error.hpp"
-#include "foreach.hpp"
-#include "none.hpp"
-#include "nothing.hpp"
-#include "path.hpp"
-#include "result.hpp"
-#include "strings.hpp"
-#include "try.hpp"
+#include <stout/bytes.hpp>
+#include <stout/duration.hpp>
+#include <stout/error.hpp>
+#include <stout/foreach.hpp>
+#include <stout/none.hpp>
+#include <stout/nothing.hpp>
+#include <stout/option.hpp>
+#include <stout/path.hpp>
+#include <stout/result.hpp>
+#include <stout/strings.hpp>
+#include <stout/try.hpp>
+
+#include <stout/os/exists.hpp>
+#include <stout/os/fork.hpp>
+#include <stout/os/killtree.hpp>
+#ifdef __linux__
+#include <stout/os/linux.hpp>
+#endif // __linux__
+#include <stout/os/ls.hpp>
+#ifdef __APPLE__
+#include <stout/os/osx.hpp>
+#endif // __APPLE__
+#include <stout/os/pstree.hpp>
+#include <stout/os/read.hpp>
+#include <stout/os/sendfile.hpp>
+#include <stout/os/signals.hpp>
+#ifdef __APPLE__
+#include <stout/os/sysctl.hpp>
+#endif // __APPLE__
 
 #ifdef __APPLE__
 // Assigning the result pointer to ret silences an unused var warning.
@@ -291,99 +307,6 @@ inline Try<Nothing> write(const std::string& path, const std::string& message)
 }
 
 
-// Reads 'size' bytes from a file from its current offset.
-// If EOF is encountered before reading size bytes, then the offset
-// is restored and none is returned.
-inline Result<std::string> read(int fd, size_t size)
-{
-  // Save the current offset.
-  off_t current = lseek(fd, 0, SEEK_CUR);
-  if (current == -1) {
-    return ErrnoError("Failed to lseek to SEEK_CUR");
-  }
-
-  char* buffer = new char[size];
-  size_t offset = 0;
-
-  while (offset < size) {
-    ssize_t length = ::read(fd, buffer + offset, size - offset);
-
-    if (length < 0) {
-      // TODO(bmahler): Handle a non-blocking fd? (EAGAIN, EWOULDBLOCK)
-      if (errno == EINTR) {
-        continue;
-      }
-      // Attempt to restore the original offset.
-      lseek(fd, current, SEEK_SET);
-      return ErrnoError();
-    } else if (length == 0) {
-      // Reached EOF before expected! Restore the offset.
-      lseek(fd, current, SEEK_SET);
-      return None();
-    }
-
-    offset += length;
-  }
-
-  return std::string(buffer, size);
-}
-
-
-// Returns the contents of the file starting from its current offset.
-// If an error occurs, this will attempt to recover the file offset.
-inline Try<std::string> read(int fd)
-{
-  // Save the current offset.
-  off_t current = lseek(fd, 0, SEEK_CUR);
-  if (current == -1) {
-    return ErrnoError("Failed to lseek to SEEK_CUR");
-  }
-
-  // Get the size of the file from the offset.
-  off_t size = lseek(fd, current, SEEK_END);
-  if (size == -1) {
-    return ErrnoError("Failed to lseek to SEEK_END");
-  }
-
-  // Restore the offset.
-  if (lseek(fd, current, SEEK_SET) == -1) {
-    return ErrnoError("Failed to lseek with SEEK_SET");
-  }
-
-  Result<std::string> result = read(fd, size);
-  if (result.isNone()) {
-    // Hit EOF before reading size bytes.
-    return Error("The file size was modified while reading");
-  } else if (result.isError()) {
-    return Error(result.error());
-  }
-
-  return result.get();
-}
-
-
-// A wrapper function that wraps the above read() with
-// open and closing the file.
-inline Try<std::string> read(const std::string& path)
-{
-  Try<int> fd =
-    os::open(path, O_RDONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IRWXO);
-
-  if (fd.isError()) {
-    return Error("Failed to open file '" + path + "'");
-  }
-
-  Try<std::string> result = read(fd.get());
-
-  // NOTE: We ignore the return value of close(). This is because users calling
-  // this function are interested in the return value of read(). Also an
-  // unsuccessful close() doesn't affect the read.
-  os::close(fd.get());
-
-  return result;
-}
-
-
 inline Try<Nothing> rm(const std::string& path)
 {
   if (::remove(path.c_str()) != 0) {
@@ -464,17 +387,6 @@ inline bool islink(const std::string& path)
     return false;
   }
   return S_ISLNK(s.st_mode);
-}
-
-
-inline bool exists(const std::string& path)
-{
-  struct stat s;
-
-  if (::lstat(path.c_str(), &s) < 0) {
-    return false;
-  }
-  return true;
 }
 
 
@@ -691,63 +603,6 @@ inline std::string getcwd()
   }
 
   return std::string();
-}
-
-
-// TODO(bmahler): Wrap with a Try.
-inline std::list<std::string> ls(const std::string& directory)
-{
-  std::list<std::string> result;
-
-  DIR* dir = opendir(directory.c_str());
-
-  if (dir == NULL) {
-    return std::list<std::string>();
-  }
-
-  // Calculate the size for a "directory entry".
-  long name_max = fpathconf(dirfd(dir), _PC_NAME_MAX);
-
-  // If we don't get a valid size, check NAME_MAX, but fall back on
-  // 255 in the worst case ... Danger, Will Robinson!
-  if (name_max == -1) {
-    name_max = (NAME_MAX > 255) ? NAME_MAX : 255;
-  }
-
-  size_t name_end =
-    (size_t) offsetof(dirent, d_name) + name_max + 1;
-
-  size_t size = (name_end > sizeof(dirent)
-    ? name_end
-    : sizeof(dirent));
-
-  dirent* temp = (dirent*) malloc(size);
-
-  if (temp == NULL) {
-    free(temp);
-    closedir(dir);
-    return std::list<std::string>();
-  }
-
-  struct dirent* entry;
-
-  int error;
-
-  while ((error = readdir_r(dir, temp, &entry)) == 0 && entry != NULL) {
-    if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-      continue;
-    }
-    result.push_back(entry->d_name);
-  }
-
-  free(temp);
-  closedir(dir);
-
-  if (error != 0) {
-    return std::list<std::string>();
-  }
-
-  return result;
 }
 
 
@@ -971,18 +826,13 @@ inline Try<Bytes> memory()
   return Bytes(info.totalram);
 # endif
 #elif defined __APPLE__
-  const size_t NAME_SIZE = 2;
-  int name[NAME_SIZE];
-  name[0] = CTL_HW;
-  name[1] = HW_MEMSIZE;
+  const Try<int64_t>& memory =
+    os::sysctl(CTL_HW, HW_MEMSIZE).integer();
 
-  int64_t memory;
-  size_t length = sizeof(memory);
-
-  if (sysctl(name, NAME_SIZE, &memory, &length, NULL, 0) < 0) {
-    return ErrnoError("Failed to get sysctl of HW_MEMSIZE");
+  if (memory.isError()) {
+    return Error(memory.error());
   }
-  return Bytes(memory);
+  return Bytes(memory.get());
 #else
   return Error("Cannot determine the size of main memory");
 #endif
@@ -1062,19 +912,126 @@ inline Try<Release> release()
 }
 
 
-inline Try<bool> alive(pid_t pid)
+inline Try<std::list<Process> > processes()
 {
-  CHECK(pid > 0);
+  const Try<std::set<pid_t> >& pids = os::pids();
 
-  if (::kill(pid, 0) == 0) {
-    return true;
+  if (pids.isError()) {
+    return Error(pids.error());
   }
 
-  if (errno == ESRCH) {
-    return false;
+  std::list<Process> result;
+  foreach (pid_t pid, pids.get()) {
+    const Result<Process>& process = os::process(pid);
+
+    // Ignore any processes that disappear.
+    if (process.isSome()) {
+      result.push_back(process.get());
+    }
+  }
+  return result;
+}
+
+
+inline Option<Process> process(
+    pid_t pid,
+    const std::list<Process>& processes)
+{
+  foreach (const Process& process, processes) {
+    if (process.pid == pid) {
+      return process;
+    }
+  }
+  return None();
+}
+
+
+inline std::set<pid_t> children(
+    pid_t pid,
+    const std::list<Process>& processes,
+    bool recursive = true)
+{
+  // Perform a breadth first search for descendants.
+  std::set<pid_t> descendants;
+  std::queue<pid_t> parents;
+  parents.push(pid);
+
+  do {
+    pid_t parent = parents.front();
+    parents.pop();
+
+    // Search for children of parent.
+    foreach (const Process& process, processes) {
+      if (process.parent == parent) {
+        // Have we seen this child yet?
+        if (descendants.insert(process.pid).second) {
+          parents.push(process.pid);
+        }
+      }
+    }
+  } while (recursive && !parents.empty());
+
+  return descendants;
+}
+
+
+inline Try<std::set<pid_t> > children(pid_t pid, bool recursive = true)
+{
+  const Try<std::list<Process> >& processes = os::processes();
+
+  if (processes.isError()) {
+    return Error(processes.error());
   }
 
-  return Try<bool>::error(strerror(errno));
+  return children(pid, processes.get(), recursive);
+}
+
+
+// Overload of os::pids for filtering by groups and sessions.
+// A group / session id of 0 will fitler on the group / session ID
+// of the calling process.
+inline Try<std::set<pid_t> > pids(Option<pid_t> group, Option<pid_t> session)
+{
+  if (group.isNone() && session.isNone()) {
+    return os::pids();
+  } else if (group.isSome() && group.get() < 0) {
+    return Error("Invalid group");
+  } else if (session.isSome() && session.get() < 0) {
+    return Error("Invalid session");
+  }
+
+  const Try<std::list<Process> >& processes = os::processes();
+
+  if (processes.isError()) {
+    return Error(processes.error());
+  }
+
+  // Obtain the calling process group / session ID when 0 is provided.
+  if (group.isSome() && group.get() == 0) {
+    group = getpgid(0);
+  }
+  if (session.isSome() && session.get() == 0) {
+    session = getsid(0);
+  }
+
+  std::set<pid_t> result;
+  foreach (const Process& process, processes.get()) {
+    // Group AND Session (intersection).
+    if (group.isSome() && session.isSome()) {
+      if (group.get() == process.group &&
+          process.session.isSome() &&
+          session.get() == process.session.get()) {
+        result.insert(process.pid);
+      }
+    } else if (group.isSome() && group.get() == process.group) {
+      result.insert(process.pid);
+    } else if (session.isSome() && process.session.isSome() &&
+               session.get() == process.session.get()) {
+      result.insert(process.pid);
+    }
+  }
+
+  return result;
 }
 
 } // namespace os {

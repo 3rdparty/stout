@@ -4,7 +4,16 @@ ACLOCAL_AMFLAGS = -I m4
 
 AUTOMAKE_OPTIONS = foreign
 
+SUBDIRS = include
+
+pkgconfigdir = $(datadir)/pkgconfig
+
+pkgconfig_DATA = stout.pc
+
 EXTRA_DIST =					\
+  LICENSE					\
+  README					\
+  m4/acx_pthread.m4				\
   include/stout/bytes.hpp			\
   include/stout/cache.hpp			\
   include/stout/check.hpp			\
@@ -26,6 +35,7 @@ EXTRA_DIST =					\
   include/stout/hashset.hpp			\
   include/stout/json.hpp			\
   include/stout/lambda.hpp			\
+  include/stout/linkedhashmap.hpp		\
   include/stout/multihashmap.hpp		\
   include/stout/multimap.hpp			\
   include/stout/net.hpp				\
@@ -34,6 +44,18 @@ EXTRA_DIST =					\
   include/stout/numify.hpp			\
   include/stout/option.hpp			\
   include/stout/os.hpp				\
+  include/stout/os/exists.hpp			\
+  include/stout/os/fork.hpp			\
+  include/stout/os/killtree.hpp			\
+  include/stout/os/linux.hpp			\
+  include/stout/os/ls.hpp			\
+  include/stout/os/osx.hpp			\
+  include/stout/os/process.hpp			\
+  include/stout/os/read.hpp			\
+  include/stout/os/sendfile.hpp			\
+  include/stout/os/signals.hpp			\
+  include/stout/os/pstree.hpp			\
+  include/stout/os/sysctl.hpp			\
   include/stout/owned.hpp			\
   include/stout/path.hpp			\
   include/stout/preprocessor.hpp		\
@@ -54,11 +76,51 @@ EXTRA_DIST =					\
   tests/gzip_tests.cpp				\
   tests/hashset_tests.cpp			\
   tests/json_tests.cpp				\
+  tests/linkedhashmap_tests.cpp			\
   tests/main.cpp				\
   tests/multimap_tests.cpp			\
   tests/none_tests.cpp				\
   tests/os_tests.cpp				\
+  tests/os/sendfile_tests.cpp			\
+  tests/os/signals_tests.cpp			\
   tests/proc_tests.cpp				\
+  tests/protobuf_tests.cpp			\
+  tests/protobuf_tests.pb.cc			\
+  tests/protobuf_tests.pb.h			\
+  tests/protobuf_tests.proto			\
   tests/strings_tests.cpp			\
   tests/thread_tests.cpp			\
   tests/uuid_tests.cpp
+
+# We should add a check target against the tests which are there.
+check_PROGRAMS = stests
+
+stests_SOURCES= 				\
+	tests/uuid_tests.cpp		\
+	tests/thread_tests.cpp		\
+	tests/multimap_tests.cpp	\
+	tests/bytes_tests.cpp		\
+	tests/duration_tests.cpp	\
+	tests/flags_tests.cpp		\
+	tests/json_tests.cpp		\
+	tests/main.cpp			\
+	tests/hashset_tests.cpp		\
+	tests/linkedhashmap_tests.cpp	\
+	tests/gzip_tests.cpp		\
+	tests/os_tests.cpp		\
+	tests/strings_tests.cpp		\
+	tests/error_tests.cpp		\
+	tests/none_tests.cpp		\
+	tests/proc_tests.cpp		\
+	tests/os/signals_tests.cpp	\
+	tests/os/sendfile_tests.cpp	\
+	/usr/src/gmock/gmock-all.cc
+
+stests_CPPFLAGS = 			\
+	-I$(top_srcdir)/include 	\
+	-I/usr/src/gmock		\
+	-I$(GTEST)/include	
+	
+stests_LDADD = -lpthread -lrt -lglog -lgtest 
+
+TESTS = stests
