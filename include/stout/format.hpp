@@ -6,7 +6,13 @@
 
 #include <string>
 
+#ifdef _LIBCPP_VERSION
+// using libc++
+#include <type_traits>
+#else
+// using libstdc++
 #include <tr1/type_traits> // For 'is_pod'.
+#endif
 
 #include "error.hpp"
 #include "try.hpp"
