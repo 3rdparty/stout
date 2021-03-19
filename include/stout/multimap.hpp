@@ -1,3 +1,15 @@
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef __STOUT_MULTIMAP_HPP__
 #define __STOUT_MULTIMAP_HPP__
 
@@ -6,6 +18,8 @@
 #include <map>
 #include <set>
 #include <utility>
+
+#include <stout/foreach.hpp>
 
 // Implementation of a multimap via std::multimap but with a better
 // interface. The rationale for creating this is that the
@@ -16,6 +30,9 @@ template <typename K, typename V>
 class Multimap : public std::multimap<K, V>
 {
 public:
+  Multimap() {}
+  Multimap(std::initializer_list<std::pair<const K, V>> list);
+
   void put(const K& key, const V& value);
   std::list<V> get(const K& key) const;
   std::set<K> keys() const;
@@ -24,6 +41,12 @@ public:
   bool contains(const K& key) const;
   bool contains(const K& key, const V& value) const;
 };
+
+
+template <typename K, typename V>
+Multimap<K, V>::Multimap(std::initializer_list<std::pair<const K, V>> list)
+  : std::multimap<K, V>(list)
+{}
 
 
 template <typename K, typename V>
@@ -100,7 +123,7 @@ bool Multimap<K, V>::contains(const K& key) const
 template <typename K, typename V>
 bool Multimap<K, V>::contains(const K& key, const V& value) const
 {
-  const std::list<V>& values = get(key);
+  const std::list<V> values = get(key);
   return std::find(values.begin(), values.end(), value) != values.end();
 }
 

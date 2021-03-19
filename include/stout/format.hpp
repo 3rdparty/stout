@@ -1,16 +1,33 @@
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef __STOUT_FORMAT_HPP__
 #define __STOUT_FORMAT_HPP__
 
 #include <stdarg.h> // For 'va_list', 'va_start', 'va_end'.
-#include <stdio.h> // For 'vasprintf'.
+
+// For 'vasprintf'.
+#ifdef __WINDOWS__
+#include <stout/windows/format.hpp>
+#else
+#include <stdio.h>
+#endif // __WINDOWS__
 
 #include <string>
+#include <type_traits> // For 'is_pod'.
 
-#include <tr1/type_traits> // For 'is_pod'.
-
-#include "error.hpp"
-#include "try.hpp"
-#include "stringify.hpp"
+#include <stout/error.hpp>
+#include <stout/stringify.hpp>
+#include <stout/try.hpp>
 
 
 // The 'strings::format' functions produces strings based on the
@@ -29,7 +46,7 @@ namespace strings {
 namespace internal {
 
 Try<std::string> format(const std::string& fmt, va_list args);
-Try<std::string> format(const std::string& fmt, ...);
+Try<std::string> format(const std::string fmt, ...);
 
 template <typename T, bool b>
 struct stringify;
@@ -37,249 +54,13 @@ struct stringify;
 } // namespace internal {
 
 
-#if __cplusplus >= 201103L
-template <typename ...T>
-Try<std::string> format(const std::string& s, const T& ...t)
+template <typename... T>
+Try<std::string> format(const std::string& s, const T&... t)
 {
   return internal::format(
       s,
       internal::stringify<T, !std::is_pod<T>::value>(t).get()...);
 }
-#else
-template <typename T1>
-Try<std::string> format(const std::string& s,
-                        const T1& t1)
-{
-  return internal::format(
-      s,
-      internal::stringify<T1, !std::tr1::is_pod<T1>::value>(t1).get());
-}
-
-
-template <typename T1,
-          typename T2>
-Try<std::string> format(const std::string& s,
-                        const T1& t1,
-                        const T2& t2)
-{
-  return internal::format(
-      s,
-      internal::stringify<T1, !std::tr1::is_pod<T1>::value>(t1).get(),
-      internal::stringify<T2, !std::tr1::is_pod<T1>::value>(t2).get());
-}
-
-
-template <typename T1,
-          typename T2,
-          typename T3>
-Try<std::string> format(const std::string& s,
-                        const T1& t1,
-                        const T2& t2,
-                        const T3& t3)
-{
-  return internal::format(
-      s,
-      internal::stringify<T1, !std::tr1::is_pod<T1>::value>(t1).get(),
-      internal::stringify<T2, !std::tr1::is_pod<T2>::value>(t2).get(),
-      internal::stringify<T3, !std::tr1::is_pod<T3>::value>(t3).get());
-}
-
-
-template <typename T1,
-          typename T2,
-          typename T3,
-          typename T4>
-Try<std::string> format(const std::string& s,
-                        const T1& t1,
-                        const T2& t2,
-                        const T3& t3,
-                        const T4& t4)
-{
-  return internal::format(
-      s,
-      internal::stringify<T1, !std::tr1::is_pod<T1>::value>(t1).get(),
-      internal::stringify<T2, !std::tr1::is_pod<T2>::value>(t2).get(),
-      internal::stringify<T3, !std::tr1::is_pod<T3>::value>(t3).get(),
-      internal::stringify<T4, !std::tr1::is_pod<T4>::value>(t4).get());
-}
-
-
-template <typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5>
-Try<std::string> format(const std::string& s,
-                        const T1& t1,
-                        const T2& t2,
-                        const T3& t3,
-                        const T4& t4,
-                        const T5& t5)
-{
-  return internal::format(
-      s,
-      internal::stringify<T1, !std::tr1::is_pod<T1>::value>(t1).get(),
-      internal::stringify<T2, !std::tr1::is_pod<T2>::value>(t2).get(),
-      internal::stringify<T3, !std::tr1::is_pod<T3>::value>(t3).get(),
-      internal::stringify<T4, !std::tr1::is_pod<T4>::value>(t4).get(),
-      internal::stringify<T5, !std::tr1::is_pod<T5>::value>(t5).get());
-}
-
-
-template <typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6>
-Try<std::string> format(const std::string& s,
-                        const T1& t1,
-                        const T2& t2,
-                        const T3& t3,
-                        const T4& t4,
-                        const T5& t5,
-                        const T6& t6)
-{
-  return internal::format(
-      s,
-      internal::stringify<T1, !std::tr1::is_pod<T1>::value>(t1).get(),
-      internal::stringify<T2, !std::tr1::is_pod<T2>::value>(t2).get(),
-      internal::stringify<T3, !std::tr1::is_pod<T3>::value>(t3).get(),
-      internal::stringify<T4, !std::tr1::is_pod<T4>::value>(t4).get(),
-      internal::stringify<T5, !std::tr1::is_pod<T5>::value>(t5).get(),
-      internal::stringify<T6, !std::tr1::is_pod<T6>::value>(t6).get());
-}
-
-
-template <typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7>
-Try<std::string> format(const std::string& s,
-                        const T1& t1,
-                        const T2& t2,
-                        const T3& t3,
-                        const T4& t4,
-                        const T5& t5,
-                        const T6& t6,
-                        const T7& t7)
-{
-  return internal::format(
-      s,
-      internal::stringify<T1, !std::tr1::is_pod<T1>::value>(t1).get(),
-      internal::stringify<T2, !std::tr1::is_pod<T2>::value>(t2).get(),
-      internal::stringify<T3, !std::tr1::is_pod<T3>::value>(t3).get(),
-      internal::stringify<T4, !std::tr1::is_pod<T4>::value>(t4).get(),
-      internal::stringify<T5, !std::tr1::is_pod<T5>::value>(t5).get(),
-      internal::stringify<T6, !std::tr1::is_pod<T6>::value>(t6).get(),
-      internal::stringify<T7, !std::tr1::is_pod<T7>::value>(t7).get());
-}
-
-
-template <typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8>
-Try<std::string> format(const std::string& s,
-                        const T1& t1,
-                        const T2& t2,
-                        const T3& t3,
-                        const T4& t4,
-                        const T5& t5,
-                        const T6& t6,
-                        const T7& t7,
-                        const T8& t8)
-{
-  return internal::format(
-      s,
-      internal::stringify<T1, !std::tr1::is_pod<T1>::value>(t1).get(),
-      internal::stringify<T2, !std::tr1::is_pod<T2>::value>(t2).get(),
-      internal::stringify<T3, !std::tr1::is_pod<T3>::value>(t3).get(),
-      internal::stringify<T4, !std::tr1::is_pod<T4>::value>(t4).get(),
-      internal::stringify<T5, !std::tr1::is_pod<T5>::value>(t5).get(),
-      internal::stringify<T6, !std::tr1::is_pod<T6>::value>(t6).get(),
-      internal::stringify<T7, !std::tr1::is_pod<T7>::value>(t7).get(),
-      internal::stringify<T8, !std::tr1::is_pod<T8>::value>(t8).get());
-}
-
-
-template <typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9>
-Try<std::string> format(const std::string& s,
-                        const T1& t1,
-                        const T2& t2,
-                        const T3& t3,
-                        const T4& t4,
-                        const T5& t5,
-                        const T6& t6,
-                        const T7& t7,
-                        const T8& t8,
-                        const T9& t9)
-{
-  return internal::format(
-      s,
-      internal::stringify<T1, !std::tr1::is_pod<T1>::value>(t1).get(),
-      internal::stringify<T2, !std::tr1::is_pod<T2>::value>(t2).get(),
-      internal::stringify<T3, !std::tr1::is_pod<T3>::value>(t3).get(),
-      internal::stringify<T4, !std::tr1::is_pod<T4>::value>(t4).get(),
-      internal::stringify<T5, !std::tr1::is_pod<T5>::value>(t5).get(),
-      internal::stringify<T6, !std::tr1::is_pod<T6>::value>(t6).get(),
-      internal::stringify<T7, !std::tr1::is_pod<T7>::value>(t7).get(),
-      internal::stringify<T8, !std::tr1::is_pod<T8>::value>(t8).get(),
-      internal::stringify<T9, !std::tr1::is_pod<T9>::value>(t9).get());
-}
-
-
-template <typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10>
-Try<std::string> format(const std::string& s,
-                        const T1& t1,
-                        const T2& t2,
-                        const T3& t3,
-                        const T4& t4,
-                        const T5& t5,
-                        const T6& t6,
-                        const T7& t7,
-                        const T8& t8,
-                        const T9& t9,
-                        const T10& t10)
-{
-  return internal::format(
-      s,
-      internal::stringify<T1, !std::tr1::is_pod<T1>::value>(t1).get(),
-      internal::stringify<T2, !std::tr1::is_pod<T2>::value>(t2).get(),
-      internal::stringify<T3, !std::tr1::is_pod<T3>::value>(t3).get(),
-      internal::stringify<T4, !std::tr1::is_pod<T4>::value>(t4).get(),
-      internal::stringify<T5, !std::tr1::is_pod<T5>::value>(t5).get(),
-      internal::stringify<T6, !std::tr1::is_pod<T6>::value>(t6).get(),
-      internal::stringify<T7, !std::tr1::is_pod<T7>::value>(t7).get(),
-      internal::stringify<T8, !std::tr1::is_pod<T8>::value>(t8).get(),
-      internal::stringify<T9, !std::tr1::is_pod<T9>::value>(t9).get(),
-      internal::stringify<T10, !std::tr1::is_pod<T10>::value>(t10).get());
-}
-#endif // __cplusplus >= 201103L
 
 
 namespace internal {
@@ -297,11 +78,15 @@ inline Try<std::string> format(const std::string& fmt, va_list args)
 }
 
 
-inline Try<std::string> format(const std::string& fmt, ...)
+// NOTE: 'fmt' cannot be 'const std::string&' because passing an
+// argument of reference type as the second argument of 'va_start'
+// results in undefined behavior.
+// Refer to http://stackoverflow.com/a/222314 for further details.
+inline Try<std::string> format(const std::string fmt, ...)
 {
   va_list args;
   va_start(args, fmt);
-  const Try<std::string>& result = format(fmt, args);
+  const Try<std::string> result = format(fmt, args);
   va_end(args);
   return result;
 }

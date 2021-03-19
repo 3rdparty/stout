@@ -1,23 +1,17 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-#ifndef __PROC_HPP__
-#define __PROC_HPP__
+#ifndef __STOUT_PROC_HPP__
+#define __STOUT_PROC_HPP__
 
 // This file contains linux-only utilities for /proc.
 #ifndef __linux__
@@ -33,17 +27,22 @@
 #include <list>
 #include <queue>
 #include <set>
+#include <sstream> // For 'std::istringstream'.
 #include <string>
 #include <vector>
 
-#include "error.hpp"
-#include "foreach.hpp"
-#include "none.hpp"
-#include "numify.hpp"
-#include "option.hpp"
-#include "os.hpp"
-#include "strings.hpp"
-#include "try.hpp"
+#include <stout/error.hpp>
+#include <stout/foreach.hpp>
+#include <stout/none.hpp>
+#include <stout/numify.hpp>
+#include <stout/option.hpp>
+#include <stout/path.hpp>
+#include <stout/strings.hpp>
+#include <stout/try.hpp>
+
+#include <stout/os/exists.hpp>
+#include <stout/os/ls.hpp>
+#include <stout/os/read.hpp>
 
 namespace proc {
 
@@ -127,11 +126,11 @@ struct ProcessStatus
   const pid_t pid;
   const std::string comm;
   const char state;
-  const int ppid;
-  const int pgrp;
-  const int session;
+  const pid_t ppid;
+  const pid_t pgrp;
+  const pid_t session;
   const int tty_nr;
-  const int tpgid;
+  const pid_t tpgid;
   const unsigned int flags;
   const unsigned long minflt;
   const unsigned long cminflt;
@@ -163,15 +162,22 @@ struct ProcessStatus
 
 
 // Returns the process statistics from /proc/[pid]/stat.
-inline Try<ProcessStatus> status(pid_t pid)
+// The return value is None if the process does not exist.
+inline Result<ProcessStatus> status(pid_t pid)
 {
   std::string path = "/proc/" + stringify(pid) + "/stat";
 
-  std::ifstream file(path.c_str());
-
-  if (!file.is_open()) {
-    return Error("Failed to open '" + path + "'");
+  Try<std::string> read = os::read(path);
+  if (read.isError()) {
+    // Need to check if file exists AFTER we open it to guarantee
+    // process hasn't terminated.
+    if (!os::exists(path)) {
+      return None();
+    }
+    return Error(read.error());
   }
+
+  std::istringstream data(read.get());
 
   std::string comm;
   char state;
@@ -220,7 +226,7 @@ inline Try<ProcessStatus> status(pid_t pid)
   std::string _; // For ignoring fields.
 
   // Parse all fields from stat.
-  file >> _ >> comm >> state >> ppid >> pgrp >> session >> tty_nr
+  data >> _ >> comm >> state >> ppid >> pgrp >> session >> tty_nr
        >> tpgid >> flags >> minflt >> cminflt >> majflt >> cmajflt
        >> utime >> stime >> cutime >> cstime >> priority >> nice
        >> num_threads >> itrealvalue >> starttime >> vsize >> rss
@@ -228,12 +234,15 @@ inline Try<ProcessStatus> status(pid_t pid)
        >> signal >> blocked >> sigcatch >> wchan >> nswap >> cnswap;
 
   // Check for any read/parse errors.
-  if (file.fail() && !file.eof()) {
-    file.close();
+  if (data.fail() && !data.eof()) {
     return Error("Failed to read/parse '" + path + "'");
   }
 
-  file.close();
+  // Remove the parentheses that is wrapped around 'comm' (when
+  // printing out the process in a process tree we use parentheses to
+  // indicate "zombie" processes).
+  comm = strings::remove(comm, "(", strings::PREFIX);
+  comm = strings::remove(comm, ")", strings::SUFFIX);
 
   return ProcessStatus(pid, comm, state, ppid, pgrp, session, tty_nr,
                        tpgid, flags, minflt, cminflt, majflt, cmajflt,
@@ -244,15 +253,57 @@ inline Try<ProcessStatus> status(pid_t pid)
 }
 
 
+inline Result<std::string> cmdline(const Option<pid_t>& pid = None())
+{
+  const std::string path = pid.isSome()
+    ? "/proc/" + stringify(pid.get()) + "/cmdline"
+    : "/proc/cmdline";
+
+  std::ifstream file(path.c_str());
+
+  if (!file.is_open()) {
+    // Need to check if file exists AFTER we open it to guarantee
+    // process hasn't terminated (or if it has, we at least have a
+    // file which the kernel _should_ respect until a close).
+    if (!os::exists(path)) {
+      return None();
+    }
+    return Error("Failed to open '" + path + "'");
+  }
+
+  std::stringbuf buffer;
+
+  do {
+    // Read each argument in "argv", separated by null bytes.
+    file.get(buffer, '\0');
+
+    // Check for any read errors.
+    if (file.fail() && !file.eof()) {
+      return Error("Failed to read '" + path + "'");
+    } else if (!file.eof()) {
+      file.get(); // Read the null byte.
+      buffer.sputc(' '); // Put a space between each command line argument.
+    }
+  } while (!file.eof());
+
+  return buffer.str();
+}
+
+
 // Reads from /proc and returns a list of all running processes.
-inline Try<std::set<pid_t> > pids()
+inline Try<std::set<pid_t>> pids()
 {
   std::set<pid_t> pids;
 
-  foreach (const std::string& file, os::ls("/proc")) {
-    Try<pid_t> pid = numify<pid_t>(file);
+  Try<std::list<std::string>> entries = os::ls("/proc");
+  if (entries.isError()) {
+    return Error("Failed to list files in /proc: " + entries.error());
+  }
+
+  foreach (const std::string& entry, entries.get()) {
+    Try<pid_t> pid = numify<pid_t>(entry);
     if (pid.isSome()) {
-      pids.insert(pid.get()); // Ignore files that can't be numified.
+      pids.insert(pid.get()); // Ignore entries that can't be numified.
     }
   }
 
@@ -264,45 +315,30 @@ inline Try<std::set<pid_t> > pids()
 }
 
 
-// Returns all child processes of the pid, including all descendants
-// if recursive.
-inline Try<std::set<pid_t> > children(pid_t pid, bool recursive = true)
+// Reads from /proc/<pid>/task/* and returns a list of threads ids for pid.
+inline Try<std::set<pid_t>> threads(pid_t pid)
 {
-  const Try<std::set<pid_t> >& pids = proc::pids();
-  if (pids.isError()) {
-    return Error(pids.error());
+  const std::string path = path::join("/proc", stringify(pid), "task");
+
+  std::set<pid_t> threads;
+
+  Try<std::list<std::string>> entries = os::ls(path);
+  if (entries.isError()) {
+    return Error("Failed to list files in " + path + ": " + entries.error());
   }
 
-  // Stat all the processes.
-  std::list<ProcessStatus> processes;
-  foreach (pid_t _pid, pids.get()) {
-    const Try<ProcessStatus>& process = status(_pid);
-    if (process.isSome()) {
-      processes.push_back(process.get());
+  foreach (const std::string& entry, entries.get()) {
+    Try<pid_t> thread = numify<pid_t>(entry);
+    if (thread.isSome()) {
+      threads.insert(thread.get());
     }
   }
 
-  // Perform a breadth first search for descendants.
-  std::set<pid_t> descendants;
-  std::queue<pid_t> parents;
-  parents.push(pid);
+  if (!threads.empty()) {
+    return threads;
+  }
 
-  do {
-    pid_t parent = parents.front();
-    parents.pop();
-
-    // Search for children of parent.
-    foreach (const ProcessStatus& process, processes) {
-      if (process.ppid == parent) {
-        // Have we seen this child yet?
-        if (descendants.insert(process.pid).second) {
-          parents.push(process.pid);
-        }
-      }
-    }
-  } while (recursive && !parents.empty());
-
-  return descendants;
+  return Error("Failed to determine thread ids from /proc");
 }
 
 
@@ -343,11 +379,8 @@ inline Try<SystemStatus> status()
   }
 
   if (file.fail() && !file.eof()) {
-    file.close();
     return Error("Failed to read /proc/stat");
   }
-
-  file.close();
 
   return SystemStatus(btime);
 }
@@ -367,14 +400,14 @@ struct CPU
 };
 
 
-inline bool operator == (const CPU& lhs, const CPU& rhs)
+inline bool operator==(const CPU& lhs, const CPU& rhs)
 {
   return (lhs.id == rhs.id) && (lhs.core == rhs.core) &&
     (lhs.socket == rhs.socket);
 }
 
 
-inline bool operator < (const CPU& lhs, const CPU& rhs)
+inline bool operator<(const CPU& lhs, const CPU& rhs)
 {
   // Sort by (socket, core, id).
   if (lhs.socket != rhs.socket) {
@@ -391,16 +424,16 @@ inline bool operator < (const CPU& lhs, const CPU& rhs)
 }
 
 
-inline std::ostream& operator << (std::ostream& out, const CPU& cpu)
+inline std::ostream& operator<<(std::ostream& stream, const CPU& cpu)
 {
-  return out << "CPU (id:" << cpu.id << ", "
-             << "core:" << cpu.core << ", "
-             << "socket:" << cpu.socket << ")";
+  return stream << "CPU (id:" << cpu.id << ", "
+                << "core:" << cpu.core << ", "
+                << "socket:" << cpu.socket << ")";
 }
 
 
 // Reads from /proc/cpuinfo and returns a list of CPUs.
-inline Try<std::list<CPU> > cpus()
+inline Try<std::list<CPU>> cpus()
 {
   std::list<CPU> results;
 
@@ -422,7 +455,12 @@ inline Try<std::list<CPU> > cpus()
         line.find("core id") == 0) {
       // Get out and parse the value.
       std::vector<std::string> tokens = strings::tokenize(line, ": ");
-      CHECK(tokens.size() >= 2) << stringify(tokens);
+
+      if (tokens.size() < 2) {
+        return Error("Unexpected format in /proc/cpuinfo: " +
+                     stringify(tokens));
+      }
+
       Try<unsigned int> value = numify<unsigned int>(tokens.back());
       if (value.isError()) {
         return Error(value.error());
@@ -437,12 +475,12 @@ inline Try<std::list<CPU> > cpus()
         id = value.get();
       } else if (line.find("physical id") == 0) {
         if (socket.isSome()) {
-          return Error("Unexpected format of /proc/cpuinfo");
+          return Error("Unexpected format in /proc/cpuinfo");
         }
         socket = value.get();
       } else if (line.find("core id") == 0) {
         if (core.isSome()) {
-          return Error("Unexpected format of /proc/cpuinfo");
+          return Error("Unexpected format in /proc/cpuinfo");
         }
         core = value.get();
       }
@@ -464,15 +502,12 @@ inline Try<std::list<CPU> > cpus()
   }
 
   if (file.fail() && !file.eof()) {
-    file.close();
     return Error("Failed to read /proc/cpuinfo");
   }
-
-  file.close();
 
   return results;
 }
 
 } // namespace proc {
 
-#endif // __PROC_HPP__
+#endif // __STOUT_PROC_HPP__

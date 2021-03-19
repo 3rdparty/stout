@@ -1,3 +1,15 @@
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef __STOUT_BYTES_HPP__
 #define __STOUT_BYTES_HPP__
 
@@ -8,14 +20,22 @@
 #include <iostream>
 #include <string>
 
-#include "numify.hpp"
-#include "strings.hpp"
-#include "try.hpp"
+#include <stout/abort.hpp>
+#include <stout/numify.hpp>
+#include <stout/stringify.hpp>
+#include <stout/strings.hpp>
+#include <stout/try.hpp>
 
 
 class Bytes
 {
 public:
+  static constexpr uint64_t BYTES = 1;
+  static constexpr uint64_t KILOBYTES = 1024 * BYTES;
+  static constexpr uint64_t MEGABYTES = 1024 * KILOBYTES;
+  static constexpr uint64_t GIGABYTES = 1024 * MEGABYTES;
+  static constexpr uint64_t TERABYTES = 1024 * GIGABYTES;
+
   static Try<Bytes> parse(const std::string& s)
   {
     size_t index = 0;
@@ -34,7 +54,7 @@ public:
         return Error(value.error());
       }
 
-      const std::string& unit = strings::upper(s.substr(index));
+      const std::string unit = strings::upper(s.substr(index));
 
       if (unit == "B") {
         return Bytes(value.get(), BYTES);
@@ -53,96 +73,91 @@ public:
     return Error("Invalid bytes '" + s + "'");
   }
 
-  Bytes(uint64_t bytes = 0) : value(bytes) {}
-  Bytes(uint64_t _value, uint64_t _unit) : value(_value * _unit) {}
+  constexpr Bytes(uint64_t bytes = 0) : value(bytes) {}
+  constexpr Bytes(uint64_t _value, uint64_t _unit) : value(_value * _unit) {}
 
-  // TODO(bmahler): Consider killing kilobytes to terabyte helpers, given
-  // they implicitly lose precision if not careful.
   uint64_t bytes()     const { return value; }
-  uint64_t kilobytes() const { return value / KILOBYTES; }
-  uint64_t megabytes() const { return value / MEGABYTES; }
-  uint64_t gigabytes() const { return value / GIGABYTES; }
-  uint64_t terabytes() const { return value / TERABYTES; }
 
-  bool operator <  (const Bytes& that) const { return value <  that.value; }
-  bool operator <= (const Bytes& that) const { return value <= that.value; }
-  bool operator >  (const Bytes& that) const { return value >  that.value; }
-  bool operator >= (const Bytes& that) const { return value >= that.value; }
-  bool operator == (const Bytes& that) const { return value == that.value; }
-  bool operator != (const Bytes& that) const { return value != that.value; }
+  bool operator<(const Bytes& that) const { return value < that.value; }
+  bool operator<=(const Bytes& that) const { return value <= that.value; }
+  bool operator>(const Bytes& that) const { return value > that.value; }
+  bool operator>=(const Bytes& that) const { return value >= that.value; }
+  bool operator==(const Bytes& that) const { return value == that.value; }
+  bool operator!=(const Bytes& that) const { return value != that.value; }
 
-  Bytes& operator += (const Bytes& that)
+  Bytes& operator+=(const Bytes& that)
   {
     value += that.value;
     return *this;
   }
 
-  Bytes& operator -= (const Bytes& that)
+  Bytes& operator-=(const Bytes& that)
   {
     value -= that.value;
     return *this;
   }
 
-protected:
-  static const uint64_t BYTES = 1;
-  static const uint64_t KILOBYTES = 1024 * BYTES;
-  static const uint64_t MEGABYTES = 1024 * KILOBYTES;
-  static const uint64_t GIGABYTES = 1024 * MEGABYTES;
-  static const uint64_t TERABYTES = 1024 * GIGABYTES;
+  Bytes& operator*=(uint64_t multiplier)
+  {
+    value *= multiplier;
+    return *this;
+  }
+
+  Bytes& operator/=(uint64_t divisor)
+  {
+    value /= divisor;
+    return *this;
+  }
 
 private:
   uint64_t value;
 };
 
 
-class Kilobytes : public Bytes
+inline constexpr Bytes Kilobytes(uint64_t value)
 {
-public:
-  explicit Kilobytes(uint64_t value) : Bytes(value, KILOBYTES) {}
-};
+  return Bytes(value, Bytes::KILOBYTES);
+}
 
 
-class Megabytes : public Bytes
+inline constexpr Bytes Megabytes(uint64_t value)
 {
-public:
-  explicit Megabytes(uint64_t value) : Bytes(value, MEGABYTES) {}
-};
+  return Bytes(value, Bytes::MEGABYTES);
+}
 
 
-class Gigabytes : public Bytes
+inline constexpr Bytes Gigabytes(uint64_t value)
 {
-public:
-  explicit Gigabytes(uint64_t value) : Bytes(value, GIGABYTES) {}
-};
+  return Bytes(value, Bytes::GIGABYTES);
+}
 
 
-class Terabytes : public Bytes
+inline constexpr Bytes Terabytes(uint64_t value)
 {
-public:
-  explicit Terabytes(uint64_t value) : Bytes(value, TERABYTES) {}
-};
+  return Bytes(value, Bytes::TERABYTES);
+}
 
 
-inline std::ostream& operator << (std::ostream& stream, const Bytes& bytes)
+inline std::ostream& operator<<(std::ostream& stream, const Bytes& bytes)
 {
   // Only raise the unit when there is no loss of information.
   if (bytes.bytes() == 0) {
+    return stream << "0B";
+  } else if (bytes.bytes() % Bytes::KILOBYTES != 0) {
     return stream << bytes.bytes() << "B";
-  } else if (bytes.bytes() % 1024 != 0) {
-    return stream << bytes.bytes() << "B";
-  } else if (bytes.kilobytes() % 1024 != 0) {
-    return stream << bytes.kilobytes() << "KB";
-  } else if (bytes.megabytes() % 1024 != 0) {
-    return stream << bytes.megabytes() << "MB";
-  } else if (bytes.gigabytes() % 1024 != 0) {
-    return stream << bytes.gigabytes() << "GB";
+  } else if (bytes.bytes() % Bytes::MEGABYTES != 0) {
+    return stream << (bytes.bytes() / Bytes::KILOBYTES) << "KB";
+  } else if (bytes.bytes() % Bytes::GIGABYTES != 0) {
+    return stream << (bytes.bytes() / Bytes::MEGABYTES) << "MB";
+  } else if (bytes.bytes() % Bytes::TERABYTES != 0) {
+    return stream << (bytes.bytes() / Bytes::GIGABYTES) << "GB";
   } else {
-    return stream << bytes.terabytes() << "TB";
+    return stream << (bytes.bytes() / Bytes::TERABYTES) << "TB";
   }
 }
 
 
-inline Bytes operator + (const Bytes& lhs, const Bytes& rhs)
+inline Bytes operator+(const Bytes& lhs, const Bytes& rhs)
 {
   Bytes sum = lhs;
   sum += rhs;
@@ -150,11 +165,27 @@ inline Bytes operator + (const Bytes& lhs, const Bytes& rhs)
 }
 
 
-inline Bytes operator - (const Bytes& lhs, const Bytes& rhs)
+inline Bytes operator-(const Bytes& lhs, const Bytes& rhs)
 {
   Bytes diff = lhs;
   diff -= rhs;
   return diff;
+}
+
+
+inline Bytes operator*(const Bytes& lhs, uint64_t multiplier)
+{
+  Bytes result = lhs;
+  result *= multiplier;
+  return result;
+}
+
+
+inline Bytes operator/(const Bytes& lhs, uint64_t divisor)
+{
+  Bytes result = lhs;
+  result /= divisor;
+  return result;
 }
 
 #endif // __STOUT_BYTES_HPP__

@@ -1,251 +1,483 @@
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef __STOUT_FLAGS_FLAGS_HPP__
 #define __STOUT_FLAGS_FLAGS_HPP__
 
-#include <stdlib.h> // For abort.
-
+#include <algorithm>
 #include <map>
+#include <ostream>
 #include <string>
 #include <typeinfo> // For typeid.
-
-#include <tr1/functional>
+#include <vector>
 
 #include <stout/error.hpp>
 #include <stout/exit.hpp>
 #include <stout/foreach.hpp>
+#include <stout/lambda.hpp>
+#include <stout/multimap.hpp>
 #include <stout/none.hpp>
 #include <stout/nothing.hpp>
 #include <stout/option.hpp>
-#include <stout/os.hpp>
+#include <stout/path.hpp>
+#include <stout/some.hpp>
 #include <stout/stringify.hpp>
 #include <stout/strings.hpp>
 #include <stout/try.hpp>
 
+#include <stout/flags/fetch.hpp>
 #include <stout/flags/flag.hpp>
-#include <stout/flags/loader.hpp>
-#include <stout/flags/parse.hpp>
+
+#include <stout/os/environment.hpp>
 
 namespace flags {
 
 class FlagsBase
 {
 public:
-  virtual ~FlagsBase() {}
+  FlagsBase()
+  {
+    add(&FlagsBase::help, "help", "Prints this help message", false);
+  }
+
+  virtual ~FlagsBase() = default;
+
+  // Explicitly disable rvalue constructors and assignment operators
+  // since we plan for this class to be used in virtual inheritance
+  // scenarios. Here e.g., constructing from an rvalue will be
+  // problematic since we can potentially have multiple lineages
+  // leading to the same base class, and could then potentially use a
+  // moved from base object.
+  // All of the following functions would be implicitly generated for
+  // C++14, but in C++11 only the versions taking lvalue references
+  // should be. GCC seems to create all of these even in C++11 mode so
+  // we need to explicitly disable them.
+  FlagsBase(const FlagsBase&) = default;
+  FlagsBase(FlagsBase&&) = delete;
+  FlagsBase& operator=(const FlagsBase&) = default;
+  FlagsBase& operator=(FlagsBase&&) = delete;
 
   // Load any flags from the environment given the variable prefix,
   // i.e., given prefix 'STOUT_' will load a flag named 'foo' via
   // environment variables 'STOUT_foo' or 'STOUT_FOO'.
-  virtual Try<Nothing> load(
-      const std::string& prefix,
-      bool unknowns = false);
+  virtual Try<Warnings> load(const std::string& prefix);
 
   // Load any flags from the environment given the variable prefix
   // (see above) followed by loading from the command line (via 'argc'
   // and 'argv'). If 'unknowns' is true then we'll ignore unknown
   // flags we see while loading. If 'duplicates' is true then we'll
-  // ignore any duplicates we see while loading.
-  virtual Try<Nothing> load(
+  // ignore any duplicates we see while loading. Note that if a flag
+  // exists in the environment and the command line, the latter takes
+  // precedence.
+  virtual Try<Warnings> load(
       const Option<std::string>& prefix,
       int argc,
-      char** argv,
+      const char* const* argv,
       bool unknowns = false,
       bool duplicates = false);
 
-  Try<Nothing> load(
-      const std::string& prefix,
-      int argc,
-      char** argv,
+  // Loads any flags from the environment as above but remove processed
+  // flags from 'argv' and update 'argc' appropriately. For example:
+  //
+  // argv = ["/path/program", "--arg1", "hi", "--arg2", "--", "bye"]
+  //
+  // Becomes:
+  //
+  // argv = ["/path/program", "hi", "bye"]
+  virtual Try<Warnings> load(
+      const Option<std::string>& prefix,
+      int* argc,
+      char*** argv,
       bool unknowns = false,
       bool duplicates = false);
 
-  virtual Try<Nothing> load(
-      const std::map<std::string, Option<std::string> >& values,
-      bool unknowns = false);
+  // Loads flags from the given map where the keys represent the flag
+  // name and the values represent the flag values. For example:
+  //
+  // values = { 'arg1': 'hi',
+  //            'arg2': 'bye' }
+  //
+  // Optionally, if `prefix` is specified, flags will also be loaded
+  // from environment variables with the given prefix.
+  // Note that if a flag exists in both the environment and the values map,
+  // the latter takes precedence.
+  virtual Try<Warnings> load(
+      const std::map<std::string, Option<std::string>>& values,
+      bool unknowns = false,
+      const Option<std::string>& prefix = None());
 
-  virtual Try<Nothing> load(
+  // Loads flags from the map and optionally the environment vars
+  // if a prefix is specified. Follows the behavior of the
+  // method `load(values, unknowns, prefix)` above in terms
+  // of precedence and load order.
+  virtual Try<Warnings> load(
       const std::map<std::string, std::string>& values,
-      bool unknowns = false);
+      bool unknowns = false,
+      const Option<std::string>& prefix = None());
 
-  // Returns a string describing the flags.
-  std::string usage() const;
+  // Returns a string describing the flags, preceded by a "usage
+  // message" that will be prepended to that description (see
+  // 'FlagsBase::usageMessage_').
+  //
+  // The optional 'message' passed to this function will be prepended
+  // to the generated string returned from this function.
+  //
+  // Derived classes and clients can modify the standard usage message
+  // by setting it before calling this method via 'setUsageMessage()'.
+  //
+  // This allows one to set a generic message that will be used for
+  // each invocation of this method, and to additionally add one for
+  // the particular invocation:
+  //
+  //    MyFlags flags;
+  //    flags.setUsageMessage("Custom Usage Message");
+  //    ...
+  //    if (flags.foo.isNone()) {
+  //      std::cerr << flags.usage("Missing required --foo flag");
+  //    }
+  //
+  // The 'message' would be emitted first, followed by a blank line,
+  // then the 'usageMessage_', finally followed by the flags'
+  // description, for example:
+  //
+  //    Missing required --foo flag
+  //
+  //    Custom Usage Message
+  //
+  //      --[no-]help       Prints this help message. (default: false)
+  //      --foo=VALUE       Description about 'foo' here.
+  //      --bar=VALUE       Description about 'bar' here. (default: 42)
+  //
+  std::string usage(const Option<std::string>& message = None()) const;
+
+  // Sets the default message that is prepended to the flags'
+  // description in 'usage()'.
+  void setUsageMessage(const std::string& message)
+  {
+    usageMessage_ = Some(message);
+  }
 
   typedef std::map<std::string, Flag>::const_iterator const_iterator;
 
-  const_iterator begin() const { return flags.begin(); }
-  const_iterator end() const { return flags.end(); }
+  const_iterator begin() const { return flags_.begin(); }
+  const_iterator end() const { return flags_.end(); }
 
-  template <typename T1, typename T2>
-  void add(T1* t1,
-           const std::string& name,
-           const std::string& help,
-           const T2& t2);
+  typedef std::map<std::string, Flag>::iterator iterator;
 
-  template <typename T>
-  void add(Option<T>* option,
-           const std::string& name,
-           const std::string& help);
+  iterator begin() { return flags_.begin(); }
+  iterator end() { return flags_.end(); }
 
-protected:
+  // In the overloaded function signatures for `add` found below, we use a `T2*`
+  // for the default flag value where applicable. This is used instead of an
+  // `Option<T2>&` because when string literals are passed to this parameter,
+  // `Option` infers a character array type, which causes problems in the
+  // current implementation of `Option`. See MESOS-5471.
+
+  template <typename Flags, typename T1, typename T2, typename F>
+  void add(
+      T1 Flags::*t1,
+      const Name& name,
+      const Option<Name>& alias,
+      const std::string& help,
+      const T2* t2,
+      F validate);
+
+  template <typename Flags, typename T1, typename T2, typename F>
+  void add(
+      T1 Flags::*t1,
+      const Name& name,
+      const Option<Name>& alias,
+      const std::string& help,
+      const T2& t2,
+      F validate)
+  {
+    add(t1, name, alias, help, &t2, validate);
+  }
+
+  template <typename Flags, typename T1, typename T2, typename F>
+  void add(
+      T1 Flags::*t1,
+      const Name& name,
+      const std::string& help,
+      const T2& t2,
+      F validate)
+  {
+    add(t1, name, None(), help, &t2, validate);
+  }
+
   template <typename Flags, typename T1, typename T2>
-  void add(T1 Flags::*t1,
-           const std::string& name,
-           const std::string& help,
-           const T2& t2);
+  void add(
+      T1 Flags::*t1,
+      const Name& name,
+      const std::string& help,
+      const T2& t2)
+  {
+    add(t1, name, None(), help, &t2, [](const T1&) { return None(); });
+  }
 
   template <typename Flags, typename T>
-  void add(Option<T> Flags::*option,
-           const std::string& name,
-           const std::string& help);
+  void add(
+      T Flags::*t,
+      const Name& name,
+      const std::string& help)
+  {
+    add(t,
+        name,
+        None(),
+        help,
+        static_cast<const T*>(nullptr),
+        [](const T&) { return None(); });
+  }
+
+  template <typename Flags, typename T1, typename T2>
+  void add(
+      T1 Flags::*t1,
+      const Name& name,
+      const Option<Name>& alias,
+      const std::string& help,
+      const T2& t2)
+  {
+    add(t1, name, alias, help, &t2, [](const T1&) { return None(); });
+  }
+
+  template <typename Flags, typename T, typename F>
+  void add(
+      Option<T> Flags::*option,
+      const Name& name,
+      const Option<Name>& alias,
+      const std::string& help,
+      F validate);
+
+  template <typename Flags, typename T, typename F>
+  void add(
+      Option<T> Flags::*option,
+      const Name& name,
+      const std::string& help,
+      F validate)
+  {
+    add(option, name, None(), help, validate);
+  }
+
+  template <typename Flags, typename T>
+  void add(
+      Option<T> Flags::*option,
+      const Name& name,
+      const std::string& help)
+  {
+    add(option, name, None(), help, [](const Option<T>&) { return None(); });
+  }
+
+  template <typename Flags, typename T>
+  void add(
+      Option<T> Flags::*option,
+      const Name& name,
+      const Option<Name>& alias,
+      const std::string& help)
+  {
+    add(option, name, alias, help, [](const Option<T>&) { return None(); });
+  }
 
   void add(const Flag& flag);
 
+  // TODO(marco): IMO the entire --help functionality should be
+  // encapsulated inside the FlagsBase class.
+  // For now, exposing this for the caller(s) to decide what to
+  // do when the user asks for help.
+  bool help;
+
+  // Extract environment variable "flags" with the specified prefix.
+  std::map<std::string, Option<std::string>> extract(
+      const std::string& prefix) const;
+
+  // Build environment variables from the flags.
+  std::map<std::string, std::string> buildEnvironment(
+      const Option<std::string>& prefix = None()) const;
+
+protected:
+  // The program's name, extracted from argv[0] by default;
+  // declared 'protected' so that derived classes can alter this
+  // behavior.
+  std::string programName_;
+
+  // An optional custom usage message, will be printed 'as is'
+  // just above the list of flags and their explanation.
+  // It is 'None' by default, in which case the default
+  // behavior is to print "Usage:" followed by the 'programName_'.
+  Option<std::string> usageMessage_;
+
 private:
-  std::map<std::string, Flag> flags;
+  Try<Warnings> load(
+      Multimap<std::string, Option<std::string>>& values,
+      bool unknowns = false,
+      bool duplicates = false,
+      const Option<std::string>& prefix = None());
+
+  // Maps flag's name to flag.
+  std::map<std::string, Flag> flags_;
+
+  // Maps flag's alias to flag's name.
+  std::map<std::string, std::string> aliases;
 };
 
 
-// Need to declare/define some explicit subclasses of FlagsBase so
-// that we can overload the 'Flags::operator FlagsN () const'
-// functions for each possible type.
-class _Flags1 : public virtual FlagsBase {};
-class _Flags2 : public virtual FlagsBase {};
-class _Flags3 : public virtual FlagsBase {};
-class _Flags4 : public virtual FlagsBase {};
-class _Flags5 : public virtual FlagsBase {};
-
-
-// TODO(benh): Add some "type constraints" for template paramters to
-// make sure they are all of type FlagsBase.
-template <typename Flags1 = _Flags1,
-          typename Flags2 = _Flags2,
-          typename Flags3 = _Flags3,
-          typename Flags4 = _Flags4,
-          typename Flags5 = _Flags5>
-class Flags : public virtual Flags1,
-              public virtual Flags2,
-              public virtual Flags3,
-              public virtual Flags4,
-              public virtual Flags5 {};
-
-
-template <typename T1, typename T2>
-void FlagsBase::add(
-    T1* t1,
-    const std::string& name,
-    const std::string& help,
-    const T2& t2)
-{
-  *t1 = t2; // Set the default.
-
-  Flag flag;
-  flag.name = name;
-  flag.help = help;
-  flag.boolean = typeid(T1) == typeid(bool);
-  flag.loader = std::tr1::bind(
-      &Loader<T1>::load,
-      t1,
-      std::tr1::function<Try<T1>(const std::string&)>(
-          std::tr1::bind(&parse<T1>, std::tr1::placeholders::_1)),
-      name,
-      std::tr1::placeholders::_2); // Use _2 because ignore FlagsBase*.
-
-  // Update the help string to include the default value.
-  flag.help += help.size() > 0 && help.find_last_of("\n\r") != help.size() - 1
-    ? " (default: " // On same line, add space.
-    : "(default: "; // On newline.
-  flag.help += stringify(t2);
-  flag.help += ")";
-
-  FlagsBase::add(flag);
-}
-
-
-template <typename T>
-void FlagsBase::add(
-    Option<T>* option,
-    const std::string& name,
-    const std::string& help)
-{
-  Flag flag;
-  flag.name = name;
-  flag.help = help;
-  flag.boolean = typeid(T) == typeid(bool);
-  flag.loader = std::tr1::bind(
-      &OptionLoader<T>::load,
-      option,
-      std::tr1::function<Try<T>(const std::string&)>(
-          std::tr1::bind(&parse<T>, std::tr1::placeholders::_1)),
-      name,
-      std::tr1::placeholders::_2); // Use _2 because ignore FlagsBase*.
-
-  FlagsBase::add(flag);
-}
-
-
-template <typename Flags, typename T1, typename T2>
+template <typename Flags, typename T1, typename T2, typename F>
 void FlagsBase::add(
     T1 Flags::*t1,
-    const std::string& name,
+    const Name& name,
+    const Option<Name>& alias,
     const std::string& help,
-    const T2& t2)
+    const T2* t2,
+    F validate)
 {
+  // Don't bother adding anything if the pointer is `nullptr`.
+  if (t1 == nullptr) {
+    return;
+  }
+
   Flags* flags = dynamic_cast<Flags*>(this);
-  if (flags == NULL) {
-    std::cerr << "Attempted to add flag '" << name
-              << "' with incompatible type" << std::endl;
-    abort();
-  } else {
-    flags->*t1 = t2; // Set the default.
+  if (flags == nullptr) {
+    ABORT("Attempted to add flag '" + name.value +
+          "' with incompatible type");
   }
 
   Flag flag;
   flag.name = name;
+  flag.alias = alias;
   flag.help = help;
   flag.boolean = typeid(T1) == typeid(bool);
-  flag.loader = std::tr1::bind(
-      &MemberLoader<Flags, T1>::load,
-      std::tr1::placeholders::_1,
-      t1,
-      std::tr1::function<Try<T1>(const std::string&)>(
-          std::tr1::bind(&parse<T1>, std::tr1::placeholders::_1)),
-      name,
-      std::tr1::placeholders::_2);
+
+  if (t2 != nullptr) {
+    flags->*t1 = *t2; // Set the default.
+    flag.required = false;
+  } else {
+    flag.required = true;
+  }
+
+  // NOTE: We need to take FlagsBase* (or const FlagsBase&) as the
+  // first argument to 'load', 'stringify', and 'validate' so that we
+  // use the correct instance of FlagsBase. In other words, we can't
+  // capture 'this' here because it's possible that the FlagsBase
+  // object that we're working with when we invoke FlagsBase::add is
+  // not the same instance as 'this' when these lambdas get invoked.
+
+  flag.load = [t1](FlagsBase* base, const std::string& value) -> Try<Nothing> {
+    Flags* flags = dynamic_cast<Flags*>(base);
+    if (flags != nullptr) {
+      // NOTE: 'fetch' "retrieves" the value if necessary and then
+      // invokes 'parse'. See 'fetch' for more details.
+      Try<T1> t = fetch<T1>(value);
+      if (t.isSome()) {
+        flags->*t1 = t.get();
+      } else {
+        return Error("Failed to load value '" + value + "': " + t.error());
+      }
+    }
+
+    return Nothing();
+  };
+
+  flag.stringify = [t1](const FlagsBase& base) -> Option<std::string> {
+    const Flags* flags = dynamic_cast<const Flags*>(&base);
+    if (flags != nullptr) {
+      return stringify(flags->*t1);
+    }
+    return None();
+  };
+
+  flag.validate = [t1, validate](const FlagsBase& base) -> Option<Error> {
+    const Flags* flags = dynamic_cast<const Flags*>(&base);
+    if (flags != nullptr) {
+      return validate(flags->*t1);
+    }
+    return None();
+  };
 
   // Update the help string to include the default value.
   flag.help += help.size() > 0 && help.find_last_of("\n\r") != help.size() - 1
     ? " (default: " // On same line, add space.
     : "(default: "; // On newline.
-  flag.help += stringify(t2);
+  if (t2 != nullptr) {
+    flag.help += stringify(*t2);
+  }
   flag.help += ")";
 
   add(flag);
 }
 
 
-template <typename Flags, typename T>
+template <typename Flags, typename T, typename F>
 void FlagsBase::add(
     Option<T> Flags::*option,
-    const std::string& name,
-    const std::string& help)
+    const Name& name,
+    const Option<Name>& alias,
+    const std::string& help,
+    F validate)
 {
+  // Don't bother adding anything if the pointer is `nullptr`.
+  if (option == nullptr) {
+    return;
+  }
+
   Flags* flags = dynamic_cast<Flags*>(this);
-  if (flags == NULL) {
-    std::cerr << "Attempted to add flag '" << name
-              << "' with incompatible type" << std::endl;
-    abort();
+  if (flags == nullptr) {
+    ABORT("Attempted to add flag '" + name.value +
+          "' with incompatible type");
   }
 
   Flag flag;
   flag.name = name;
+  flag.alias = alias;
   flag.help = help;
   flag.boolean = typeid(T) == typeid(bool);
-  flag.loader = std::tr1::bind(
-      &OptionMemberLoader<Flags, T>::load,
-      std::tr1::placeholders::_1,
-      option,
-      std::tr1::function<Try<T>(const std::string&)>(
-          std::tr1::bind(&parse<T>, std::tr1::placeholders::_1)),
-      name,
-      std::tr1::placeholders::_2);
+  flag.required = false;
+
+  // NOTE: See comment above in Flags::T* overload of FLagsBase::add
+  // for why we need to pass FlagsBase* (or const FlagsBase&) as a
+  // parameter.
+
+  flag.load =
+    [option](FlagsBase* base, const std::string& value) -> Try<Nothing> {
+    Flags* flags = dynamic_cast<Flags*>(base);
+    if (flags != nullptr) {
+      // NOTE: 'fetch' "retrieves" the value if necessary and then
+      // invokes 'parse'. See 'fetch' for more details.
+      Try<T> t = fetch<T>(value);
+      if (t.isSome()) {
+        flags->*option = Some(t.get());
+      } else {
+        return Error("Failed to load value '" + value + "': " + t.error());
+      }
+    }
+
+    return Nothing();
+  };
+
+  flag.stringify = [option](const FlagsBase& base) -> Option<std::string> {
+    const Flags* flags = dynamic_cast<const Flags*>(&base);
+    if (flags != nullptr) {
+      if ((flags->*option).isSome()) {
+        return stringify((flags->*option).get());
+      }
+    }
+    return None();
+  };
+
+  flag.validate = [option, validate](const FlagsBase& base) -> Option<Error> {
+    const Flags* flags = dynamic_cast<const Flags*>(&base);
+    if (flags != nullptr) {
+      return validate(flags->*option);
+    }
+    return None();
+  };
 
   add(flag);
 }
@@ -253,36 +485,56 @@ void FlagsBase::add(
 
 inline void FlagsBase::add(const Flag& flag)
 {
-  if (flags.count(flag.name) > 0) {
-    EXIT(1) << "Attempted to add duplicate flag '" << flag.name << "'";
-  } else if (flag.name.find("no-") == 0) {
-    EXIT(1) << "Attempted to add flag '" << flag.name
-            << "' that starts with the reserved 'no-' prefix";
+  // Check if the name and alias of the flag are valid.
+  std::vector<Name> names = {flag.name};
+  if (flag.alias.isSome()) {
+    if (flag.alias.get() == flag.name) {
+      EXIT(EXIT_FAILURE)
+        << "Attempted to add flag '" << flag.name.value << "' with an alias"
+        << " that is same as the flag name";
+    }
+
+    names.push_back(flag.alias.get());
   }
 
-  flags[flag.name] = flag;
+  foreach (const Name& name, names) {
+    if (flags_.count(name.value) > 0) {
+      EXIT(EXIT_FAILURE)
+        << "Attempted to add duplicate flag '" << name.value << "'";
+    } else if (name.value.find("no-") == 0) {
+      EXIT(EXIT_FAILURE)
+        << "Attempted to add flag '" << name.value
+        << "' that starts with the reserved 'no-' prefix";
+    }
+  }
+
+  flags_[flag.name.value] = flag;
+  if (flag.alias.isSome()) {
+    aliases[flag.alias->value] = flag.name.value;
+  }
 }
 
 
 // Extract environment variable "flags" with the specified prefix.
-inline std::map<std::string, Option<std::string> > extract(
-    const std::string& prefix)
+inline std::map<std::string, Option<std::string>> FlagsBase::extract(
+    const std::string& prefix) const
 {
-  char** environ = os::environ();
+  std::map<std::string, Option<std::string>> values;
 
-  std::map<std::string, Option<std::string> > values;
-
-  for (int i = 0; environ[i] != NULL; i++) {
-    std::string variable = environ[i];
-    if (variable.find(prefix) == 0) {
-      size_t eq = variable.find_first_of("=");
-      if (eq == std::string::npos) {
-        continue; // Not expecting a missing '=', but ignore anyway.
-      }
-      std::string name = variable.substr(prefix.size(), eq - prefix.size());
+  foreachpair (const std::string& key,
+               const std::string& value,
+               os::environment()) {
+    if (key.find(prefix) == 0) {
+      std::string name = key.substr(prefix.size());
       name = strings::lower(name); // Allow PREFIX_NAME or PREFIX_name.
-      std::string value = variable.substr(eq + 1);
-      values[name] = Option<std::string>::some(value);
+
+      // Only add if it's a known flag.
+      // TODO(vinod): Reject flags with an unknown name if `unknowns` is false.
+      // This will break backwards compatibility however!
+      std::string flag_name = strings::remove(name, "no-", strings::PREFIX);
+      if (flags_.count(flag_name) > 0 || aliases.count(flag_name) > 0) {
+        values[name] = Some(value);
+      }
     }
   }
 
@@ -290,170 +542,341 @@ inline std::map<std::string, Option<std::string> > extract(
 }
 
 
-inline Try<Nothing> FlagsBase::load(
-    const std::string& prefix,
-    bool unknowns)
+inline std::map<std::string, std::string> FlagsBase::buildEnvironment(
+    const Option<std::string>& prefix) const
 {
-  return load(extract(prefix), unknowns);
+  std::map<std::string, std::string> result;
+
+  foreachvalue (const Flag& flag, flags_) {
+    Option<std::string> value = flag.stringify(*this);
+    if (value.isSome()) {
+      const std::string key = prefix.isSome()
+        ? prefix.get() + strings::upper(flag.effective_name().value)
+        : strings::upper(flag.effective_name().value);
+
+      result[key] = value.get();
+    }
+  }
+
+  return result;
 }
 
 
-inline Try<Nothing> FlagsBase::load(
+inline Try<Warnings> FlagsBase::load(const std::string& prefix)
+{
+  return load(extract(prefix));
+}
+
+
+inline Try<Warnings> FlagsBase::load(
     const Option<std::string>& prefix,
     int argc,
-    char** argv,
+    const char* const *argv,
     bool unknowns,
     bool duplicates)
 {
-  std::map<std::string, Option<std::string> > values;
+  Multimap<std::string, Option<std::string>> values;
 
-  if (prefix.isSome()) {
-    values = extract(prefix.get());
-  }
+  // Grab the program name from argv[0].
+  programName_ = argc > 0 ? Path(argv[0]).basename() : "";
 
   // Read flags from the command line.
   for (int i = 1; i < argc; i++) {
-    const std::string arg(argv[i]);
+    const std::string arg(strings::trim(argv[i]));
+
+    // Stop parsing flags after '--' is encountered.
+    if (arg == "--") {
+      break;
+    }
+
+    // Skip anything that doesn't look like a flag.
+    if (arg.find("--") != 0) {
+      continue;
+    }
 
     std::string name;
     Option<std::string> value = None();
-    if (arg.find("--") == 0) {
-      size_t eq = arg.find_first_of("=");
-      if (eq == std::string::npos && arg.find("--no-") == 0) { // --no-name
-        name = arg.substr(2);
-      } else if (eq == std::string::npos) {                    // --name
-        name = arg.substr(2);
-      } else {                                                 // --name=value
-        name = arg.substr(2, eq - 2);
-        value = arg.substr(eq + 1);
-      }
+
+    size_t eq = arg.find_first_of('=');
+    if (eq == std::string::npos && arg.find("--no-") == 0) { // --no-name
+      name = arg.substr(2);
+    } else if (eq == std::string::npos) {                    // --name
+      name = arg.substr(2);
+    } else {                                                 // --name=value
+      name = arg.substr(2, eq - 2);
+      value = arg.substr(eq + 1);
     }
+
     name = strings::lower(name);
 
-    if (!duplicates) {
-      if (values.count(name) > 0 ||
-          (name.find("no-") == 0 && values.count(name.substr(3)) > 0)) {
-        return Error("Duplicate flag '" + name + "' on command line");
-      }
-    }
-
-    values[name] = value;
+    values.put(name, value);
   }
 
-  return load(values, unknowns);
+  return load(values, unknowns, duplicates, prefix);
 }
 
 
-inline Try<Nothing> FlagsBase::load(
-    const std::string& prefix,
-    int argc,
-    char** argv,
+inline Try<Warnings> FlagsBase::load(
+    const Option<std::string>& prefix,
+    int* argc,
+    char*** argv,
     bool unknowns,
     bool duplicates)
 {
-  return load(Option<std::string>::some(prefix),
-              argc,
-              argv,
-              unknowns,
-              duplicates);
+  Multimap<std::string, Option<std::string>> values;
+
+  // Grab the program name from argv, without removing it.
+  programName_ = *argc > 0 ? Path(*(argv[0])).basename() : "";
+
+  // Keep the arguments that are not being processed as flags.
+  std::vector<char*> args;
+
+  // Read flags from the command line.
+  for (int i = 1; i < *argc; i++) {
+    const std::string arg(strings::trim((*argv)[i]));
+
+    // Stop parsing flags after '--' is encountered.
+    if (arg == "--") {
+      // Save the rest of the arguments.
+      for (int j = i + 1; j < *argc; j++) {
+        args.push_back((*argv)[j]);
+      }
+      break;
+    }
+
+    // Skip anything that doesn't look like a flag.
+    if (arg.find("--") != 0) {
+      args.push_back((*argv)[i]);
+      continue;
+    }
+
+    std::string name;
+    Option<std::string> value = None();
+
+    size_t eq = arg.find_first_of('=');
+    if (eq == std::string::npos && arg.find("--no-") == 0) { // --no-name
+      name = arg.substr(2);
+    } else if (eq == std::string::npos) {                    // --name
+      name = arg.substr(2);
+    } else {                                                 // --name=value
+      name = arg.substr(2, eq - 2);
+      value = arg.substr(eq + 1);
+    }
+
+    name = strings::lower(name);
+
+    values.put(name, value);
+  }
+
+  Try<Warnings> result = load(values, unknowns, duplicates, prefix);
+
+  // Update 'argc' and 'argv' if we successfully loaded the flags.
+  if (!result.isError()) {
+    CHECK_LE(args.size(), (size_t) *argc);
+    int i = 1; // Start at '1' to skip argv[0].
+    foreach (char* arg, args) {
+      (*argv)[i++] = arg;
+    }
+
+    *argc = i;
+
+    // Now null terminate the array. Note that we'll "leak" the
+    // arguments that were processed here but it's not like they would
+    // have gotten deleted in normal operations anyway.
+    (*argv)[i++] = nullptr;
+  }
+
+  return result;
 }
 
 
-inline Try<Nothing> FlagsBase::load(
-    const std::map<std::string, Option<std::string> >& values,
-    bool unknowns)
+inline Try<Warnings> FlagsBase::load(
+    const std::map<std::string, Option<std::string>>& values,
+    bool unknowns,
+    const Option<std::string>& prefix)
 {
-  std::map<std::string, Option<std::string> >::const_iterator iterator;
+  Multimap<std::string, Option<std::string>> values_;
+  foreachpair (const std::string& name,
+               const Option<std::string>& value,
+               values) {
+    values_.put(name, value);
+  }
+  return load(values_, unknowns, false, prefix);
+}
 
-  for (iterator = values.begin(); iterator != values.end(); ++iterator) {
-    const std::string& name = iterator->first;
-    const Option<std::string>& value = iterator->second;
 
-    if (flags.count(name) > 0) {
-      if (value.isSome()) {                        // --name=value
-        if (flags[name].boolean && value.get() == "") {
-          flags[name].loader(this, "true"); // Should never fail.
-        } else {
-          Try<Nothing> loader = flags[name].loader(this, value.get());
-          if (loader.isError()) {
-            return Error(
-                "Failed to load flag '" + name + "': " + loader.error());
-          }
-        }
-      } else {                                     // --name
-        if (flags[name].boolean) {
-          flags[name].loader(this, "true"); // Should never fail.
-        } else {
-          return Error(
-              "Failed to load non-boolean flag '" + name + "': Missing value");
-        }
+inline Try<Warnings> FlagsBase::load(
+    const std::map<std::string, std::string>& values,
+    bool unknowns,
+    const Option<std::string>& prefix)
+{
+  Multimap<std::string, Option<std::string>> values_;
+  foreachpair (const std::string& name, const std::string& value, values) {
+    values_.put(name, Some(value));
+  }
+  return load(values_, unknowns, false, prefix);
+}
+
+
+inline Try<Warnings> FlagsBase::load(
+    Multimap<std::string, Option<std::string>>& values,
+    bool unknowns,
+    bool duplicates,
+    const Option<std::string>& prefix)
+{
+  Warnings warnings;
+
+  if (prefix.isSome()) {
+    // Merge in flags from the environment. Values in the
+    // map take precedence over environment flags.
+    //
+    // Other overloads parse command line flags into
+    // the values map and pass them into this method.
+    foreachpair (const std::string& name,
+                 const Option<std::string>& value,
+                 extract(prefix.get())) {
+      if (!values.contains(name)) {
+        values.put(name, value);
       }
-    } else if (name.find("no-") == 0) {
-      if (flags.count(name.substr(3)) > 0) {       // --no-name
-        if (flags[name.substr(3)].boolean) {
-          if (value.isNone() || value.get() == "") {
-            flags[name.substr(3)].loader(this, "false"); // Should never fail.
-          } else {
-            return Error(
-                "Failed to load boolean flag '" + name.substr(3) +
-                "' via '" + name + "' with value '" + value.get() + "'");
-          }
-        } else {
-          return Error(
-              "Failed to load non-boolean flag '" + name.substr(3) +
-              "' via '" + name + "'");
-        }
-      } else {
-        return Error(
-            "Failed to load unknown flag '" + name.substr(3) +
-            "' via '" + name + "'");
-      }
-    } else if (!unknowns) {
-      return Error("Failed to load unknown flag '" + name + "'");
     }
   }
 
-  return Nothing();
-}
+  foreachpair (const std::string& name,
+               const Option<std::string>& value,
+               values) {
+    bool is_negated = strings::startsWith(name, "no-");
+    std::string flag_name = !is_negated ? name : name.substr(3);
 
+    auto iter = aliases.count(flag_name)
+      ? flags_.find(aliases[flag_name])
+      : flags_.find(flag_name);
 
-inline Try<Nothing> FlagsBase::load(
-    const std::map<std::string, std::string>& _values,
-    bool unknowns)
-{
-  std::map<std::string, Option<std::string> > values;
-  std::map<std::string, std::string>::const_iterator iterator;
-  for (iterator = _values.begin(); iterator != _values.end(); ++iterator) {
-    const std::string& name = iterator->first;
-    const std::string& value = iterator->second;
-    values[name] = Option<std::string>::some(value);
+    if (iter == flags_.end()) {
+      if (!unknowns) {
+        return Error("Failed to load unknown flag '" + flag_name + "'" +
+                     (!is_negated ? "" : " via '" + name + "'"));
+      } else {
+        continue;
+      }
+    }
+
+    Flag* flag = &(iter->second);
+
+    if (!duplicates && flag->loaded_name.isSome()) {
+      return Error("Flag '" + flag_name + "' is already loaded via name '" +
+                   flag->loaded_name->value + "'");
+    }
+
+    // Validate the flag value.
+    std::string value_;
+    if (!flag->boolean) {  // Non-boolean flag.
+      if (is_negated) { // Non-boolean flag cannot be loaded with "no-" prefix.
+        return Error("Failed to load non-boolean flag '" + flag_name +
+                     "' via '" + name + "'");
+      }
+
+      if (value.isNone()) {
+        return Error("Failed to load non-boolean flag '" + flag_name +
+                     "': Missing value");
+      }
+
+      value_ = value.get();
+    } else {  // Boolean flag.
+      if (value.isNone() || value.get() == "") {
+        value_ = !is_negated ? "true" : "false";
+      } else if (!is_negated) {
+        value_ = value.get();
+      } else { // Boolean flag with "no-" prefix cannot have non-empty value.
+        return Error(
+            "Failed to load boolean flag '" + flag_name + "' via '" + name +
+            "' with value '" + value.get() + "'");
+      }
+    }
+
+    Try<Nothing> load = flag->load(this, value_);
+    if (load.isError()) {
+      return Error("Failed to load flag '" + flag_name + "': " + load.error());
+    }
+
+    // TODO(vinod): Move this logic inside `Flag::load()`.
+
+    // Set `loaded_name` to the Name corresponding to `flag_name`.
+    if (aliases.count(flag_name)) {
+      CHECK_SOME(flag->alias);
+      flag->loaded_name = flag->alias.get();
+    } else {
+      flag->loaded_name = flag->name;
+    }
+
+    if (flag->loaded_name->deprecated) {
+      warnings.warnings.push_back(
+          Warning("Loaded deprecated flag '" + flag_name + "'"));
+    }
   }
-  return load(values, unknowns);
+
+  // Validate the flags value.
+  //
+  // TODO(benh): Consider validating all flags at the same time in
+  // order to provide more feedback rather than requiring a user to
+  // fix one at a time.
+  foreachvalue (const Flag& flag, flags_) {
+    if (flag.required && flag.loaded_name.isNone()) {
+        return Error(
+            "Flag '" + flag.name.value +
+            "' is required, but it was not provided");
+    }
+
+    Option<Error> error = flag.validate(*this);
+    if (error.isSome()) {
+      return error.get();
+    }
+  }
+
+  return warnings;
 }
 
 
-inline std::string FlagsBase::usage() const
+inline std::string FlagsBase::usage(const Option<std::string>& message) const
 {
   const int PAD = 5;
 
   std::string usage;
 
-  std::map<std::string, std::string> col1; // key -> col 1 string
+  if (message.isSome()) {
+    usage = message.get() + "\n\n";
+  }
+
+  if (usageMessage_.isNone()) {
+    usage += "Usage: " + programName_ + " [options]\n\n";
+  } else {
+    usage += usageMessage_.get() + "\n\n";
+  }
+
+  std::map<std::string, std::string> col1; // key -> col 1 string.
 
   // Construct string for the first column and store width of column.
   size_t width = 0;
 
   foreachvalue (const flags::Flag& flag, *this) {
     if (flag.boolean) {
-      col1[flag.name] = "  --[no-]" + flag.name;
+      col1[flag.name.value] += "  --[no-]" + flag.name.value;
+      if (flag.alias.isSome()) {
+        col1[flag.name.value] += ", --[no-]" + flag.alias->value;
+      }
     } else {
-      col1[flag.name] = "  --" + flag.name + "=VALUE";
+      // TODO(vinod): Rename "=VALUE" to "=<VALUE>".
+      col1[flag.name.value] += "  --" + flag.name.value + "=VALUE";
+      if (flag.alias.isSome()) {
+        col1[flag.name.value] += ", --" + flag.alias->value + "=VALUE";
+      }
     }
-    width = std::max(width, col1[flag.name].size());
+    width = std::max(width, col1[flag.name.value].size());
   }
 
+  // TODO(vinod): Print the help on the next line instead of on the same line as
+  // the names.
   foreachvalue (const flags::Flag& flag, *this) {
-    std::string line = col1[flag.name];
+    std::string line = col1[flag.name.value];
 
     std::string pad(PAD + width - line.size(), ' ');
     line += pad;
@@ -473,7 +896,24 @@ inline std::string FlagsBase::usage() const
       usage += line;
     }
   }
+
   return usage;
+}
+
+
+inline std::ostream& operator<<(std::ostream& stream, const FlagsBase& flags)
+{
+  std::vector<std::string> _flags;
+
+  foreachvalue (const flags::Flag& flag, flags) {
+    const Option<std::string> value = flag.stringify(flags);
+    if (value.isSome()) {
+      _flags.push_back("--" + flag.effective_name().value + "=\"" +
+                       value.get() + '"');
+    }
+  }
+
+  return stream << strings::join(" ", _flags);
 }
 
 } // namespace flags {

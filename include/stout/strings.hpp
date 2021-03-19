@@ -1,19 +1,37 @@
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef __STOUT_STRINGS_HPP__
 #define __STOUT_STRINGS_HPP__
 
 #include <algorithm>
-#include <string>
+#include <cstring>
 #include <map>
+#include <sstream>
+#include <string>
 #include <vector>
 
 #include "foreach.hpp"
 #include "format.hpp"
+#include "option.hpp"
 #include "stringify.hpp"
 
 namespace strings {
 
-// Flags indicating how remove should operate.
-enum Mode {
+const std::string WHITESPACE = " \t\n\r";
+
+// Flags indicating how 'remove' or 'trim' should operate.
+enum Mode
+{
   PREFIX,
   SUFFIX,
   ANY
@@ -48,15 +66,46 @@ inline std::string remove(
 
 inline std::string trim(
     const std::string& from,
-    const std::string& chars = " \t\n\r")
+    Mode mode = ANY,
+    const std::string& chars = WHITESPACE)
 {
-  size_t start = from.find_first_not_of(chars);
-  size_t end = from.find_last_not_of(chars);
-  if (start == std::string::npos) { // Contains only characters in chars.
+  size_t start = 0;
+  Option<size_t> end = None();
+
+  if (mode == ANY) {
+    start = from.find_first_not_of(chars);
+    end = from.find_last_not_of(chars);
+  } else if (mode == PREFIX) {
+    start = from.find_first_not_of(chars);
+  } else if (mode == SUFFIX) {
+    end = from.find_last_not_of(chars);
+  }
+
+  // Bail early if 'from' contains only characters in 'chars'.
+  if (start == std::string::npos) {
     return "";
   }
 
-  return from.substr(start, end + 1 - start);
+  // Calculate the length of the substring, defaulting to the "end" of
+  // string if there were no characters to remove from the suffix.
+  size_t length = std::string::npos;
+
+  // Found characters to trim at the end.
+  if (end.isSome() && end.get() != std::string::npos) {
+    length = end.get() + 1 - start;
+  }
+
+  return from.substr(start, length);
+}
+
+
+// Helper providing some syntactic sugar for when 'mode' is ANY but
+// the 'chars' are specified.
+inline std::string trim(
+    const std::string& from,
+    const std::string& chars)
+{
+  return trim(from, ANY, chars);
 }
 
 
@@ -81,49 +130,76 @@ inline std::string replace(
 }
 
 
-// Tokenizes the string using the delimiters.
-// Empty tokens will not be included in the result.
+// Tokenizes the string using the delimiters. Empty tokens will not be
+// included in the result.
+//
+// Optionally, the maximum number of tokens to be returned can be
+// specified. If the maximum number of tokens is reached, the last
+// token returned contains the remainder of the input string.
 inline std::vector<std::string> tokenize(
     const std::string& s,
-    const std::string& delims)
+    const std::string& delims,
+    const Option<size_t>& maxTokens = None())
 {
-  size_t offset = 0;
+  if (maxTokens.isSome() && maxTokens.get() == 0) {
+    return {};
+  }
+
   std::vector<std::string> tokens;
+  size_t offset = 0;
 
   while (true) {
-    size_t i = s.find_first_not_of(delims, offset);
-    if (std::string::npos == i) {
-      offset = s.length();
-      return tokens;
+    size_t nonDelim = s.find_first_not_of(delims, offset);
+
+    if (nonDelim == std::string::npos) {
+      break; // Nothing left.
     }
 
-    size_t j = s.find_first_of(delims, i);
-    if (std::string::npos == j) {
-      tokens.push_back(s.substr(i));
-      offset = s.length();
-      continue;
+    size_t delim = s.find_first_of(delims, nonDelim);
+
+    // Finish tokenizing if this is the last token,
+    // or we've found enough tokens.
+    if (delim == std::string::npos ||
+        (maxTokens.isSome() && tokens.size() == maxTokens.get() - 1)) {
+      tokens.push_back(s.substr(nonDelim));
+      break;
     }
 
-    tokens.push_back(s.substr(i, j - i));
-    offset = j;
+    tokens.push_back(s.substr(nonDelim, delim - nonDelim));
+    offset = delim;
   }
+
   return tokens;
 }
 
 
-// Splits the string using the provided delimiters.
-// Empty tokens are allowed in the result.
+// Splits the string using the provided delimiters. The string is
+// split each time at the first character that matches any of the
+// characters specified in delims.  Empty tokens are allowed in the
+// result.
+//
+// Optionally, the maximum number of tokens to be returned can be
+// specified. If the maximum number of tokens is reached, the last
+// token returned contains the remainder of the input string.
 inline std::vector<std::string> split(
     const std::string& s,
-    const std::string& delims)
+    const std::string& delims,
+    const Option<size_t>& maxTokens = None())
 {
+  if (maxTokens.isSome() && maxTokens.get() == 0) {
+    return {};
+  }
+
   std::vector<std::string> tokens;
   size_t offset = 0;
-  size_t next = 0;
 
   while (true) {
-    next = s.find_first_of(delims, offset);
-    if (next == std::string::npos) {
+    size_t next = s.find_first_of(delims, offset);
+
+    // Finish splitting if this is the last token,
+    // or we've found enough tokens.
+    if (next == std::string::npos ||
+        (maxTokens.isSome() && tokens.size() == maxTokens.get() - 1)) {
       tokens.push_back(s.substr(offset));
       break;
     }
@@ -131,6 +207,7 @@ inline std::vector<std::string> split(
     tokens.push_back(s.substr(offset, next - offset));
     offset = next + 1;
   }
+
   return tokens;
 }
 
@@ -143,16 +220,16 @@ inline std::vector<std::string> split(
 // Would return a map with the following:
 //   bar: ["2"]
 //   foo: ["1", "3"]
-inline std::map<std::string, std::vector<std::string> > pairs(
+inline std::map<std::string, std::vector<std::string>> pairs(
     const std::string& s,
     const std::string& delims1,
     const std::string& delims2)
 {
-  std::map<std::string, std::vector<std::string> > result;
+  std::map<std::string, std::vector<std::string>> result;
 
-  const std::vector<std::string>& tokens = tokenize(s, delims1);
+  const std::vector<std::string> tokens = tokenize(s, delims1);
   foreach (const std::string& token, tokens) {
-    const std::vector<std::string>& pairs = tokenize(token, delims2);
+    const std::vector<std::string> pairs = tokenize(token, delims2);
     if (pairs.size() == 2) {
       result[pairs[0]].push_back(pairs[1]);
     }
@@ -162,30 +239,106 @@ inline std::map<std::string, std::vector<std::string> > pairs(
 }
 
 
-inline std::string join(const std::string& separator,
-                        const std::string& s1,
-                        const std::string& s2)
+namespace internal {
+
+inline std::stringstream& append(
+    std::stringstream& stream,
+    const std::string& value)
 {
-  return s1 + separator + s2;
+  stream << value;
+  return stream;
 }
 
 
-inline std::string join(const std::string& separator,
-                        const std::string& s1,
-                        const std::string& s2,
-                        const std::string& s3)
+inline std::stringstream& append(
+    std::stringstream& stream,
+    std::string&& value)
 {
-  return s1 + separator + s2 + separator + s3;
+  stream << value;
+  return stream;
 }
 
 
-inline std::string join(const std::string& separator,
-                        const std::string& s1,
-                        const std::string& s2,
-                        const std::string& s4,
-                        const std::string& s3)
+inline std::stringstream& append(
+    std::stringstream& stream,
+    const char*&& value)
 {
-  return s1 + separator + s2 + separator + s3 + separator + s4;
+  stream << value;
+  return stream;
+}
+
+
+template <typename T>
+std::stringstream& append(
+    std::stringstream& stream,
+    T&& value)
+{
+  stream << ::stringify(std::forward<T>(value));
+  return stream;
+}
+
+
+template <typename T>
+std::stringstream& join(
+    std::stringstream& stream,
+    const std::string& separator,
+    T&& tail)
+{
+  return append(stream, std::forward<T>(tail));
+}
+
+
+template <typename THead, typename... TTail>
+std::stringstream& join(
+    std::stringstream& stream,
+    const std::string& separator,
+    THead&& head,
+    TTail&&... tail)
+{
+  append(stream, std::forward<THead>(head)) << separator;
+  internal::join(stream, separator, std::forward<TTail>(tail)...);
+  return stream;
+}
+
+} // namespace internal {
+
+
+template <typename... T>
+std::stringstream& join(
+    std::stringstream& stream,
+    const std::string& separator,
+    T&&... args)
+{
+  internal::join(stream, separator, std::forward<T>(args)...);
+  return stream;
+}
+
+
+// Use 2 heads here to disambiguate variadic argument join from the
+// templatized Iterable join below. This means this implementation of
+// strings::join() is only activated if there are 2 or more things to
+// join.
+template <typename THead1, typename THead2, typename... TTail>
+std::string join(
+    const std::string& separator,
+    THead1&& head1,
+    THead2&& head2,
+    TTail&&... tail)
+{
+  std::stringstream stream;
+  internal::join(
+      stream,
+      separator,
+      std::forward<THead1>(head1),
+      std::forward<THead2>(head2),
+      std::forward<TTail>(tail)...);
+  return stream.str();
+}
+
+
+// Ensure std::string doesn't fall into the iterable case
+inline std::string join(const std::string& seperator, const std::string& s) {
+  return s;
 }
 
 
@@ -227,13 +380,43 @@ inline bool checkBracketsMatching(
 
 inline bool startsWith(const std::string& s, const std::string& prefix)
 {
-  return s.find(prefix) == 0;
+  return s.size() >= prefix.size() &&
+         std::equal(prefix.begin(), prefix.end(), s.begin());
+}
+
+
+inline bool startsWith(const std::string& s, const char* prefix)
+{
+  size_t len = ::strnlen(prefix, s.size() + 1);
+  return s.size() >= len &&
+         std::equal(s.begin(), s.begin() + len, prefix);
+}
+
+
+inline bool startsWith(const std::string& s, char c)
+{
+  return !s.empty() && s.front() == c;
 }
 
 
 inline bool endsWith(const std::string& s, const std::string& suffix)
 {
-  return s.rfind(suffix) == s.length() - suffix.length();
+  return s.size() >= suffix.size() &&
+         std::equal(suffix.rbegin(), suffix.rend(), s.rbegin());
+}
+
+
+inline bool endsWidth(const std::string& s, const char* suffix)
+{
+  size_t len = ::strnlen(suffix, s.size() + 1);
+  return s.size() >= len &&
+         std::equal(s.end() - len, s.end(), suffix);
+}
+
+
+inline bool endsWith(const std::string& s, char c)
+{
+  return !s.empty() && s.back() == c;
 }
 
 
@@ -258,6 +441,6 @@ inline std::string upper(const std::string& s)
   return result;
 }
 
-} // namespaces strings {
+} // namespace strings {
 
 #endif // __STOUT_STRINGS_HPP__
