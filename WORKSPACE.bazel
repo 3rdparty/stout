@@ -1,0 +1,9 @@
+workspace(name = "stout")
+
+load("//bazel:stout_repos.bzl", "stout_repos")
+
+stout_repos()
+
+load("//bazel:stout_deps.bzl", "stout_deps")
+
+stout_deps()
