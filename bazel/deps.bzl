@@ -1,4 +1,4 @@
-"""Load dependencies needed to use the library as a 3rdparty consumer."""
+"""Perform dependency specific initialization for stout."""
 
 load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
 load("@com_github_3rdparty_bazel_rules_picojson//:bazel/picojson.bzl", "picojson_deps")
