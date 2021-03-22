@@ -2,23 +2,24 @@
 
 ### Bazel
 
-Build follows Bazel build "load/deps" pattern (in order to deal with recursive dependencies). To use:
+Follows the Bazel build "load/deps" pattern (in order to deal with recursive dependencies). To use:
 
 (1) Copy the directory `./bazel/stout` into your repository.
 
 (2) Add the following to your `WORKSPACE` (or `WORKSPACE.bazel`):
 
-```bazel
-load("//bazel/stout:load.bzl", "stout_load")
+  ```bazel
+  load("//bazel/stout:load.bzl", "stout_load")
 
-stout_load()
+  stout_load()
 
-load("@com_github_3rdparty_stout//:bazel/stout_deps.bzl", "stout_deps")
+  load("@com_github_3rdparty_stout//:bazel/stout_deps.bzl", "stout_deps")
 
-stout_deps()
-```
+  stout_deps()
+  ```
 
 (3) When you want to use a different version of the library repeat the steps starting at (1) from a repository at the version that you want to use.
+
 ------------------------
 
 Stout is a header-only C++ library. Simply add the `include` folder to your include path (i.e., `-I/path/to/stout/include`) during compilation (eventually we plan to support installation).
