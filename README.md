@@ -1,5 +1,29 @@
 ## Stout Developer Guide
 
+Bazel build instructions:
+
+```bazel
+
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
+git_repository(
+    name = "com_github_3rdparty_stout",
+    commit = "59775188a1b9c66dd70301ea45f56b4ccf12df09",
+    remote = "https://github.com/3rdparty/stout",
+)
+
+load("@com_github_3rdparty_stout//:bazel/stout_repos.bzl", "stout_repos")
+
+stout_repos()
+
+load("@com_github_3rdparty_stout//:bazel/stout_deps.bzl", "stout_deps")
+
+stout_deps()
+
+```
+
+------------------------
+
 Stout is a header-only C++ library. Simply add the `include` folder to your include path (i.e., `-I/path/to/stout/include`) during compilation (eventually we plan to support installation).
 
 > NOTE: Depending on which headers you'd like to use, you may require the following third party libraries:
