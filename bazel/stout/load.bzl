@@ -4,14 +4,6 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 def stout_load(external = True):
-    if external and "com_github_3rdparty_stout" not in native.existing_rules():
-        git_repository(
-            name = "com_github_3rdparty_stout",
-            commit = "aac8a619f86e293cb671c1fcd544d5d1b739c3d0",
-            remote = "https://github.com/3rdparty/stout",
-            shallow_since = "1616453483 -0700",
-        )
-
     if "com_github_nelhage_rules_boost" not in native.existing_rules():
         git_repository(
             name = "com_github_nelhage_rules_boost",
@@ -52,3 +44,10 @@ def stout_load(external = True):
             strip_prefix = "glog-0.4.0",
         )
 
+    if external and "com_github_3rdparty_stout" not in native.existing_rules():
+        git_repository(
+            name = "com_github_3rdparty_stout",
+            commit = "aac8a619f86e293cb671c1fcd544d5d1b739c3d0",
+            remote = "https://github.com/3rdparty/stout",
+            shallow_since = "1616453483 -0700",
+        )

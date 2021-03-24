@@ -18,7 +18,9 @@ Follows the Bazel build "load/deps" pattern (in order to deal with recursive dep
   stout_deps()
   ```
 
-(3) When you want to use a different version of the library repeat the steps starting at (1) from a repository at the version that you want to use.
+(3) You can then use `@com_github_3rdparty_stout//:stout` in your target's `deps`.
+
+(4) Repeat the steps starting at (1) at the desired version of this repository that you want to use.
 
 ------------------------
 
