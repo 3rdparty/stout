@@ -13,7 +13,7 @@ Follows the Bazel build "load/deps" pattern (in order to deal with recursive dep
 
   stout_load()
 
-  load("@com_github_3rdparty_stout//bazel/stout_deps.bzl", "stout_deps")
+  load("@com_github_3rdparty_stout//bazel/deps.bzl", "stout_deps")
 
   stout_deps()
   ```
