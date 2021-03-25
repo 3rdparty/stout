@@ -56,7 +56,7 @@ def stout_load(external = True):
     if external and "com_github_3rdparty_stout" not in native.existing_rules():
         git_repository(
             name = "com_github_3rdparty_stout",
-            commit = "",
+            commit = "bc77686a32d08003ade7d501fff6c4f9d679aaab",
             remote = "https://github.com/3rdparty/stout",
-            shallow_since = "",
+            shallow_since = "1616631418 -0700",
         )
