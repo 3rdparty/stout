@@ -9,10 +9,10 @@ Follows a "repos/deps" pattern (in order to deal with recursive dependencies). T
 2. Either ... add the following to your `WORKSPACE` (or `WORKSPACE.bazel`):
 
 ```bazel
-load("//bazel/repos/project/stout/repos.bzl", stout_repos="repos")
+load("bazel/repos/project/stout/repos.bzl", stout_repos="repos")
 stout_repos()
 
-load("@com_github_3rdparty_stout//bazel/deps.bzl", stout_deps="deps")
+load("@com_github_3rdparty_stout//:bazel/deps.bzl", stout_deps="deps")
 stout_deps()
 ```
 
@@ -28,7 +28,7 @@ def repos():
 And the following to your project's `deps.bzl`:
 
 ```bazel
-load("@com_github_3rdparty_stout//bazel/deps.bzl", stout="deps")
+load("@com_github_3rdparty_stout//:bazel/deps.bzl", stout="deps")
 
 def deps():
     stout()
