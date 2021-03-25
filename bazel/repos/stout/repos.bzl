@@ -12,7 +12,7 @@
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-def stout_load(external = True):
+def repos(external = True):
     if "com_github_nelhage_rules_boost" not in native.existing_rules():
         git_repository(
             name = "com_github_nelhage_rules_boost",

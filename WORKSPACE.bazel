@@ -1,9 +1,9 @@
 workspace(name = "stout")
 
-load("//bazel/stout:load.bzl", "stout_load")
+load("//bazel/repos/stout/repos.bzl", "repos")
 
-stout_load(external = False)
+repos(external = False)
 
-load("//bazel:deps.bzl", "stout_deps")
+load("//bazel/deps.bzl", "deps")
 
-stout_deps()
+deps()

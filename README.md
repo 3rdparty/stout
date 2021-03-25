@@ -2,25 +2,43 @@
 
 ### Bazel
 
-Follows the Bazel build "load/deps" pattern (in order to deal with recursive dependencies). To use:
+Follows a "repos/deps" pattern (in order to deal with recursive dependencies). To use:
 
-(1) Copy the directory `./bazel/stout` into your repository.
+1. Copy the directory `./bazel/repos/stout` into your repository (i.e., if your project is called `project` then copy it into `./bazel/repos/project/stout` in order to enable `project` to also be depended on).
 
-(2) Add the following to your `WORKSPACE` (or `WORKSPACE.bazel`):
+2. Either ...
+    2a. Add the following to your `WORKSPACE` (or `WORKSPACE.bazel`):
 
-  ```bazel
-  load("//bazel/stout/load.bzl", "stout_load")
+    ```bazel
+    load("//bazel/repos/project/stout/repos.bzl", stout_repos="repos")
 
-  stout_load()
+    stout_repos()
 
-  load("@com_github_3rdparty_stout//bazel/deps.bzl", "stout_deps")
+    load("@com_github_3rdparty_stout//bazel/deps.bzl", stout_deps="deps")
 
-  stout_deps()
-  ```
+    stout_deps()
+    ```
 
-(3) You can then use `@com_github_3rdparty_stout//:stout` in your target's `deps`.
+    2b. Following the "repos/deps" pattern add the following to your project's `repos.bzl`:
 
-(4) Repeat the steps starting at (1) at the desired version of this repository that you want to use.
+    ```bazel
+    load("stout/repos.bzl", stout="repos")
+
+    def repos():
+        stout()
+    ```
+
+    And the following to your project's `deps.bzl`:
+    ```bazel
+    load("@com_github_3rdparty_stout//bazel/deps.bzl", stout="deps")
+
+    def deps():
+        stout()
+    ```
+
+3. You can then use `@com_github_3rdparty_stout//:stout` in your target's `deps`.
+
+4. Repeat the steps starting at (1) at the desired version of this repository that you want to use.
 
 ------------------------
 
