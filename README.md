@@ -7,31 +7,32 @@ Follows a "repos/deps" pattern (in order to deal with recursive dependencies). T
 1. Copy the directory `./bazel/repos/stout` into your repository (i.e., if your project is called `project` then copy it into `./bazel/repos/project/stout` in order to enable `project` to also be depended on).
 
 2. Either ... add the following to your `WORKSPACE` (or `WORKSPACE.bazel`):
-  ```bazel
-  load("//bazel/repos/project/stout/repos.bzl", stout_repos="repos")
 
-  stout_repos()
+```bazel
+load("//bazel/repos/project/stout/repos.bzl", stout_repos="repos")
+stout_repos()
 
-  load("@com_github_3rdparty_stout//bazel/deps.bzl", stout_deps="deps")
+load("@com_github_3rdparty_stout//bazel/deps.bzl", stout_deps="deps")
+stout_deps()
+```
 
-  stout_deps()
-  ```
+Or ... following the "repos/deps" pattern add the following to your project's `repos.bzl`:
 
-  Or ... following the "repos/deps" pattern add the following to your project's `repos.bzl`:
-  ```bazel
-  load("stout/repos.bzl", stout="repos")
+```bazel
+load("stout/repos.bzl", stout="repos")
 
-  def repos():
-      stout()
-  ```
+def repos():
+    stout()
+```
 
-  And the following to your project's `deps.bzl`:
-  ```bazel
-  load("@com_github_3rdparty_stout//bazel/deps.bzl", stout="deps")
+And the following to your project's `deps.bzl`:
 
-  def deps():
-      stout()
-  ```
+```bazel
+load("@com_github_3rdparty_stout//bazel/deps.bzl", stout="deps")
+
+def deps():
+    stout()
+```
 
 3. You can then use `@com_github_3rdparty_stout//:stout` in your target's `deps`.
 
