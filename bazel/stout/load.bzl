@@ -12,10 +12,7 @@
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-def stout_load(
-        external = True,
-        tag = "v1.0.0",
-        shallow_since = "1616552714 -0700"):
+def stout_load(external = True):
     if "com_github_nelhage_rules_boost" not in native.existing_rules():
         git_repository(
             name = "com_github_nelhage_rules_boost",
@@ -59,7 +56,7 @@ def stout_load(
     if external and "com_github_3rdparty_stout" not in native.existing_rules():
         git_repository(
             name = "com_github_3rdparty_stout",
-            tag = tag,
+            commit = "",
             remote = "https://github.com/3rdparty/stout",
-            shallow_since = shallow_since,
+            shallow_since = "",
         )
