@@ -9,11 +9,11 @@ Follows the Bazel build "load/deps" pattern (in order to deal with recursive dep
 (2) Add the following to your `WORKSPACE` (or `WORKSPACE.bazel`):
 
   ```bazel
-  load("//bazel/stout:load.bzl", "stout_load")
+  load("//bazel/stout/load.bzl", "stout_load")
 
   stout_load()
 
-  load("@com_github_3rdparty_stout//bazel:stout_deps.bzl", "stout_deps")
+  load("@com_github_3rdparty_stout//bazel/stout_deps.bzl", "stout_deps")
 
   stout_deps()
   ```
@@ -25,13 +25,6 @@ Follows the Bazel build "load/deps" pattern (in order to deal with recursive dep
 ------------------------
 
 Stout is a header-only C++ library. Simply add the `include` folder to your include path (i.e., `-I/path/to/stout/include`) during compilation (eventually we plan to support installation).
-
-> NOTE: Depending on which headers you'd like to use, you may require the following third party libraries:
->
->  - Boost
->  - Google's glog (this dependency will be removed in the future)
->  - Google's protobuf (version 3.3.x - 3.5.x is required to run tests)
->  - Google's gmock/gtest
 
 There are a handful of data structures provided within the library (including some collections), as well as some namespaced and miscellaneous utilities. Also included are abstractions for [command line flags](#flags).
 
