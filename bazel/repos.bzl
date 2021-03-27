@@ -46,7 +46,7 @@ def repos(*, external = True, repo_mapping = {}):
     if external and "com_github_3rdparty_stout" not in native.existing_rules():
         git_repository(
             name = "com_github_3rdparty_stout",
-            commit = "485986ef21bfdf2c9da2ec04e7490d77a76b67b2",
+            commit = "88bc2b1048da2004c020fb96a61f0fb233ac458b",
             remote = "https://github.com/3rdparty/stout",
-            shallow_since = "1616708495 -0700",
+            shallow_since = "1616864594 -0700",
         )
