@@ -14,7 +14,7 @@ cc_library(
          "@boost//:lexical_cast",
          "@boost//:variant",
          "@com_github_google_glog//:glog",
-         "@picojson//:picojson",
+         "@com_github_kazuho_picojson//:picojson",
          "@com_github_tencent_rapidjson//:rapidjson",
     ],
 )
