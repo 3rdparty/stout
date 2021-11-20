@@ -13,6 +13,7 @@
 #ifndef __STOUT_TESTS_UTILS_HPP__
 #define __STOUT_TESTS_UTILS_HPP__
 
+#include <filesystem>
 #include <string>
 
 #include <gtest/gtest.h>
@@ -108,8 +109,15 @@ protected:
     return Nothing();
   }
 
+  std::filesystem::path test_directory_path() {
+    return sandbox.get();
+  }
+
   // A temporary directory for test purposes.
   // Not to be confused with the "sandbox" that tasks are run in.
+  //
+  // TODO(benh): make this private to force using
+  // 'test_directory_path()'.
   Option<std::string> sandbox;
 
 private:
