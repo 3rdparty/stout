@@ -12,12 +12,17 @@
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-load("//3rdparty/bazel-rules-picojson:repos.bzl", picojson="repos")
-load("//3rdparty/bazel-rules-rapidjson:repos.bzl", rapidjson="repos")
+load("//3rdparty/bazel-rules-picojson:repos.bzl", picojson_repos="repos")
+load("//3rdparty/bazel-rules-rapidjson:repos.bzl", rapidjson_repos="repos")
 
-def repos(*, external = True, repo_mapping = {}):
-    picojson(repo_mapping = repo_mapping)
-    rapidjson(repo_mapping = repo_mapping)
+def repos(external = True, repo_mapping = {}):
+    picojson_repos(
+        repo_mapping = repo_mapping,
+    )
+
+    rapidjson_repos(
+        repo_mapping = repo_mapping,
+    )
 
     if "com_github_nelhage_rules_boost" not in native.existing_rules():
         git_repository(
