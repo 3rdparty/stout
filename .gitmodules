@@ -1,3 +1,18 @@
 [submodule "dev-tools"]
 	path = dev-tools
 	url = https://github.com/3rdparty/dev-tools.git
+[submodule "stout-flags"]
+	path = stout-flags
+	url = https://github.com/3rdparty/stout-flags.git
+[submodule "stout-borrowed-ptr"]
+	path = stout-borrowed-ptr
+	url = https://github.com/3rdparty/stout-borrowed-ptr.git
+[submodule "stout-notification"]
+	path = stout-notification
+	url = https://github.com/3rdparty/stout-notification.git
+[submodule "stout-stateful-tally"]
+	path = stout-stateful-tally
+	url = https://github.com/3rdparty/stout-stateful-tally.git
+[submodule "stout-atomic-backoff"]
+	path = stout-atomic-backoff
+	url = https://github.com/3rdparty/stout-atomic-backoff.git
