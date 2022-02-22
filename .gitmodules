@@ -13,3 +13,6 @@
 [submodule "submodules/stout-atomic-backoff"]
 	path = submodules/stout-atomic-backoff
 	url = https://github.com/3rdparty/stout-atomic-backoff.git
+[submodule "dev-tools"]
+	path = dev-tools
+	url = https://github.com/3rdparty/dev-tools.git
