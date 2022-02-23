@@ -16,5 +16,10 @@ cc_library(
          "@com_github_google_glog//:glog",
          "@com_github_kazuho_picojson//:picojson",
          "@com_github_tencent_rapidjson//:rapidjson",
+         "@com_github_3rdparty_stout_atomic_backoff//:atomic-backoff",
+         "@com_github_3rdparty_stout_borrowed_ptr//:borrowed_ptr",
+         "@com_github_3rdparty_stout_flags//:flags",
+         "@com_github_3rdparty_stout_notification//:notification",
+         "@com_github_3rdparty_stout_stateful_tally//:stateful-tally",  
     ],
 )

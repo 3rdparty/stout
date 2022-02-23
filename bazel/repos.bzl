@@ -13,6 +13,11 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//3rdparty/bazel-rules-picojson:repos.bzl", picojson_repos = "repos")
 load("//3rdparty/bazel-rules-rapidjson:repos.bzl", rapidjson_repos = "repos")
+load("@com_github_3rdparty_stout_atomic_backoff//bazel:repos.bzl", stout_atomic_backoff_repos = "repos")
+load("@com_github_3rdparty_stout_borrowed_ptr//bazel:repos.bzl", stout_borrowed_ptr_repos = "repos")
+load("@com_github_3rdparty_stout_flags//bazel:repos.bzl", stout_flags_repos = "repos")
+load("@com_github_3rdparty_stout_notification//bazel:repos.bzl", stout_notification_repos = "repos")
+load("@com_github_3rdparty_stout_stateful_tally//bazel:repos.bzl", stout_stateful_tally_repos = "repos")
 
 def repos(external = True, repo_mapping = {}):
     picojson_repos(
@@ -20,6 +25,26 @@ def repos(external = True, repo_mapping = {}):
     )
 
     rapidjson_repos(
+        repo_mapping = repo_mapping,
+    )
+
+    stout_atomic_backoff_repos(
+        repo_mapping = repo_mapping,
+    )
+
+    stout_borrowed_ptr_repos(
+        repo_mapping = repo_mapping,
+    )
+
+    stout_flags_repos(
+        repo_mapping = repo_mapping,
+    )
+
+    stout_notification_repos(
+        repo_mapping = repo_mapping,
+    )
+
+    stout_stateful_tally_repos(
         repo_mapping = repo_mapping,
     )
 
