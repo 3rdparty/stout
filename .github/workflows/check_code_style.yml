@@ -1,0 +1,43 @@
+name: Check Code Style
+
+# We use action's triggers 'push' and 'pull_request'.
+# The strategy is the following: this action will be
+# triggered on any push to 'main' branch and any pull
+# request to any branch. Thus we avoid duplicate work-
+# flows.
+on:
+  push:
+    branches:
+      - "main"
+    paths-ignore:
+      - "**.md" 
+  pull_request:
+    paths-ignore:
+      - "**.md"       
+
+jobs:
+  check_code_style:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ["ubuntu-latest"]
+
+    steps:
+      # We should checkout the repo with submodules
+      # cause we need to have symlink to 
+      # dev-tools/.clang-format file for all code
+      # style checks.
+      - uses: actions/checkout@v2
+        with: 
+          submodules: 'recursive'
+
+      # Call the composite action to check files
+      # for correct code style. This action (action.yml)
+      # is in `dev-tools` submodule.
+      - uses: ./dev-tools/check-code-style
+        with: 
+          os: ${{matrix.os}}
+
+      - name: Debug using tmate (if failure)
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3

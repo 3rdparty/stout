@@ -1,0 +1,57 @@
+# Workflow for building and testing flags on macOS, Ubuntu and Windows.  
+name: Build and Run all tests
+
+# We use action's triggers 'push' and 'pull_request'.
+# The strategy is the following: this action will be
+# triggered on any push to 'main' branch and any pull
+# request to any branch. Thus we avoid duplicate work-
+# flows.
+on:
+  push:
+    branches:
+      - "main"
+    paths-ignore:
+      - "**.md"
+  pull_request:
+    paths-ignore:
+      - "**.md"   
+  
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ["macos-latest", "ubuntu-latest", "windows-latest"]
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      # Checkout the repository under $GITHUB_WORKSPACE.
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
+      - name: Build
+        run: |
+          bazel build \
+            --spawn_strategy=local \
+            -c dbg \
+            --strip="never" \
+            :stout       
+
+      - name: Test
+        run: | 
+          bazel test \
+            --spawn_strategy=local \
+            -c dbg \
+            --strip="never" \
+            --test_output=errors \
+            tests:stout \
+            --test_arg=--gtest_shuffle \
+            --test_arg=--gtest_repeat=100
+
+      - name: Debug using tmate (if failure)
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
