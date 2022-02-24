@@ -10,47 +10,43 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_TESTS_UTILS_HPP__
-#define __STOUT_TESTS_UTILS_HPP__
+#pragma once
+
+#include <gtest/gtest.h>
 
 #include <filesystem>
 #include <string>
 
-#include <gtest/gtest.h>
-
-#include <stout/gtest.hpp>
-#include <stout/try.hpp>
-
-#include <stout/os/chdir.hpp>
-#include <stout/os/getcwd.hpp>
-#include <stout/os/mkdtemp.hpp>
-#include <stout/os/realpath.hpp>
-#include <stout/os/rmdir.hpp>
+#include "stout/gtest.hpp"
+#include "stout/os/chdir.hpp"
+#include "stout/os/getcwd.hpp"
+#include "stout/os/mkdtemp.hpp"
+#include "stout/os/realpath.hpp"
+#include "stout/os/rmdir.hpp"
+#include "stout/try.hpp"
 
 #if __FreeBSD__
-#include <stout/os/sysctl.hpp>
+#include "stout/os/sysctl.hpp"
 #endif
 
+////////////////////////////////////////////////////////////////////////
+
 template <typename T>
-class MixinTemporaryDirectoryTest : public T
-{
-protected:
-  void SetUp() override
-  {
+class MixinTemporaryDirectoryTest : public T {
+ protected:
+  void SetUp() override {
     T::SetUp();
 
     ASSERT_SOME(SetUpMixin());
   }
 
-  void TearDown() override
-  {
+  void TearDown() override {
     ASSERT_SOME(TearDownMixin());
 
     T::TearDown();
   }
 
-  Try<Nothing> SetUpMixin()
-  {
+  Try<Nothing> SetUpMixin() {
     // Save the current working directory.
     cwd = os::getcwd();
 
@@ -69,11 +65,13 @@ protected:
     Result<std::string> realpath = os::realpath(directory.get());
 
     if (realpath.isError()) {
-      return Error("Failed to get realpath of '" + directory.get() + "'"
-                   ": " + realpath.error());
+      return Error(
+          "Failed to get realpath of '" + directory.get() + "'"
+          + ": " + realpath.error());
     } else if (realpath.isNone()) {
-      return Error("Failed to get realpath of '" + directory.get() + "'"
-                   ": No such directory");
+      return Error(
+          "Failed to get realpath of '" + directory.get() + "'"
+          + ": No such directory");
     }
 
     sandbox = realpath.get();
@@ -82,15 +80,15 @@ protected:
     Try<Nothing> chdir = os::chdir(sandbox.get());
 
     if (chdir.isError()) {
-      return Error("Failed to chdir into '" + sandbox.get() + "'"
-                   ": " + chdir.error());
+      return Error(
+          "Failed to chdir into '" + sandbox.get() + "'"
+          + ": " + chdir.error());
     }
 
     return Nothing();
   }
 
-  Try<Nothing> TearDownMixin()
-  {
+  Try<Nothing> TearDownMixin() {
     // Return to previous working directory and cleanup the sandbox.
     Try<Nothing> chdir = os::chdir(cwd);
 
@@ -101,8 +99,9 @@ protected:
     if (sandbox.isSome()) {
       Try<Nothing> rmdir = os::rmdir(sandbox.get());
       if (rmdir.isError()) {
-        return Error("Failed to rmdir '" + sandbox.get() + "'"
-                     ": " + rmdir.error());
+        return Error(
+            "Failed to rmdir '" + sandbox.get() + "'"
+            + ": " + rmdir.error());
       }
     }
 
@@ -120,14 +119,16 @@ protected:
   // 'test_directory_path()'.
   Option<std::string> sandbox;
 
-private:
+ private:
   std::string cwd;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 class TemporaryDirectoryTest
   : public MixinTemporaryDirectoryTest<::testing::Test> {};
 
+////////////////////////////////////////////////////////////////////////
 
 #ifdef __FreeBSD__
 inline bool isJailed() {
@@ -136,11 +137,10 @@ inline bool isJailed() {
   ::sysctlnametomib("security.jail.jailed", mib, &len);
   Try<int> jailed = os::sysctl(mib[0], mib[1], mib[2]).integer();
   if (jailed.isSome()) {
-      return jailed.get() == 1;
+    return jailed.get() == 1;
   }
-
   return false;
 }
 #endif
 
-#endif // __STOUT_TESTS_UTILS_HPP__
+////////////////////////////////////////////////////////////////////////
