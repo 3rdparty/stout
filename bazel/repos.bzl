@@ -67,9 +67,9 @@ def repos(external = True, repo_mapping = {}):
     if "com_github_google_glog" not in native.existing_rules():
         http_archive(
             name = "com_github_google_glog",
-            url = "https://github.com/google/glog/archive/v0.4.0.tar.gz",
-            sha256 = "f28359aeba12f30d73d9e4711ef356dc842886968112162bc73002645139c39c",
-            strip_prefix = "glog-0.4.0",
+            url = "https://github.com/google/glog/archive/refs/tags/v0.5.0.tar.gz",
+            sha256 = "eede71f28371bf39aa69b45de23b329d37214016e2055269b3b5e7cfd40b59f5",
+            strip_prefix = "glog-0.5.0",
         )
 
     if external and "com_github_3rdparty_stout" not in native.existing_rules():
