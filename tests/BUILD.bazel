@@ -1,0 +1,12 @@
+load("@rules_cc//cc:defs.bzl", "cc_test")
+
+cc_test(
+    name = "stout",
+    srcs = [
+        "temporary_directory_test_tests.cpp",
+    ],
+    deps = [
+        "//:stout",
+        "@com_github_google_googletest//:gtest_main",
+    ],
+)
