@@ -10,17 +10,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_RM_HPP__
-#define __STOUT_OS_RM_HPP__
+#pragma once
 
 
 // For readability, we minimize the number of #ifdef blocks in the code by
 // splitting platform specific system calls into separate directories.
-#ifdef __WINDOWS__
-#include <stout/os/windows/rm.hpp>
+#ifdef _WIN32
+#include "stout/os/windows/rm.hpp"
 #else
-#include <stout/os/posix/rm.hpp>
-#endif // __WINDOWS__
-
-
-#endif // __STOUT_OS_RM_HPP__
+#include "stout/os/posix/rm.hpp"
+#endif // _WIN32

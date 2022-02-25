@@ -10,15 +10,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_INT_FD_HPP__
-#define __STOUT_OS_INT_FD_HPP__
-
+#pragma once
 
 // For readability, we minimize the number of #ifdef blocks in the code by
 // splitting platform specifc system calls into separate directories.
-#ifdef __WINDOWS__
-#include <stout/os/windows/fd.hpp>
-#endif // __WINDOWS__
+#ifdef _WIN32
+#include "stout/os/windows/fd.hpp"
+#endif // _WIN32
 
 // The `int_fd` type is designed to be able to keep / continue to write the
 // existing POSIX file descriptor pattern in a portable manner with Windows.
@@ -29,10 +27,8 @@
 // NOTE: The `int_` prefix is meant to indicate that on POSIX, `int_fd` will
 // behave exactly as-is.
 using int_fd =
-#ifdef __WINDOWS__
-  os::WindowsFD;
+#ifdef _WIN32
+    os::WindowsFD;
 #else
-  int;
-#endif // __WINDOWS__
-
-#endif // __STOUT_OS_INT_FD_HPP__
+    int;
+#endif // _WIN32

@@ -14,11 +14,11 @@
 #define __STOUT_ATTRIBUTES_HPP__
 
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
 #define NORETURN __declspec(noreturn)
 #else
 #define NORETURN __attribute__((noreturn))
-#endif // __WINDOWS__
+#endif // _WIN32
 
 
 #endif // __STOUT_ATTRIBUTES_HPP__

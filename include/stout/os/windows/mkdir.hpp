@@ -10,22 +10,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_MKDIR_HPP__
-#define __STOUT_OS_WINDOWS_MKDIR_HPP__
+#pragma once
 
 #include <string>
 #include <vector>
 
-#include <stout/error.hpp>
-#include <stout/nothing.hpp>
-#include <stout/strings.hpp>
-#include <stout/try.hpp>
-#include <stout/windows.hpp>
-
-#include <stout/os/exists.hpp>
-#include <stout/os/constants.hpp>
-
-#include <stout/internal/windows/longpath.hpp>
+#include "stout/error.hpp"
+#include "stout/internal/windows/longpath.hpp"
+#include "stout/nothing.hpp"
+#include "stout/os/constants.hpp"
+#include "stout/os/exists.hpp"
+#include "stout/strings.hpp"
+#include "stout/try.hpp"
+#include "stout/windows.hpp"
 
 namespace os {
 
@@ -33,8 +30,7 @@ namespace os {
 inline Try<Nothing> mkdir(
     const std::string& directory,
     bool recursive = true,
-    bool sync = false)
-{
+    bool sync = false) {
   if (!recursive) {
     // NOTE: We check for existence because parts of certain directories
     // like `C:\` will return an error if passed to `CreateDirectory`,
@@ -69,6 +65,4 @@ inline Try<Nothing> mkdir(
   return Nothing();
 }
 
-} // namespace os {
-
-#endif // __STOUT_OS_WINDOWS_MKDIR_HPP__
+} // namespace os

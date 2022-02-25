@@ -10,41 +10,40 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_READ_HPP__
-#define __STOUT_OS_READ_HPP__
+#pragma once
 
 #include <assert.h>
 #include <stdio.h>
-#ifndef __WINDOWS__
+#ifndef _WIN32
 #include <unistd.h>
-#endif // __WINDOWS__
+#endif // _WIN32
 
 #include <string>
 
-#if defined(__sun) || defined(__WINDOWS__)
+#if defined(__sun) || defined(_WIN32)
 #include <fstream>
-#endif // __sun || __WINDOWS__
+#endif // __sun || _WIN32
 
-#include <stout/error.hpp>
-#include <stout/result.hpp>
-#include <stout/try.hpp>
-#ifdef __WINDOWS__
-#include <stout/stringify.hpp>
-#include <stout/windows.hpp>
-#endif // __WINDOWS__
+#include "stout/error.hpp"
+#include "stout/result.hpp"
+#include "stout/try.hpp"
+#ifdef _WIN32
+#include "stout/stringify.hpp"
+#include "stout/windows.hpp"
+#endif // _WIN32
 
-#include <stout/os/int_fd.hpp>
-#include <stout/os/socket.hpp>
+#include "stout/os/int_fd.hpp"
+#include "stout/os/socket.hpp"
 
-#ifdef __WINDOWS__
-#include <stout/internal/windows/longpath.hpp>
-#endif // __WINDOWS__
+#ifdef _WIN32
+#include "stout/internal/windows/longpath.hpp"
+#endif // _WIN32
 
-#ifdef __WINDOWS__
-#include <stout/os/windows/read.hpp>
+#ifdef _WIN32
+#include "stout/os/windows/read.hpp"
 #else
-#include <stout/os/posix/read.hpp>
-#endif // __WINDOWS__
+#include "stout/os/posix/read.hpp"
+#endif // _WIN32
 
 
 namespace os {
@@ -52,15 +51,14 @@ namespace os {
 // Reads 'size' bytes from a file from its current offset.
 // If EOF is encountered before reading 'size' bytes then the result
 // will contain the bytes read and a subsequent read will return None.
-inline Result<std::string> read(int_fd fd, size_t size)
-{
+inline Result<std::string> read(int_fd fd, size_t size) {
   char* buffer = new char[size];
   size_t offset = 0;
 
   while (offset < size) {
     ssize_t length = os::read(fd, buffer + offset, size - offset);
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
     // NOTE: There is no actual difference between `WSAGetLastError` and
     // `GetLastError`, the former is an alias for the latter. As such, there is
     // no difference between `WindowsError` and `WindowsSocketError`, so we can
@@ -69,7 +67,7 @@ inline Result<std::string> read(int_fd fd, size_t size)
     WindowsError error;
 #else
     ErrnoError error;
-#endif // __WINDOWS__
+#endif // _WIN32
 
     if (length < 0) {
       // TODO(bmahler): Handle a non-blocking fd? (EAGAIN, EWOULDBLOCK)
@@ -102,20 +100,19 @@ inline Result<std::string> read(int_fd fd, size_t size)
 // Returns the contents of the file.
 // NOTE: getline is not available on Solaris so we use STL.
 #if defined(__sun)
-inline Try<std::string> read(const std::string& path)
-{
+inline Try<std::string> read(const std::string& path) {
   std::ifstream file(path.c_str());
   if (!file.is_open()) {
     // Does ifstream actually set errno?
     return ErrnoError("Failed to open file");
   }
-  return std::string((std::istreambuf_iterator<char>(file)),
-                     (std::istreambuf_iterator<char>()));
+  return std::string(
+      (std::istreambuf_iterator<char>(file)),
+      (std::istreambuf_iterator<char>()));
 }
 // NOTE: Windows needs Unicode long path support.
-#elif defined(__WINDOWS__)
-inline Try<std::string> read(const std::string& path)
-{
+#elif defined(_WIN32)
+inline Try<std::string> read(const std::string& path) {
   const std::wstring longpath = ::internal::windows::longpath(path);
   // NOTE: The `wchar_t` constructor of `ifstream` is an MSVC
   // extension.
@@ -127,12 +124,12 @@ inline Try<std::string> read(const std::string& path)
     return Error("Failed to open file");
   }
 
-  return std::string((std::istreambuf_iterator<char>(file)),
-                     (std::istreambuf_iterator<char>()));
+  return std::string(
+      (std::istreambuf_iterator<char>(file)),
+      (std::istreambuf_iterator<char>()));
 }
 #else
-inline Try<std::string> read(const std::string& path)
-{
+inline Try<std::string> read(const std::string& path) {
   FILE* file = ::fopen(path.c_str(), "r");
   if (file == nullptr) {
     return ErrnoError();
@@ -171,8 +168,6 @@ inline Try<std::string> read(const std::string& path)
   delete[] buffer;
   return result;
 }
-#endif // __sun || __WINDOWS__
+#endif // __sun || _WIN32
 
-} // namespace os {
-
-#endif // __STOUT_OS_READ_HPP__
+} // namespace os

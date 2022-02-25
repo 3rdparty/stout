@@ -8,6 +8,10 @@ cc_library(
         "include/stout/**/*.hpp",
     ]),
     includes = ["include"],
+    defines = [
+        # Windows build fails without this define.
+        "GLOG_NO_ABBREVIATED_SEVERITIES",
+    ],
     deps = [
          "@boost//:functional",
          "@boost//:get_pointer",

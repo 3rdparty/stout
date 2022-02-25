@@ -10,15 +10,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_DURATION_HPP__
-#define __STOUT_DURATION_HPP__
+#pragma once
 
 #include <ctype.h> // For 'isdigit'.
 
 // For 'timeval'.
-#ifndef __WINDOWS__
+#ifndef _WIN32
 #include <sys/time.h>
-#endif // __WINDOWS__
+#endif // _WIN32
 
 #include <iomanip>
 #include <iostream>
@@ -29,31 +28,45 @@
 #include "numify.hpp"
 #include "try.hpp"
 
-class Duration
-{
-public:
+class Duration {
+ public:
   static Try<Duration> parse(const std::string& s);
 
   static Try<Duration> create(double seconds);
 
-  constexpr Duration() : nanos(0) {}
+  constexpr Duration()
+    : nanos(0) {}
 
-  explicit Duration(const timeval& t)
-  {
+  explicit Duration(const timeval& t) {
     nanos = t.tv_sec * SECONDS + t.tv_usec * MICROSECONDS;
   }
 
-  int64_t ns() const   { return nanos; }
-  double us() const    { return static_cast<double>(nanos) / MICROSECONDS; }
-  double ms() const    { return static_cast<double>(nanos) / MILLISECONDS; }
-  double secs() const  { return static_cast<double>(nanos) / SECONDS; }
-  double mins() const  { return static_cast<double>(nanos) / MINUTES; }
-  double hrs() const   { return static_cast<double>(nanos) / HOURS; }
-  double days() const  { return static_cast<double>(nanos) / DAYS; }
-  double weeks() const { return static_cast<double>(nanos) / WEEKS; }
+  int64_t ns() const {
+    return nanos;
+  }
+  double us() const {
+    return static_cast<double>(nanos) / MICROSECONDS;
+  }
+  double ms() const {
+    return static_cast<double>(nanos) / MILLISECONDS;
+  }
+  double secs() const {
+    return static_cast<double>(nanos) / SECONDS;
+  }
+  double mins() const {
+    return static_cast<double>(nanos) / MINUTES;
+  }
+  double hrs() const {
+    return static_cast<double>(nanos) / HOURS;
+  }
+  double days() const {
+    return static_cast<double>(nanos) / DAYS;
+  }
+  double weeks() const {
+    return static_cast<double>(nanos) / WEEKS;
+  }
 
-  struct timeval timeval() const
-  {
+  struct timeval timeval() const {
     struct timeval t;
 
     // Explicitly compute `tv_sec` and `tv_usec` instead of using `us` and
@@ -64,64 +77,68 @@ public:
     return t;
   }
 
-  bool operator<(const Duration& d) const { return nanos < d.nanos; }
-  bool operator<=(const Duration& d) const { return nanos <= d.nanos; }
-  bool operator>(const Duration& d) const { return nanos > d.nanos; }
-  bool operator>=(const Duration& d) const { return nanos >= d.nanos; }
-  bool operator==(const Duration& d) const { return nanos == d.nanos; }
-  bool operator!=(const Duration& d) const { return nanos != d.nanos; }
+  bool operator<(const Duration& d) const {
+    return nanos < d.nanos;
+  }
+  bool operator<=(const Duration& d) const {
+    return nanos <= d.nanos;
+  }
+  bool operator>(const Duration& d) const {
+    return nanos > d.nanos;
+  }
+  bool operator>=(const Duration& d) const {
+    return nanos >= d.nanos;
+  }
+  bool operator==(const Duration& d) const {
+    return nanos == d.nanos;
+  }
+  bool operator!=(const Duration& d) const {
+    return nanos != d.nanos;
+  }
 
-  Duration& operator+=(const Duration& that)
-  {
+  Duration& operator+=(const Duration& that) {
     nanos += that.nanos;
     return *this;
   }
 
-  Duration& operator-=(const Duration& that)
-  {
+  Duration& operator-=(const Duration& that) {
     nanos -= that.nanos;
     return *this;
   }
 
   template <typename T>
-  Duration& operator*=(T multiplier)
-  {
+  Duration& operator*=(T multiplier) {
     nanos = static_cast<int64_t>(nanos * multiplier);
     return *this;
   }
 
   template <typename T>
-  Duration& operator/=(T divisor)
-  {
+  Duration& operator/=(T divisor) {
     nanos = static_cast<int64_t>(nanos / divisor);
     return *this;
   }
 
-  Duration operator+(const Duration& that) const
-  {
+  Duration operator+(const Duration& that) const {
     Duration sum = *this;
     sum += that;
     return sum;
   }
 
-  Duration operator-(const Duration& that) const
-  {
+  Duration operator-(const Duration& that) const {
     Duration diff = *this;
     diff -= that;
     return diff;
   }
 
   template <typename T>
-  Duration operator*(T multiplier) const
-  {
+  Duration operator*(T multiplier) const {
     Duration product = *this;
     product *= multiplier;
     return product;
   }
 
   template <typename T>
-  Duration operator/(T divisor) const
-  {
+  Duration operator/(T divisor) const {
     Duration quotient = *this;
     quotient /= divisor;
     return quotient;
@@ -133,23 +150,25 @@ public:
   // have.
   static constexpr Duration min();
   // A constant holding a Duration of a "zero" value.
-  static constexpr Duration zero() { return Duration(); }
+  static constexpr Duration zero() {
+    return Duration();
+  }
 
-protected:
-  static constexpr int64_t NANOSECONDS  = 1;
+ protected:
+  static constexpr int64_t NANOSECONDS = 1;
   static constexpr int64_t MICROSECONDS = 1000 * NANOSECONDS;
   static constexpr int64_t MILLISECONDS = 1000 * MICROSECONDS;
-  static constexpr int64_t SECONDS      = 1000 * MILLISECONDS;
-  static constexpr int64_t MINUTES      = 60 * SECONDS;
-  static constexpr int64_t HOURS        = 60 * MINUTES;
-  static constexpr int64_t DAYS         = 24 * HOURS;
-  static constexpr int64_t WEEKS        = 7 * DAYS;
+  static constexpr int64_t SECONDS = 1000 * MILLISECONDS;
+  static constexpr int64_t MINUTES = 60 * SECONDS;
+  static constexpr int64_t HOURS = 60 * MINUTES;
+  static constexpr int64_t DAYS = 24 * HOURS;
+  static constexpr int64_t WEEKS = 7 * DAYS;
 
   // Construct from a (value, unit) pair.
   constexpr Duration(int64_t value, int64_t unit)
     : nanos(value * unit) {}
 
-private:
+ private:
   // Used only by "parse".
   constexpr Duration(double value, int64_t unit)
     : nanos(static_cast<int64_t>(value * unit)) {}
@@ -157,127 +176,161 @@ private:
   int64_t nanos;
 
   friend std::ostream& operator<<(
-    std::ostream& stream,
-    const Duration& duration);
+      std::ostream& stream,
+      const Duration& duration);
 };
 
 
-class Nanoseconds : public Duration
-{
-public:
+class Nanoseconds : public Duration {
+ public:
   explicit constexpr Nanoseconds(int64_t nanoseconds)
     : Duration(nanoseconds, NANOSECONDS) {}
 
-  constexpr Nanoseconds(const Duration& d) : Duration(d) {}
+  constexpr Nanoseconds(const Duration& d)
+    : Duration(d) {}
 
-  double value() const { return static_cast<double>(this->ns()); }
+  double value() const {
+    return static_cast<double>(this->ns());
+  }
 
-  static std::string units() { return "ns"; }
+  static std::string units() {
+    return "ns";
+  }
 };
 
 
-class Microseconds : public Duration
-{
-public:
+class Microseconds : public Duration {
+ public:
   explicit constexpr Microseconds(int64_t microseconds)
     : Duration(microseconds, MICROSECONDS) {}
 
-  constexpr Microseconds(const Duration& d) : Duration(d) {}
+  constexpr Microseconds(const Duration& d)
+    : Duration(d) {}
 
-  double value() const { return this->us(); }
+  double value() const {
+    return this->us();
+  }
 
-  static std::string units() { return "us"; }
+  static std::string units() {
+    return "us";
+  }
 };
 
 
-class Milliseconds : public Duration
-{
-public:
+class Milliseconds : public Duration {
+ public:
   explicit constexpr Milliseconds(int64_t milliseconds)
     : Duration(milliseconds, MILLISECONDS) {}
 
-  constexpr Milliseconds(const Duration& d) : Duration(d) {}
+  constexpr Milliseconds(const Duration& d)
+    : Duration(d) {}
 
-  double value() const { return this->ms(); }
+  double value() const {
+    return this->ms();
+  }
 
-  static std::string units() { return "ms"; }
+  static std::string units() {
+    return "ms";
+  }
 };
 
 
-class Seconds : public Duration
-{
-public:
+class Seconds : public Duration {
+ public:
   explicit constexpr Seconds(int64_t seconds)
     : Duration(seconds, SECONDS) {}
 
-  constexpr Seconds(const Duration& d) : Duration(d) {}
+  constexpr Seconds(const Duration& d)
+    : Duration(d) {}
 
-  double value() const { return this->secs(); }
+  double value() const {
+    return this->secs();
+  }
 
-  static std::string units() { return "secs"; }
+  static std::string units() {
+    return "secs";
+  }
 };
 
 
-class Minutes : public Duration
-{
-public:
+class Minutes : public Duration {
+ public:
   explicit constexpr Minutes(int64_t minutes)
     : Duration(minutes, MINUTES) {}
 
-  constexpr Minutes(const Duration& d) : Duration(d) {}
+  constexpr Minutes(const Duration& d)
+    : Duration(d) {}
 
-  double value() const { return this->mins(); }
+  double value() const {
+    return this->mins();
+  }
 
-  static std::string units() { return "mins"; }
+  static std::string units() {
+    return "mins";
+  }
 };
 
 
-class Hours : public Duration
-{
-public:
+class Hours : public Duration {
+ public:
   explicit constexpr Hours(int64_t hours)
     : Duration(hours, HOURS) {}
 
-  constexpr Hours(const Duration& d) : Duration(d) {}
+  constexpr Hours(const Duration& d)
+    : Duration(d) {}
 
-  double value() const { return this->hrs(); }
+  double value() const {
+    return this->hrs();
+  }
 
-  static std::string units() { return "hrs"; }
+  static std::string units() {
+    return "hrs";
+  }
 };
 
 
-class Days : public Duration
-{
-public:
+class Days : public Duration {
+ public:
   explicit constexpr Days(int64_t days)
     : Duration(days, DAYS) {}
 
-  constexpr Days(const Duration& d) : Duration(d) {}
+  constexpr Days(const Duration& d)
+    : Duration(d) {}
 
-  double value() const { return this->days(); }
+  double value() const {
+    return this->days();
+  }
 
-  static std::string units() { return "days"; }
+  static std::string units() {
+    return "days";
+  }
 };
 
 
-class Weeks : public Duration
-{
-public:
-  explicit constexpr Weeks(int64_t value) : Duration(value, WEEKS) {}
+class Weeks : public Duration {
+ public:
+  explicit constexpr Weeks(int64_t value)
+    : Duration(value, WEEKS) {}
 
-  constexpr Weeks(const Duration& d) : Duration(d) {}
+  constexpr Weeks(const Duration& d)
+    : Duration(d) {}
 
-  double value() const { return this->weeks(); }
+  double value() const {
+    return this->weeks();
+  }
 
-  static std::string units() { return "weeks"; }
+  static std::string units() {
+    return "weeks";
+  }
 };
 
 
-inline std::ostream& operator<<(std::ostream& stream, const Duration& duration_)
-{
+inline std::ostream& operator<<(
+    std::ostream& stream,
+    const Duration& duration_) {
   // Output the duration in full double precision and save the old precision.
   std::streamsize precision =
-    stream.precision(std::numeric_limits<double>::digits10);
+      stream.precision(std::numeric_limits<double>::digits10);
 
   // Parse the duration as the sign and the absolute value.
   Duration duration = duration_;
@@ -310,43 +363,43 @@ inline std::ostream& operator<<(std::ostream& stream, const Duration& duration_)
       stream << duration.us() << Microseconds::units();
     }
   } else if (duration < Seconds(1)) {
-    if (nanoseconds % Duration::MILLISECONDS != 0 &&
-        nanoseconds % Duration::MICROSECONDS == 0) {
+    if (nanoseconds % Duration::MILLISECONDS != 0
+        && nanoseconds % Duration::MICROSECONDS == 0) {
       stream << duration.us() << Microseconds::units();
     } else {
       stream << duration.ms() << Milliseconds::units();
     }
   } else if (duration < Minutes(1)) {
-    if (nanoseconds % Duration::SECONDS != 0 &&
-        nanoseconds % Duration::MILLISECONDS == 0) {
+    if (nanoseconds % Duration::SECONDS != 0
+        && nanoseconds % Duration::MILLISECONDS == 0) {
       stream << duration.ms() << Milliseconds::units();
     } else {
       stream << duration.secs() << Seconds::units();
     }
   } else if (duration < Hours(1)) {
-    if (nanoseconds % Duration::MINUTES != 0 &&
-        nanoseconds % Duration::SECONDS == 0) {
+    if (nanoseconds % Duration::MINUTES != 0
+        && nanoseconds % Duration::SECONDS == 0) {
       stream << duration.secs() << Seconds::units();
     } else {
       stream << duration.mins() << Minutes::units();
     }
   } else if (duration < Days(1)) {
-    if (nanoseconds % Duration::HOURS != 0 &&
-        nanoseconds % Duration::MINUTES == 0) {
+    if (nanoseconds % Duration::HOURS != 0
+        && nanoseconds % Duration::MINUTES == 0) {
       stream << duration.mins() << Minutes::units();
     } else {
       stream << duration.hrs() << Hours::units();
     }
   } else if (duration < Weeks(1)) {
-    if (nanoseconds % Duration::DAYS != 0 &&
-        nanoseconds % Duration::HOURS == 0) {
+    if (nanoseconds % Duration::DAYS != 0
+        && nanoseconds % Duration::HOURS == 0) {
       stream << duration.hrs() << Hours::units();
     } else {
       stream << duration.days() << Days::units();
     }
   } else {
-    if (nanoseconds % Duration::WEEKS != 0 &&
-        nanoseconds % Duration::DAYS == 0) {
+    if (nanoseconds % Duration::WEEKS != 0
+        && nanoseconds % Duration::DAYS == 0) {
       stream << duration.days() << Days::units();
     } else {
       stream << duration.weeks() << Weeks::units();
@@ -360,8 +413,7 @@ inline std::ostream& operator<<(std::ostream& stream, const Duration& duration_)
 }
 
 
-inline Try<Duration> Duration::parse(const std::string& s)
-{
+inline Try<Duration> Duration::parse(const std::string& s) {
   // TODO(benh): Support negative durations (i.e., starts with '-').
   size_t index = 0;
   while (index < s.size()) {
@@ -397,7 +449,8 @@ inline Try<Duration> Duration::parse(const std::string& s)
       factor = WEEKS;
     } else {
       return Error(
-          "Unknown duration unit '" + unit + "'; supported units are"
+          "Unknown duration unit '" + unit +
+          "'; supported units are"
           " 'ns', 'us', 'ms', 'secs', 'mins', 'hrs', 'days', and 'weeks'");
     }
 
@@ -415,26 +468,22 @@ inline Try<Duration> Duration::parse(const std::string& s)
 }
 
 
-inline Try<Duration> Duration::create(double seconds)
-{
+inline Try<Duration> Duration::create(double seconds) {
   if (seconds * SECONDS > max().nanos || seconds * SECONDS < min().nanos) {
-    return Error("Argument out of the range that a Duration can represent due "
-                 "to int64_t's size limit");
+    return Error(
+        "Argument out of the range that a Duration can represent due "
+        "to int64_t's size limit");
   }
 
   return Nanoseconds(static_cast<int64_t>(seconds * SECONDS));
 }
 
 
-inline constexpr Duration Duration::max()
-{
+inline constexpr Duration Duration::max() {
   return Nanoseconds(std::numeric_limits<int64_t>::max());
 }
 
 
-inline constexpr Duration Duration::min()
-{
+inline constexpr Duration Duration::min() {
   return Nanoseconds(std::numeric_limits<int64_t>::min());
 }
-
-#endif // __STOUT_DURATION_HPP__

@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_CONSTANTS_HPP__
-#define __STOUT_OS_CONSTANTS_HPP__
+#pragma once
 
 #include <string>
 
@@ -20,27 +19,25 @@ namespace os {
 constexpr char WINDOWS_PATH_SEPARATOR = '\\';
 constexpr char POSIX_PATH_SEPARATOR = '/';
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
 constexpr char PATH_SEPARATOR = POSIX_PATH_SEPARATOR;
 #else
 constexpr char PATH_SEPARATOR = WINDOWS_PATH_SEPARATOR;
-#endif // __WINDOWS__
+#endif // _WIN32
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
 constexpr char DEV_NULL[] = "/dev/null";
 #else
 constexpr char DEV_NULL[] = "NUL";
-#endif // __WINDOWS__
+#endif // _WIN32
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
 // This prefix is prepended to absolute paths on Windows to indicate the path
 // may be greater than 255 characters.
 //
 // NOTE: We do not use a R"raw string" here because syntax highlighters do not
 // handle mismatched backslashes well.
 constexpr char LONGPATH_PREFIX[] = "\\\\?\\";
-#endif // __WINDOWS__
+#endif // _WIN32
 
-} // namespace os {
-
-#endif // __STOUT_OS_CONSTANTS_HPP__
+} // namespace os

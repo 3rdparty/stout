@@ -10,18 +10,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_SOCKET_HPP__
-#define __STOUT_OS_SOCKET_HPP__
+#pragma once
 
-#include <stout/error.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/try.hpp"
 
-#include <stout/os/int_fd.hpp>
-
-#ifdef __WINDOWS__
-#include <stout/os/windows/socket.hpp>
+#ifdef _WIN32
+#include "stout/os/windows/socket.hpp"
 #else
-#include <stout/os/posix/socket.hpp>
-#endif // __WINDOWS__
-
-#endif // __STOUT_OS_SOCKET_HPP__
+#include "stout/os/posix/socket.hpp"
+#endif // _WIN32

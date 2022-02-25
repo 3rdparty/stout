@@ -14,20 +14,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_MKDTEMP_HPP__
-#define __STOUT_OS_WINDOWS_MKDTEMP_HPP__
+#pragma once
 
 #include <random>
 #include <string>
 
-#include <stout/error.hpp>
-#include <stout/nothing.hpp>
-#include <stout/path.hpp>
-#include <stout/strings.hpp>
-#include <stout/try.hpp>
-
-#include <stout/os/mkdir.hpp>
-#include <stout/os/temp.hpp>
+#include "stout/error.hpp"
+#include "stout/nothing.hpp"
+#include "stout/os/mkdir.hpp"
+#include "stout/os/temp.hpp"
+#include "stout/path.hpp"
+#include "stout/strings.hpp"
+#include "stout/try.hpp"
 
 
 namespace os {
@@ -37,8 +35,7 @@ namespace os {
 // it, for example /tmp/temp.XXXXXX. The trailing `Xs' are replaced
 // with a unique alphanumeric combination.
 inline Try<std::string> mkdtemp(
-    const std::string& path = path::join(os::temp(), "XXXXXX"))
-{
+    const std::string& path = path::join(os::temp(), "XXXXXX")) {
   // NOTE: We'd like to avoid reallocating `postfixTemplate` and `alphabet`,
   // and to avoid  recomputing their sizes on each call to `mkdtemp`, so we
   // make them `static const` and use the slightly awkward `sizeof` trick to
@@ -48,14 +45,14 @@ inline Try<std::string> mkdtemp(
 
   if (!strings::endsWith(path, postfixTemplate)) {
     return Error(
-        "Invalid template passed to `os::mkdtemp`: template '" + path +
-        "' should end with 6 'X' characters");
+        "Invalid template passed to `os::mkdtemp`: template '"
+        + path + "' should end with 6 'X' characters");
   }
 
   static const char alphabet[] =
-    "0123456789"
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    "abcdefghijklmnopqrstuvwxyz";
+      "0123456789"
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      "abcdefghijklmnopqrstuvwxyz";
 
   // NOTE: The maximum addressable index in a string is the total length of the
   // string minus 1; but C strings have an extra null character at the end, so
@@ -72,9 +69,8 @@ inline Try<std::string> mkdtemp(
   }
 
   // Replace template, make directory.
-  std::string tempPath = path
-    .substr(0, path.length() - postfixSize)
-    .append(postfix);
+  std::string tempPath = path.substr(0, path.length() - postfixSize)
+                             .append(postfix);
 
   Try<Nothing> mkdir = os::mkdir(tempPath, false);
 
@@ -85,7 +81,4 @@ inline Try<std::string> mkdtemp(
   return tempPath;
 }
 
-} // namespace os {
-
-
-#endif // __STOUT_OS_WINDOWS_MKDTEMP_HPP__
+} // namespace os

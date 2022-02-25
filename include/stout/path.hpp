@@ -10,17 +10,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_PATH_HPP__
-#define __STOUT_PATH_HPP__
+#pragma once
 
 #include <string>
 #include <utility>
 #include <vector>
 
-#include <stout/stringify.hpp>
-#include <stout/strings.hpp>
-
-#include <stout/os/constants.hpp>
+#include "stout/os/constants.hpp"
+#include "stout/stringify.hpp"
+#include "stout/strings.hpp"
 
 
 namespace path {
@@ -38,17 +36,16 @@ namespace path {
 // NOTE: Currently, Mesos uses URIs and files somewhat interchangably.
 // For compatibility, lack of "file://" prefix is not considered an
 // error.
-inline std::string from_uri(const std::string& uri)
-{
+inline std::string from_uri(const std::string& uri) {
   // Remove the optional "file://" if it exists.
   // TODO(coffler): Remove the `hostname` component.
   const std::string path = strings::remove(uri, "file://", strings::PREFIX);
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
   return path;
 #else
   return strings::replace(path, "/", "\\");
-#endif // __WINDOWS__
+#endif // _WIN32
 }
 
 
@@ -64,8 +61,7 @@ inline std::string from_uri(const std::string& uri)
 // actual filesystem.
 inline Try<std::string> normalize(
     const std::string& path,
-    const char _separator = os::PATH_SEPARATOR)
-{
+    const char _separator = os::PATH_SEPARATOR) {
   if (path.empty()) {
     return ".";
   }
@@ -113,12 +109,13 @@ inline Try<std::string> normalize(
 inline std::string join(
     const std::string& path1,
     const std::string& path2,
-    const char _separator = os::PATH_SEPARATOR)
-{
+    const char _separator = os::PATH_SEPARATOR) {
   const std::string separator = stringify(_separator);
-  return strings::remove(path1, separator, strings::SUFFIX) +
-         separator +
-         strings::remove(path2, separator, strings::PREFIX);
+  return strings::remove(
+             path1,
+             separator,
+             strings::SUFFIX)
+      + separator + strings::remove(path2, separator, strings::PREFIX);
 }
 
 
@@ -126,14 +123,12 @@ template <typename... Paths>
 inline std::string join(
     const std::string& path1,
     const std::string& path2,
-    Paths&&... paths)
-{
+    Paths&&... paths) {
   return join(path1, join(path2, std::forward<Paths>(paths)...));
 }
 
 
-inline std::string join(const std::vector<std::string>& paths)
-{
+inline std::string join(const std::vector<std::string>& paths) {
   if (paths.empty()) {
     return "";
   }
@@ -150,9 +145,8 @@ inline std::string join(const std::vector<std::string>& paths)
  * Returns whether the given path is an absolute path.
  * If an invalid path is given, the return result is also invalid.
  */
-inline bool absolute(const std::string& path)
-{
-#ifndef __WINDOWS__
+inline bool absolute(const std::string& path) {
+#ifndef _WIN32
   return strings::startsWith(path, os::PATH_SEPARATOR);
 #else
   // NOTE: We do not use `PathIsRelative` Windows utility function
@@ -180,17 +174,16 @@ inline bool absolute(const std::string& path)
   }
 
   const char letter = path[0];
-  if (!((letter >= 'A' && letter <= 'Z') ||
-        (letter >= 'a' && letter <= 'z'))) {
+  if (!((letter >= 'A' && letter <= 'Z') || (letter >= 'a' && letter <= 'z'))) {
     return false;
   }
 
   std::string colon = path.substr(1, 2);
   return colon == ":\\" || colon == ":/";
-#endif // __WINDOWS__
+#endif // _WIN32
 }
 
-} // namespace path {
+} // namespace path
 
 
 /**
@@ -199,16 +192,17 @@ inline bool absolute(const std::string& path)
  * to the path separator character, so read it as "'/' or '\', depending on
  * platform".
  */
-class Path
-{
-public:
-  Path() : value(), separator(os::PATH_SEPARATOR) {}
+class Path {
+ public:
+  Path()
+    : value(),
+      separator(os::PATH_SEPARATOR) {}
 
   explicit Path(
-      const std::string& path, const char path_separator = os::PATH_SEPARATOR)
+      const std::string& path,
+      const char path_separator = os::PATH_SEPARATOR)
     : value(strings::remove(path, "file://", strings::PREFIX)),
-      separator(path_separator)
-  {}
+      separator(path_separator) {}
 
   // TODO(cmaloney): Add more useful operations such as 'directoryname()',
   // 'filename()', etc.
@@ -236,8 +230,7 @@ public:
    *   string "/", then this returns the string "/". If Path is an
    *   empty string, then it returns the string ".".
    */
-  inline std::string basename() const
-  {
+  inline std::string basename() const {
     if (value.empty()) {
       return std::string(".");
     }
@@ -295,8 +288,7 @@ public:
    *   If Path is the string "/", then this returns the string "/".
    *   If Path is an empty string, then this returns the string ".".
    */
-  inline std::string dirname() const
-  {
+  inline std::string dirname() const {
     if (value.empty()) {
       return std::string(".");
     }
@@ -350,8 +342,7 @@ public:
    *   "."          |  None
    *   ".."         |  None
    */
-  inline Option<std::string> extension() const
-  {
+  inline Option<std::string> extension() const {
     std::string _basename = basename();
     size_t index = _basename.rfind('.');
 
@@ -363,69 +354,57 @@ public:
   }
 
   // Checks whether the path is absolute.
-  inline bool absolute() const
-  {
+  inline bool absolute() const {
     return path::absolute(value);
   }
 
   // Implicit conversion from Path to string.
-  operator std::string() const
-  {
+  operator std::string() const {
     return value;
   }
 
-  const std::string& string() const
-  {
+  const std::string& string() const {
     return value;
   }
 
-private:
+ private:
   std::string value;
   char separator;
 };
 
 
-inline bool operator==(const Path& left, const Path& right)
-{
+inline bool operator==(const Path& left, const Path& right) {
   return left.string() == right.string();
 }
 
 
-inline bool operator!=(const Path& left, const Path& right)
-{
+inline bool operator!=(const Path& left, const Path& right) {
   return !(left == right);
 }
 
 
-inline bool operator<(const Path& left, const Path& right)
-{
+inline bool operator<(const Path& left, const Path& right) {
   return left.string() < right.string();
 }
 
 
-inline bool operator>(const Path& left, const Path& right)
-{
+inline bool operator>(const Path& left, const Path& right) {
   return right < left;
 }
 
 
-inline bool operator<=(const Path& left, const Path& right)
-{
+inline bool operator<=(const Path& left, const Path& right) {
   return !(left > right);
 }
 
 
-inline bool operator>=(const Path& left, const Path& right)
-{
+inline bool operator>=(const Path& left, const Path& right) {
   return !(left < right);
 }
 
 
 inline std::ostream& operator<<(
     std::ostream& stream,
-    const Path& path)
-{
+    const Path& path) {
   return stream << path.string();
 }
-
-#endif // __STOUT_PATH_HPP__

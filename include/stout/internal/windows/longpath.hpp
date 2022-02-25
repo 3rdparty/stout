@@ -10,17 +10,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_INTERNAL_WINDOWS_LONGPATH_HPP__
-#define __STOUT_INTERNAL_WINDOWS_LONGPATH_HPP__
+#pragma once
+#include <assert.h>
 
 #include <string>
 
-#include <assert.h>
-
-#include <stout/path.hpp>
-#include <stout/stringify.hpp>
-
-#include <stout/os/constants.hpp>
+#include "stout/os/constants.hpp"
+#include "stout/path.hpp"
+#include "stout/stringify.hpp"
 
 
 namespace internal {
@@ -35,12 +32,11 @@ namespace windows {
 //
 // It then converts the path to UTF-16, appropriate for use in Unicode versions
 // of Windows filesystem APIs which support lengths greater than NAME_MAX.
-inline std::wstring longpath(const std::string& path)
-{
+inline std::wstring longpath(const std::string& path) {
   const size_t max_path_length = 248;
-  if (path.size() >= max_path_length &&
-      path::absolute(path) &&
-      !strings::startsWith(path, os::LONGPATH_PREFIX)) {
+  if (path.size() >= max_path_length
+      && path::absolute(path)
+      && !strings::startsWith(path, os::LONGPATH_PREFIX)) {
     return wide_stringify(os::LONGPATH_PREFIX + path);
   } else {
     return wide_stringify(path);
@@ -48,12 +44,9 @@ inline std::wstring longpath(const std::string& path)
 }
 
 
-inline std::wstring longpath(const std::wstring& path)
-{
+inline std::wstring longpath(const std::wstring& path) {
   return longpath(stringify(path));
 }
 
-} // namespace windows {
-} // namespace internal {
-
-#endif // __STOUT_INTERNAL_WINDOWS_LONGPATH_HPP__
+} // namespace windows
+} // namespace internal
