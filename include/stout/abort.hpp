@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_ABORT_HPP__
-#define __STOUT_ABORT_HPP__
+#pragma once
 
 #include <errno.h>
 #include <stdio.h>
@@ -19,14 +18,14 @@
 #include <string.h>
 
 #ifdef __WINDOWS__
-#include <stout/windows.hpp> // For `windows.h`.
+#include "stout/windows.hpp" // For `windows.h`.
 #else
 #include <unistd.h>
 #endif // __WINDOWS__
 
 #include <string>
 
-#include <stout/attributes.hpp>
+#include "stout/attributes.hpp"
 
 // NOTE: These macros are already defined in Visual Studio (Windows) headers.
 #ifndef __WINDOWS__
@@ -40,8 +39,7 @@
 #define ABORT(...) _Abort(_ABORT_PREFIX, __VA_ARGS__)
 
 
-inline NORETURN void _Abort(const char* prefix, const char* message)
-{
+inline NORETURN void _Abort(const char* prefix, const char* message) {
 #ifndef __WINDOWS__
   const size_t prefix_len = strlen(prefix);
   const size_t message_len = strlen(message);
@@ -51,20 +49,22 @@ inline NORETURN void _Abort(const char* prefix, const char* message)
   // In fact, it is highly unlikely that strlen would be
   // implemented in an unsafe manner:
   // http://austingroupbugs.net/view.php?id=692
-  // NOTE: we can't use `signal_safe::write`, because it's defined in the header
-  // which can't be included due to circular dependency of headers.
-  while (::write(STDERR_FILENO, prefix, prefix_len) == -1 &&
-         errno == EINTR);
-  while (message != nullptr &&
-         ::write(STDERR_FILENO, message, message_len) == -1 &&
-         errno == EINTR);
+  // NOTE: we can't use `signal_safe::write`, because it's defined in the
+  // header which can't be included due to circular dependency of headers.
+  while (::write(STDERR_FILENO, prefix, prefix_len) == -1 && errno == EINTR)
+    ;
+  while (message != nullptr
+         && ::write(STDERR_FILENO, message, message_len) == -1
+         && errno == EINTR)
+    ;
 
   // NOTE: Since `1` can be interpreted as either an `unsigned int` or a
   // `size_t`, removing the `static_cast` here makes this call ambiguous
   // between the `write` in windows.hpp and the (deprecated) `write` in the
   // Windows CRT headers.
-  while (::write(STDERR_FILENO, "\n", static_cast<size_t>(1)) == -1 &&
-         errno == EINTR);
+  while (::write(STDERR_FILENO, "\n", static_cast<size_t>(1)) == -1
+         && errno == EINTR)
+    ;
 #else
   // NOTE: On Windows, `WriteFile` takes an `DWORD`, not `size_t`. We
   // perform an explicit type conversion here to silence the warning.
@@ -87,10 +87,6 @@ inline NORETURN void _Abort(const char* prefix, const char* message)
 }
 
 
-inline NORETURN void _Abort(const char* prefix, const std::string& message)
-{
+inline NORETURN void _Abort(const char* prefix, const std::string& message) {
   _Abort(prefix, message.c_str());
 }
-
-
-#endif // __STOUT_ABORT_HPP__
