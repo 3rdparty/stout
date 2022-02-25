@@ -10,30 +10,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_STRERROR_HPP__
-#define __STOUT_OS_STRERROR_HPP__
+#pragma once
 
 #include <errno.h>
 #include <string.h>
 
 #include <string>
 
-#ifdef __WINDOWS__
-#include <stout/windows.hpp>
-#endif // __WINDOWS__
+#ifdef _WIN32
+#include "stout/windows.hpp"
+#endif // _WIN32
 
 namespace os {
 
 /**
  * A thread-safe version of strerror.
  */
-inline std::string strerror(int errno_)
-{
+inline std::string strerror(int errno_) {
   // There are two versions of strerror_r that need to be handled
   // based on the feature test macros below.
-#if !defined(__GLIBC__) || \
-    ((_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && \
-     !defined(_GNU_SOURCE))
+#if !defined(__GLIBC__) || ((_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && !defined(_GNU_SOURCE))
   // (1) We have the XSI-compliant version which returns an error code.
   size_t size = 1024;
   char* buffer = new char[size];
@@ -63,5 +59,4 @@ inline std::string strerror(int errno_)
 #endif
 }
 
-} // namespace os {
-#endif // __STOUT_OS_STRERROR_HPP__
+} // namespace os

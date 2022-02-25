@@ -17,21 +17,23 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
+#define UNICODE
+#define _UNICODE
 #include "stout/windows.hpp" // For `windows.h`.
 #else
 #include <unistd.h>
-#endif // __WINDOWS__
+#endif // _WIN32
 
 #include <string>
 
 #include "stout/attributes.hpp"
 
 // NOTE: These macros are already defined in Visual Studio (Windows) headers.
-#ifndef __WINDOWS__
+#ifndef _WIN32
 #define __STRINGIZE(x) #x
 #define _STRINGIZE(x) __STRINGIZE(x)
-#endif // __WINDOWS__
+#endif // _WIN32
 
 // Signal safe abort which prints a message.
 #define _ABORT_PREFIX "ABORT: (" __FILE__ ":" _STRINGIZE(__LINE__) "): "
@@ -40,7 +42,7 @@
 
 
 inline NORETURN void _Abort(const char* prefix, const char* message) {
-#ifndef __WINDOWS__
+#ifndef _WIN32
   const size_t prefix_len = strlen(prefix);
   const size_t message_len = strlen(message);
 
@@ -51,20 +53,17 @@ inline NORETURN void _Abort(const char* prefix, const char* message) {
   // http://austingroupbugs.net/view.php?id=692
   // NOTE: we can't use `signal_safe::write`, because it's defined in the
   // header which can't be included due to circular dependency of headers.
-  while (::write(STDERR_FILENO, prefix, prefix_len) == -1 && errno == EINTR)
-    ;
+  while (::write(STDERR_FILENO, prefix, prefix_len) == -1 && errno == EINTR) {}
   while (message != nullptr
          && ::write(STDERR_FILENO, message, message_len) == -1
-         && errno == EINTR)
-    ;
+         && errno == EINTR) {}
 
   // NOTE: Since `1` can be interpreted as either an `unsigned int` or a
   // `size_t`, removing the `static_cast` here makes this call ambiguous
   // between the `write` in windows.hpp and the (deprecated) `write` in the
   // Windows CRT headers.
   while (::write(STDERR_FILENO, "\n", static_cast<size_t>(1)) == -1
-         && errno == EINTR)
-    ;
+         && errno == EINTR) {}
 #else
   // NOTE: On Windows, `WriteFile` takes an `DWORD`, not `size_t`. We
   // perform an explicit type conversion here to silence the warning.
@@ -81,7 +80,7 @@ inline NORETURN void _Abort(const char* prefix, const char* message) {
   ::WriteFile(fd, prefix, prefix_len, &bytes, nullptr);
   ::WriteFile(fd, message, message_len, &bytes, nullptr);
   ::WriteFile(fd, "\n", 1, &bytes, nullptr);
-#endif // __WINDOWS__
+#endif // _WIN32
 
   abort();
 }

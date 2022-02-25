@@ -10,14 +10,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_TEMP_HPP__
-#define __STOUT_OS_TEMP_HPP__
+#pragma once
 
 
-#ifdef __WINDOWS__
-#include <stout/os/windows/temp.hpp>
+#ifdef _WIN32
+#include "stout/os/windows/temp.hpp"
 #else
-#include <stout/os/posix/temp.hpp>
-#endif // __WINDOWS__
-
-#endif // __STOUT_OS_TEMP_HPP__
+#include "stout/os/posix/temp.hpp"
+#endif // _WIN32

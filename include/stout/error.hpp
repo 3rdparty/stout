@@ -10,9 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_ERROR_HPP__
-#define __STOUT_ERROR_HPP__
-
+#pragma once
 // NOTE: The order of these `#include`s is important. This file is structured
 // as a series of `#include`s for historical reasons. Before, `stout/error`
 // simply contained the definitions of `Error` and `ErrnoError`. The addition
@@ -20,17 +18,15 @@
 // `#ifdef`'ing code, opting instead to `#ifdef` `#include` statements. Hence,
 // we simply move the `error.hpp` code to `errorbase.hpp` and include the
 // Windows error code below it.
-#include <stout/errorbase.hpp>
+#include "stout/errorbase.hpp"
 
-#ifdef __WINDOWS__
-#include <stout/windows/error.hpp>
-#endif // __WINDOWS__
+#ifdef _WIN32
+#include "stout/windows/error.hpp"
+#endif // _WIN32
 
 using SocketError =
-#ifdef __WINDOWS__
-  WindowsSocketError;
+#ifdef _WIN32
+    WindowsSocketError;
 #else
-  ErrnoError;
-#endif  // __WINDOWS__
-
-#endif // __STOUT_ERROR_HPP__
+    ErrnoError;
+#endif // _WIN32

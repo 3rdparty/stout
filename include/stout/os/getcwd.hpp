@@ -10,17 +10,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_GETCWD_HPP__
-#define __STOUT_OS_GETCWD_HPP__
-
+#pragma once
 
 // For readability, we minimize the number of #ifdef blocks in the code by
 // splitting platform specific system calls into separate directories.
-#ifdef __WINDOWS__
-#include <stout/os/windows/getcwd.hpp>
+#ifdef _WIN32
+#include "stout/os/windows/getcwd.hpp"
 #else
-#include <stout/os/posix/getcwd.hpp>
-#endif // __WINDOWS__
-
-
-#endif // __STOUT_OS_GETCWD_HPP__
+#include "stout/os/posix/getcwd.hpp"
+#endif // _WIN32
