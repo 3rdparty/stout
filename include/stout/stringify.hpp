@@ -20,13 +20,6 @@
 #include <string>
 #include <vector>
 
-#ifdef _WIN32
-// `codecvt` is not available on older versions of Linux. Until it is needed on
-// other platforms, it's easiest to just build the UTF converter for Windows.
-#include <codecvt>
-#include <locale>
-#endif // _WIN32
-
 #include "abort.hpp"
 #include "error.hpp"
 #include "hashmap.hpp"
@@ -56,25 +49,60 @@ inline std::string stringify(const std::string& str) {
 ////////////////////////////////////////////////////////////////////////
 
 #ifdef _WIN32
-inline std::string stringify(const std::wstring& str) {
-  // Convert UTF-16 `wstring` to UTF-8 `string`.
-  static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>
-      converter(
-          "UTF-16 to UTF-8 conversion failed",
-          L"UTF-16 to UTF-8 conversion failed");
-
-  return converter.to_bytes(str);
+// WideCharToMultiByte and MultiByteToWideChar are needed, cause
+// std::wbuffer_convert, std::wstring_convert, and the <codecvt>
+// header (containing std::codecvt_mode, std::codecvt_utf8,
+// std::codecvt_utf16, and std::codecvt_utf8_utf16) are deprecated in
+// C++17. The C++ Standard doesn't provide equivalent non-deprecated
+// functionality.
+static std::string stringify(const std::wstring& wstr) {
+  if (wstr.empty()) {
+    return std::string{};
+  }
+  int size_needed = WideCharToMultiByte(
+      CP_UTF8,
+      0,
+      &wstr[0],
+      static_cast<int>(wstr.size()),
+      nullptr,
+      0,
+      nullptr,
+      nullptr);
+  std::string str(size_needed, 0);
+  WideCharToMultiByte(
+      CP_UTF8,
+      0,
+      &wstr[0],
+      static_cast<int>(wstr.size()),
+      &str[0],
+      size_needed,
+      nullptr,
+      nullptr);
+  return str;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline std::wstring wide_stringify(const std::string& str) {
-  // Convert UTF-8 `string` to UTF-16 `wstring`.
-  static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>
-      converter(
-          "UTF-8 to UTF-16 conversion failed",
-          L"UTF-8 to UTF-16 conversion failed");
-
-  return converter.from_bytes(str);
+static std::wstring wide_stringify(const std::string& str) {
+  if (str.empty()) {
+    return std::wstring();
+  }
+  int size_needed = MultiByteToWideChar(
+      CP_UTF8,
+      0,
+      &str[0],
+      static_cast<int>(str.size()),
+      nullptr,
+      0);
+  std::wstring wstr(size_needed, 0);
+  MultiByteToWideChar(
+      CP_UTF8,
+      0,
+      &str[0],
+      static_cast<int>(str.size()),
+      &wstr[0],
+      size_needed);
+  return wstr;
 }
 #endif // _WIN32
 
