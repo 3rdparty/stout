@@ -3,6 +3,7 @@ load("@rules_cc//cc:defs.bzl", "cc_test")
 cc_test(
     name = "stout",
     srcs = [
+        "stringify_tests.cpp",
         "temporary_directory_test_tests.cpp",
     ],
     deps = [
