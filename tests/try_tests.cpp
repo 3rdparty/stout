@@ -10,16 +10,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <string>
-
 #include <gtest/gtest.h>
 
-#include <stout/try.hpp>
+#include <string>
+
+#include "stout/try.hpp"
 
 using std::string;
 
-TEST(TryTest, ArrowOperator)
-{
+TEST(TryTest, ArrowOperator) {
   Try<string> s = string("hello");
   EXPECT_EQ(5u, s->size());
 
@@ -28,25 +27,23 @@ TEST(TryTest, ArrowOperator)
 }
 
 
-TEST(TryTest, StarOperator)
-{
+TEST(TryTest, StarOperator) {
   // A test class with a `moved` flag where we can verify if an object
   // has been moved.
-  struct Foo
-  {
+  struct Foo {
     bool moved = false;
     string s;
 
-    Foo(const string& s) { this->s = s; };
+    Foo(const string& s) {
+      this->s = s;
+    };
 
-    Foo(Foo&& that)
-    {
+    Foo(Foo&& that) {
       s = std::move(that.s);
       that.moved = true;
     };
 
-    Foo& operator=(Foo&& that)
-    {
+    Foo& operator=(Foo&& that) {
       s = std::move(that.s);
       that.moved = true;
 

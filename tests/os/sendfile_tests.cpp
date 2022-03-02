@@ -10,30 +10,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
-#include <string>
-
 #include <gmock/gmock.h>
-
 #include <gtest/gtest.h>
 
-#include <stout/gtest.hpp>
-#include <stout/os.hpp>
-#include <stout/path.hpp>
+#include <string>
 
-#ifdef __WINDOWS__
-#include <stout/windows.hpp>
-#endif // __WINDOWS__
+#include "stout/gtest.hpp"
+#include "stout/os.hpp"
+#include "stout/path.hpp"
 
-#include <stout/os/sendfile.hpp>
-#include <stout/os/write.hpp>
+#ifdef _WIN32
+#include "stout/windows.hpp"
+#endif // _WIN32
 
-#include <stout/tests/utils.hpp>
+#include "stout/os/sendfile.hpp"
+#include "stout/os/write.hpp"
+#include "stout/tests/utils.hpp"
 
 using std::string;
 
-class OsSendfileTest : public TemporaryDirectoryTest
-{
-public:
+class OsSendfileTest : public TemporaryDirectoryTest {
+ public:
   OsSendfileTest()
     : LOREM_IPSUM(
         "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do "
@@ -44,9 +41,8 @@ public:
         "pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
         "culpa qui officia deserunt mollit anim id est laborum.") {}
 
-protected:
-  void SetUp() override
-  {
+ protected:
+  void SetUp() override {
     TemporaryDirectoryTest::SetUp();
 
     filename = "lorem.txt";
@@ -59,12 +55,11 @@ protected:
 };
 
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
 // TODO(akagup): If it's necessary, we can have a more general version of this
 // function in a stout header, but `socketpair` isn't currently used in the
 // cross-platform parts of Mesos.
-Try<std::array<int_fd, 2>> socketpair()
-{
+Try<std::array<int_fd, 2>> socketpair() {
   struct AutoFD {
     int_fd fd;
     ~AutoFD() {
@@ -85,7 +80,8 @@ Try<std::array<int_fd, 2>> socketpair()
   if (net::bind(
           server.fd,
           reinterpret_cast<const sockaddr*>(&addr),
-          sizeof(addr)) != 0) {
+          sizeof(addr))
+      != 0) {
     return SocketError();
   }
 
@@ -95,7 +91,10 @@ Try<std::array<int_fd, 2>> socketpair()
 
   int addrlen = sizeof(addr);
   if (::getsockname(
-          server.fd, reinterpret_cast<sockaddr*>(&addr), &addrlen) != 0) {
+          server.fd,
+          reinterpret_cast<sockaddr*>(&addr),
+          &addrlen)
+      != 0) {
     return SocketError();
   }
 
@@ -112,7 +111,8 @@ Try<std::array<int_fd, 2>> socketpair()
   if (net::connect(
           client,
           reinterpret_cast<const sockaddr*>(&addr),
-          sizeof(addr)) != 0) {
+          sizeof(addr))
+      != 0) {
     SocketError error;
     os::close(client);
     return error;
@@ -122,7 +122,7 @@ Try<std::array<int_fd, 2>> socketpair()
   // the destructor.
   addrlen = sizeof(addr);
   const int_fd accepted_client =
-    net::accept(server.fd, reinterpret_cast<sockaddr*>(&addr), &addrlen);
+      net::accept(server.fd, reinterpret_cast<sockaddr*>(&addr), &addrlen);
 
   if (!accepted_client.is_valid()) {
     SocketError error;
@@ -130,36 +130,36 @@ Try<std::array<int_fd, 2>> socketpair()
     return error;
   }
 
-  return std::array<int_fd, 2>{ accepted_client, client };
+  return std::array<int_fd, 2>{accepted_client, client};
 }
-#endif // __WINDOWS__
+#endif // _WIN32
 
 
-TEST_F(OsSendfileTest, Sendfile)
-{
+TEST_F(OsSendfileTest, Sendfile) {
   Try<int_fd> fd = os::open(filename, O_RDONLY | O_CLOEXEC);
   ASSERT_SOME(fd);
 
   // Construct a socket pair and use sendfile to transmit the text.
   int_fd s[2];
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
   Try<std::array<int_fd, 2>> s_ = socketpair();
 #else
   Try<std::array<int_fd, 2>> s_ = net::socketpair(AF_UNIX, SOCK_STREAM, 0);
-#endif // __WINDOWS__
+#endif // _WIN32
 
   ASSERT_SOME(s_);
   s[0] = s_.get()[0];
   s[1] = s_.get()[1];
 
   Try<ssize_t, SocketError> length =
-    os::sendfile(s[0], fd.get(), 0, LOREM_IPSUM.size());
+      os::sendfile(s[0], fd.get(), 0, LOREM_IPSUM.size());
   ASSERT_SOME_EQ(static_cast<ssize_t>(LOREM_IPSUM.size()), length);
 
   char* buffer = new char[LOREM_IPSUM.size()];
-  ASSERT_EQ(static_cast<ssize_t>(LOREM_IPSUM.size()),
-            os::read(s[1], buffer, LOREM_IPSUM.size()));
+  ASSERT_EQ(
+      static_cast<ssize_t>(LOREM_IPSUM.size()),
+      os::read(s[1], buffer, LOREM_IPSUM.size()));
   ASSERT_EQ(LOREM_IPSUM, string(buffer, LOREM_IPSUM.size()));
   ASSERT_SOME(os::close(fd.get()));
   delete[] buffer;
@@ -170,7 +170,7 @@ TEST_F(OsSendfileTest, Sendfile)
   ASSERT_SOME(os::close(s[1]));
 
   Try<ssize_t, SocketError> result =
-    os::sendfile(s[0], fd.get(), 0, LOREM_IPSUM.size());
+      os::sendfile(s[0], fd.get(), 0, LOREM_IPSUM.size());
   ASSERT_ERROR(result);
   int _errno = result.error().code;
 
@@ -178,25 +178,24 @@ TEST_F(OsSendfileTest, Sendfile)
   ASSERT_EQ(EPIPE, _errno) << result.error().message;
 #elif defined __APPLE__
   ASSERT_EQ(ENOTCONN, _errno) << result.error().message;
-#elif defined __WINDOWS__
+#elif defined _WIN32
   ASSERT_EQ(WSAECONNRESET, _errno) << result.error().message;
 #endif
 
   ASSERT_SOME(os::close(fd.get()));
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
   // On Windows, closing this socket results in the `WSACONNRESET` error.
   ASSERT_ERROR(os::close(s[0]));
 #else
   ASSERT_SOME(os::close(s[0]));
-#endif // __WINDOWS__
+#endif // _WIN32
 }
 
-#ifdef __WINDOWS__
-TEST_F(OsSendfileTest, SendfileAsync)
-{
+#ifdef _WIN32
+TEST_F(OsSendfileTest, SendfileAsync) {
   const string testfile =
-    path::join(sandbox.get(), id::UUID::random().toString());
+      path::join(sandbox.get(), id::UUID::random().toString());
 
   // We create a 1MB file, which should be too big for the socket
   // buffers to hold, forcing us to go through the asynchronous path.
@@ -212,7 +211,7 @@ TEST_F(OsSendfileTest, SendfileAsync)
   // that the operation is pending.
   OVERLAPPED overlapped = {};
   const Result<size_t> length =
-    os::sendfile_async(s.get()[0], fd.get(), data.size(), &overlapped);
+      os::sendfile_async(s.get()[0], fd.get(), data.size(), &overlapped);
 
   // NOTE: A pending operation is represented by None()
   ASSERT_NONE(length);
@@ -230,4 +229,4 @@ TEST_F(OsSendfileTest, SendfileAsync)
   EXPECT_SOME(os::close(s.get()[0]));
   EXPECT_SOME(os::close(s.get()[1]));
 }
-#endif // __WINDOWS__
+#endif // _WIN32

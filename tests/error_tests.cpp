@@ -10,54 +10,47 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
-#include <string>
-
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <gmock/gmock.h>
+#include <string>
 
-#include <stout/error.hpp>
-#include <stout/gtest.hpp>
-#include <stout/option.hpp>
-#include <stout/result.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/gtest.hpp"
+#include "stout/option.hpp"
+#include "stout/result.hpp"
+#include "stout/try.hpp"
 
 using std::string;
 
 using testing::StartsWith;
 
-Error error1()
-{
+Error error1() {
   return Error("Failed to ...");
 }
 
 
-Try<string> error2()
-{
+Try<string> error2() {
   return Error("Failed to ...");
 }
 
 
-Try<string> error3(const Try<string>& t)
-{
+Try<string> error3(const Try<string>& t) {
   return t;
 }
 
 
-Result<string> error4()
-{
+Result<string> error4() {
   return Error("Failed to ...");
 }
 
 
-Result<string> error5(const Result<string>& r)
-{
+Result<string> error5(const Result<string>& r) {
   return r;
 }
 
 
-TEST(ErrorTest, Test)
-{
+TEST(ErrorTest, Test) {
   Try<string> t = error1();
   EXPECT_ERROR(t);
   t = error2();
@@ -74,15 +67,14 @@ TEST(ErrorTest, Test)
 }
 
 
-TEST(ErrorTest, Errno)
-{
-#ifdef __WINDOWS__
+TEST(ErrorTest, Errno) {
+#ifdef _WIN32
   DWORD einval = ERROR_INVALID_HANDLE;
 #else
   int einval = EINVAL;
 #endif
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
   DWORD notsock = WSAENOTSOCK;
 #else
   int notsock = ENOTSOCK;
@@ -93,17 +85,18 @@ TEST(ErrorTest, Errno)
 
   EXPECT_EQ(einval, ErrnoError(einval, "errno error").code);
   EXPECT_THAT(
-    ErrnoError(einval, "errno error").message, StartsWith("errno error"));
+      ErrnoError(einval, "errno error").message,
+      StartsWith("errno error"));
 
   EXPECT_EQ(notsock, SocketError(notsock, "socket error").code);
   EXPECT_THAT(
-    SocketError(notsock, "socket error").message, StartsWith("socket error"));
+      SocketError(notsock, "socket error").message,
+      StartsWith("socket error"));
 }
 
 
-#ifdef __WINDOWS__
-TEST(ErrorTest, Windows)
-{
+#ifdef _WIN32
+TEST(ErrorTest, Windows) {
   // NOTE: This is an edge case where the implementation explicitly
   // avoids calling `FormatMessage` when default constructed, and so
   // the message is an empty string, NOT "The operation completed
@@ -111,15 +104,15 @@ TEST(ErrorTest, Windows)
   EXPECT_EQ(WindowsError(ERROR_SUCCESS).message, "");
 
   EXPECT_THAT(
-    WindowsError(ERROR_FILE_NOT_FOUND).message,
-    StartsWith("The system cannot find the file specified."));
+      WindowsError(ERROR_FILE_NOT_FOUND).message,
+      StartsWith("The system cannot find the file specified."));
 
   EXPECT_THAT(
-    WindowsError(ERROR_INVALID_HANDLE).message,
-    StartsWith("The handle is invalid."));
+      WindowsError(ERROR_INVALID_HANDLE).message,
+      StartsWith("The handle is invalid."));
 
   EXPECT_THAT(
-    WindowsError(ERROR_INVALID_PARAMETER).message,
-    StartsWith("The parameter is incorrect."));
+      WindowsError(ERROR_INVALID_PARAMETER).message,
+      StartsWith("The parameter is incorrect."));
 }
-#endif // __WINDOWS__
+#endif // _WIN32

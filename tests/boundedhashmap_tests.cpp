@@ -10,21 +10,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
+#include <gtest/gtest.h>
+
 #include <list>
 #include <string>
 #include <vector>
 
-#include <gtest/gtest.h>
-
-#include <stout/boundedhashmap.hpp>
-#include <stout/gtest.hpp>
+#include "stout/boundedhashmap.hpp"
+#include "stout/gtest.hpp"
 
 using std::list;
 using std::string;
 using std::vector;
 
-TEST(BoundedHashMapTest, Set)
-{
+TEST(BoundedHashMapTest, Set) {
   BoundedHashMap<string, int> map(2);
 
   map.set("foo", 1);
@@ -56,8 +55,7 @@ TEST(BoundedHashMapTest, Set)
 }
 
 
-TEST(BoundedHashMapTest, EmptyMap)
-{
+TEST(BoundedHashMapTest, EmptyMap) {
   BoundedHashMap<string, int> map(0);
 
   map.set("foo", 1);
@@ -70,8 +68,7 @@ TEST(BoundedHashMapTest, EmptyMap)
 }
 
 
-TEST(BoundedHashmapTest, Contains)
-{
+TEST(BoundedHashmapTest, Contains) {
   BoundedHashMap<string, int> map(2);
 
   map.set("foo", 1);
@@ -83,8 +80,7 @@ TEST(BoundedHashmapTest, Contains)
 }
 
 
-TEST(BoundedHashmapTest, Erase)
-{
+TEST(BoundedHashmapTest, Erase) {
   BoundedHashMap<string, int> map(2);
 
   map.set("foo", 1);
@@ -99,8 +95,7 @@ TEST(BoundedHashmapTest, Erase)
 }
 
 
-TEST(BoundedHashmapTest, Keys)
-{
+TEST(BoundedHashmapTest, Keys) {
   BoundedHashMap<string, int> map(5);
 
   list<string> keys = {"foo", "bar", "food", "rad", "cat"};
@@ -116,8 +111,7 @@ TEST(BoundedHashmapTest, Keys)
 }
 
 
-TEST(BoundedHashmapTest, Values)
-{
+TEST(BoundedHashmapTest, Values) {
   BoundedHashMap<string, int> map(3);
 
   map.set("foo", 1);
@@ -132,8 +126,7 @@ TEST(BoundedHashmapTest, Values)
 }
 
 
-TEST(BoundedHashMapTest, Foreach)
-{
+TEST(BoundedHashMapTest, Foreach) {
   BoundedHashMap<string, int> map(3);
 
   map.set("foo", 1);
@@ -150,7 +143,7 @@ TEST(BoundedHashMapTest, Foreach)
 
   {
     int i = 0;
-    foreachpair (const string& key, int value, map) {
+    foreachpair(const string& key, int value, map) {
       EXPECT_EQ(keys[i], key);
       EXPECT_EQ(values[i], value);
       i++;
@@ -159,7 +152,7 @@ TEST(BoundedHashMapTest, Foreach)
 
   {
     int i = 0;
-    foreachkey (const string& key, map) {
+    foreachkey(const string& key, map) {
       EXPECT_EQ(keys[i], key);
       i++;
     }
@@ -167,7 +160,7 @@ TEST(BoundedHashMapTest, Foreach)
 
   {
     int i = 0;
-    foreachvalue (int value, map) {
+    foreachvalue(int value, map) {
       EXPECT_EQ(values[i], value);
       i++;
     }
@@ -177,8 +170,7 @@ TEST(BoundedHashMapTest, Foreach)
 
 // Check that `foreach`-style loops can be used with a const ref to
 // BoundedHashMap.
-TEST(BoundedHashMapTest, ForeachConst)
-{
+TEST(BoundedHashMapTest, ForeachConst) {
   BoundedHashMap<string, int> map(3);
 
   map.set("foo", 1);
@@ -187,24 +179,23 @@ TEST(BoundedHashMapTest, ForeachConst)
 
   const BoundedHashMap<string, int>& constMap = map;
 
-  foreachkey (const string& key, constMap) {
+  foreachkey(const string& key, constMap) {
     EXPECT_NE("qux", key);
   }
-  foreachvalue (int value, constMap) {
+  foreachvalue(int value, constMap) {
     EXPECT_NE(0, value);
   }
 }
 
 
-TEST(BoundedHashMapTest, ForeachMutate)
-{
+TEST(BoundedHashMapTest, ForeachMutate) {
   BoundedHashMap<int, string> map(3);
 
   map.set(1, "foo");
   map.set(2, "bar");
   map.set(3, "caz");
 
-  foreachpair (int key, string& value, map) {
+  foreachpair(int key, string& value, map) {
     if (key == 2) {
       value = "qux";
     }

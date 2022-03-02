@@ -10,47 +10,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 #include <stdint.h>
-
 #include <sys/stat.h>
 
 #include <string>
 
-#include <gtest/gtest.h>
-
-#include <gmock/gmock.h>
-
-#include <stout/gtest.hpp>
-#include <stout/json.hpp>
-#include <stout/stringify.hpp>
-#include <stout/strings.hpp>
+#include "stout/gtest.hpp"
+#include "stout/json.hpp"
+#include "stout/stringify.hpp"
+#include "stout/strings.hpp"
 
 using std::string;
 
 using boost::get;
 
 
-TEST(JsonTest, DefaultValueIsNull)
-{
+TEST(JsonTest, DefaultValueIsNull) {
   JSON::Value v;
   EXPECT_EQ("null", stringify(v));
 }
 
 
-TEST(JsonTest, UTF8)
-{
+TEST(JsonTest, UTF8) {
   // We don't use the optional \uXXXX escaping for UTF-8,
   // unless required (" U+0022, \ U+005C, and the control
   // characters U+0000 to U+001F).
   JSON::String s("Hello! \x01\x1F\x22\x5C \xF0\x9F\x98\x80");
 
-  EXPECT_EQ("\"Hello! \\u0001\\u001F\\\"\\\\ \xF0\x9F\x98\x80\"",
-            stringify(s));
+  EXPECT_EQ(
+      "\"Hello! \\u0001\\u001F\\\"\\\\ \xF0\x9F\x98\x80\"",
+      stringify(s));
 }
 
 
-TEST(JsonTest, InvalidUTF8)
-{
+TEST(JsonTest, InvalidUTF8) {
   // There currently is no validation either when constructing
   // invalid UTF-8 string, or during serialization. Here, we
   // use a 4 byte sequence but only provide the first byte.
@@ -61,8 +56,7 @@ TEST(JsonTest, InvalidUTF8)
 }
 
 
-TEST(JsonTest, NumberFormat)
-{
+TEST(JsonTest, NumberFormat) {
   // Test whole numbers (as doubles).
   EXPECT_EQ("0.0", stringify(JSON::Number(0.0)));
   EXPECT_EQ("1.0", stringify(JSON::Number(1.0)));
@@ -80,8 +74,7 @@ TEST(JsonTest, NumberFormat)
 }
 
 
-TEST(JsonTest, NumberComparisons)
-{
+TEST(JsonTest, NumberComparisons) {
   // Unsigned and signed comparisons.
   EXPECT_EQ(JSON::Number(1U), JSON::Number((int64_t) 1));
   EXPECT_EQ(JSON::Number(0U), JSON::Number((int64_t) 0));
@@ -107,8 +100,7 @@ TEST(JsonTest, NumberComparisons)
 }
 
 
-TEST(JsonTest, BooleanFormat)
-{
+TEST(JsonTest, BooleanFormat) {
   EXPECT_EQ("false", stringify(JSON::False()));
   EXPECT_EQ("true", stringify(JSON::True()));
 
@@ -120,8 +112,7 @@ TEST(JsonTest, BooleanFormat)
 }
 
 
-TEST(JsonTest, BooleanAssignement)
-{
+TEST(JsonTest, BooleanAssignement) {
   JSON::Value v = true;
   EXPECT_TRUE(get<JSON::Boolean>(v).value);
 
@@ -136,8 +127,7 @@ TEST(JsonTest, BooleanAssignement)
 }
 
 
-TEST(JsonTest, CStringAssignment)
-{
+TEST(JsonTest, CStringAssignment) {
   JSON::Value v = "test";
   JSON::String s = "test";
   EXPECT_EQ(get<JSON::String>(v).value, "test");
@@ -157,8 +147,7 @@ TEST(JsonTest, CStringAssignment)
 }
 
 
-TEST(JsonTest, NumericAssignment)
-{
+TEST(JsonTest, NumericAssignment) {
   // Just using this to get various numeric datatypes that
   // are used by clients of stout.
   struct stat s;
@@ -213,8 +202,7 @@ TEST(JsonTest, NumericAssignment)
 }
 
 
-TEST(JsonTest, Parse)
-{
+TEST(JsonTest, Parse) {
   JSON::Object object;
 
   object.values["strings"] = "string";
@@ -246,50 +234,53 @@ TEST(JsonTest, Parse)
   object.values["oh"] = "no";
 
   string jsonString =
-    "      "
-    "{\n"
-    "  \"some\": \"stuff\","
-    "  \"oh\": \"no\""
-    "}\t   ";
+      "      "
+      "{\n"
+      "  \"some\": \"stuff\","
+      "  \"oh\": \"no\""
+      "}\t   ";
 
   EXPECT_SOME_EQ(object, JSON::parse<JSON::Object>(jsonString));
 }
 
 
-TEST(JsonTest, ParseError)
-{
+TEST(JsonTest, ParseError) {
   string jsonString =
-    "{"
-    "  \"key1\": \"value1\","
-    "  \"key2\": \"value2\""
-    "}trailingcharacters";
+      "{"
+      "  \"key1\": \"value1\","
+      "  \"key2\": \"value2\""
+      "}trailingcharacters";
 
   EXPECT_ERROR(JSON::parse<JSON::Object>(jsonString));
 
   jsonString =
-    "{"
-    "  \"key1\": \"value1\","
-    "  \"key2\": \"value2\""
-    "},"
-    "{"
-    "  \"key3\": \"value3\","
-    "  \"key4\": \"value4\""
-    "}";
+      "{"
+      "  \"key1\": \"value1\","
+      "  \"key2\": \"value2\""
+      "},"
+      "{"
+      "  \"key3\": \"value3\","
+      "  \"key4\": \"value4\""
+      "}";
 
   EXPECT_ERROR(JSON::parse<JSON::Object>(jsonString));
 
   jsonString =
-    "{"
-    "  \"key1\": \"value1\","
-    "  \"key2\": \"value2\""
-    " ";
+      "{"
+      "  \"key1\": \"value1\","
+      "  \"key2\": \"value2\""
+      " ";
 
   EXPECT_ERROR(JSON::parse<JSON::Object>(jsonString));
 
+  /* clang-format off */
   jsonString = R"~(
     {
-      "double1": 123123123121231231231231321312312312123123122E112312387129381723\x0d\x0a\x0d\x0a\x0d\x0a\x0d
+      "double1":
+      123123123121231231231231321312312312123123122E112312387129381723
+      \x0d\x0a\x0d\x0a\x0d\x0a\x0d
     })~";
+  /* clang-format on */
 
   EXPECT_ERROR(JSON::parse<JSON::Object>(jsonString));
 
@@ -302,8 +293,7 @@ TEST(JsonTest, ParseError)
 }
 
 
-TEST(JsonTest, Find)
-{
+TEST(JsonTest, Find) {
   Try<JSON::Value> value = JSON::parse(
       R"~(
       {
@@ -391,8 +381,7 @@ TEST(JsonTest, Find)
 }
 
 
-TEST(JsonTest, At)
-{
+TEST(JsonTest, At) {
   JSON::Object object;
 
   object.values["this.string"] = "string";
@@ -435,8 +424,7 @@ TEST(JsonTest, At)
 
 
 // Test the equality operator between two objects.
-TEST(JsonTest, Equals)
-{
+TEST(JsonTest, Equals) {
   // Array checks.
   Try<JSON::Value> _array = JSON::parse("{\"array\" : [1, 2, 3]}");
   ASSERT_SOME(_array);
@@ -494,8 +482,7 @@ TEST(JsonTest, Equals)
 
 
 // Test the containment of JSON objects where one is a JSON array.
-TEST(JsonTest, ContainsArray)
-{
+TEST(JsonTest, ContainsArray) {
   Try<JSON::Value> _array = JSON::parse("{\"array\" : [1, 2, 3]}");
   ASSERT_SOME(_array);
   const JSON::Value array = _array.get();
@@ -536,16 +523,16 @@ TEST(JsonTest, ContainsArray)
 
   // Test arrays of doubles.
   Try<JSON::Value> _doubleArray =
-    JSON::parse("{\"array_of_doubles\" : [1.0, -22.33, 99.987, 100]}");
+      JSON::parse("{\"array_of_doubles\" : [1.0, -22.33, 99.987, 100]}");
   ASSERT_SOME(_doubleArray);
   const JSON::Value doubleArray = _doubleArray.get();
 
   Try<JSON::Value> doubleArrayTest =
-    JSON::parse("{\"array_of_doubles\" : [1.0, -22.33, 99.987, 100]}");
+      JSON::parse("{\"array_of_doubles\" : [1.0, -22.33, 99.987, 100]}");
   EXPECT_TRUE(doubleArray.contains(doubleArrayTest.get()));
 
   doubleArrayTest =
-    JSON::parse("{\"array_of_doubles\" : [1.0, -22.33, 99.999, 100]}");
+      JSON::parse("{\"array_of_doubles\" : [1.0, -22.33, 99.999, 100]}");
   EXPECT_FALSE(doubleArray.contains(doubleArrayTest.get()));
 
   doubleArrayTest = JSON::parse("{\"array_of_doubles\" : [1.0, -22.33, 100]}");
@@ -554,31 +541,30 @@ TEST(JsonTest, ContainsArray)
 
   // Test array of arrays.
   Try<JSON::Value> _arrayArray =
-    JSON::parse("{\"array_of_arrays\" : [[1.0, -22.33], [1, 2]]}");
+      JSON::parse("{\"array_of_arrays\" : [[1.0, -22.33], [1, 2]]}");
   ASSERT_SOME(_arrayArray);
   const JSON::Value arrayArray = _arrayArray.get();
 
   Try<JSON::Value> arrayArrayTest =
-    JSON::parse("{\"array_of_arrays\" : [[1.0, -22.33], [1, 2]]}");
+      JSON::parse("{\"array_of_arrays\" : [[1.0, -22.33], [1, 2]]}");
   EXPECT_TRUE(arrayArray.contains(arrayArrayTest.get()));
 
   arrayArrayTest =
-    JSON::parse("{\"array_of_arrays\" : [[1.0, -22.33], [1, 3]]}");
+      JSON::parse("{\"array_of_arrays\" : [[1.0, -22.33], [1, 3]]}");
   EXPECT_FALSE(arrayArray.contains(arrayArrayTest.get()));
 
   arrayArrayTest =
-    JSON::parse("{\"array_of_arrays\" : [[1.0, -33.44], [1, 3]]}");
+      JSON::parse("{\"array_of_arrays\" : [[1.0, -33.44], [1, 3]]}");
   EXPECT_FALSE(arrayArray.contains(arrayArrayTest.get()));
 
   arrayArrayTest =
-    JSON::parse("{\"array_of_arrays\" : [[1.0, -22.33], [1]]}");
+      JSON::parse("{\"array_of_arrays\" : [[1.0, -22.33], [1]]}");
   EXPECT_FALSE(arrayArray.contains(arrayArrayTest.get()));
 }
 
 
 // Test the containment of JSON objects where one is a JSON boolean.
-TEST(JsonTest, ContainsBoolean)
-{
+TEST(JsonTest, ContainsBoolean) {
   Try<JSON::Value> _boolean = JSON::parse("{\"boolean\" : true}");
   ASSERT_SOME(_boolean);
   const JSON::Value boolean = _boolean.get();
@@ -604,8 +590,7 @@ TEST(JsonTest, ContainsBoolean)
 
 
 // Test the containment of JSON objects where one is a JSON null.
-TEST(JsonTest, ContainsNull)
-{
+TEST(JsonTest, ContainsNull) {
   Try<JSON::Value> _nullEntry = JSON::parse("{\"null_entry\" : null}");
   ASSERT_SOME(_nullEntry);
   const JSON::Value nullEntry = _nullEntry.get();
@@ -625,8 +610,7 @@ TEST(JsonTest, ContainsNull)
 
 
 // Test the containment of JSON objects where one is a JSON string.
-TEST(JsonTest, ContainsString)
-{
+TEST(JsonTest, ContainsString) {
   Try<JSON::Value> _str = JSON::parse("{\"string\" : \"Hello World!\"}");
   ASSERT_SOME(_str);
   const JSON::Value str = _str.get();
@@ -655,8 +639,7 @@ TEST(JsonTest, ContainsString)
 
 
 // Test the containment of JSON objects to JSON objects.
-TEST(JsonTest, ContainsObject)
-{
+TEST(JsonTest, ContainsObject) {
   Try<JSON::Value> _object = JSON::parse("{\"a\" : 1, \"b\" : 2}");
   ASSERT_SOME(_object);
   const JSON::Value object = _object.get();
@@ -682,12 +665,13 @@ TEST(JsonTest, ContainsObject)
 
   // Array of objects checks.
   Try<JSON::Value> _objectArray = JSON::parse(
-      "{"
-      "  \"objectarray\" : ["
-      "    {\"a\" : 1, \"b\" : 2},"
-      "    {\"c\" : 3, \"d\" : 4}"
-      "  ]"
-      "}").get();
+                                      "{"
+                                      "  \"objectarray\" : ["
+                                      "    {\"a\" : 1, \"b\" : 2},"
+                                      "    {\"c\" : 3, \"d\" : 4}"
+                                      "  ]"
+                                      "}")
+                                      .get();
   ASSERT_SOME(_objectArray);
   const JSON::Value objectArray = _objectArray.get();
 
@@ -797,8 +781,7 @@ TEST(JsonTest, ContainsObject)
 }
 
 
-TEST(JsonTest, NestingDepth)
-{
+TEST(JsonTest, NestingDepth) {
   const size_t depth = 500000;
 
   string deeplyNested;

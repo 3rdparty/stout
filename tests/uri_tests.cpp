@@ -12,20 +12,19 @@
 
 #include <gtest/gtest.h>
 
-#include <stout/uri.hpp>
+#include "stout/uri.hpp"
 
 
-TEST(UriTest, TestUriFromPath)
-{
+TEST(UriTest, TestUriFromPath) {
   EXPECT_EQ(uri::FILE_PREFIX, uri::from_path(""));
 
   EXPECT_EQ(
       uri::FILE_PREFIX + "/absolute/path/on/linux",
       uri::from_path("/absolute/path/on/linux"));
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
   EXPECT_EQ(
       uri::FILE_PREFIX + "C:/somedir/somefile",
       uri::from_path("C:\\somedir\\somefile"));
-#endif // __WINDOWS__
+#endif // _WIN32
 }

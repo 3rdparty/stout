@@ -10,23 +10,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
-#include <string>
-
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <gmock/gmock.h>
+#include <string>
 
-#include <stout/check.hpp>
-#include <stout/gtest.hpp>
-#include <stout/uuid.hpp>
+#include "stout/check.hpp"
+#include "stout/gtest.hpp"
+#include "stout/uuid.hpp"
 
 using id::UUID;
 
 using std::string;
 
 
-TEST(UUIDTest, Test)
-{
+TEST(UUIDTest, Test) {
   UUID uuid1 = UUID::random();
   UUID uuid2 = UUID::fromBytes(uuid1.toBytes()).get();
   UUID uuid3 = uuid2;
@@ -57,8 +55,7 @@ TEST(UUIDTest, Test)
 }
 
 
-TEST(UUIDTest, Metadata)
-{
+TEST(UUIDTest, Metadata) {
   UUID uuid = UUID::random();
 
   EXPECT_EQ(16u, uuid.size());
@@ -67,8 +64,7 @@ TEST(UUIDTest, Metadata)
 }
 
 
-TEST(UUIDTest, MalformedUUID)
-{
+TEST(UUIDTest, MalformedUUID) {
   EXPECT_SOME(UUID::fromBytes(UUID::random().toBytes()));
   EXPECT_ERROR(UUID::fromBytes("malformed-uuid"));
   EXPECT_ERROR(UUID::fromBytes("invalidstringmsg"));

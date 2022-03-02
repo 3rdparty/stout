@@ -10,16 +10,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
-#include <string>
-
 #include <gtest/gtest.h>
 
-#include <stout/cache.hpp>
-#include <stout/gtest.hpp>
+#include <string>
+
+#include "stout/cache.hpp"
+#include "stout/gtest.hpp"
 
 
-TEST(CacheTest, Insert)
-{
+TEST(CacheTest, Insert) {
   Cache<int, std::string> cache(1);
   EXPECT_EQ(0u, cache.size());
   cache.put(1, "a");
@@ -28,8 +27,7 @@ TEST(CacheTest, Insert)
 }
 
 
-TEST(CacheTest, Update)
-{
+TEST(CacheTest, Update) {
   Cache<int, std::string> cache(1);
   cache.put(1, "a");
   cache.put(1, "b");
@@ -38,8 +36,7 @@ TEST(CacheTest, Update)
 }
 
 
-TEST(CacheTest, Erase)
-{
+TEST(CacheTest, Erase) {
   Cache<int, std::string> cache(2);
   cache.put(1, "a");
   cache.put(2, "b");
@@ -57,8 +54,7 @@ TEST(CacheTest, Erase)
 }
 
 
-TEST(CacheTest, LRUEviction)
-{
+TEST(CacheTest, LRUEviction) {
   Cache<int, std::string> cache(2);
   cache.put(1, "a");
   cache.put(2, "b");

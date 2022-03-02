@@ -10,20 +10,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <gtest/gtest.h>
+
 #include <cstdlib> // For rand().
 #include <string>
 
-#include <gtest/gtest.h>
-
-#include <stout/bytes.hpp>
-#include <stout/gtest.hpp>
-#include <stout/svn.hpp>
+#include "stout/bytes.hpp"
+#include "stout/gtest.hpp"
+#include "stout/svn.hpp"
 
 using std::string;
 
 
-TEST(SVNTest, DiffPatch)
-{
+TEST(SVNTest, DiffPatch) {
   string source;
 
   while (Bytes(source.size()) < Megabytes(1)) {
@@ -50,8 +49,7 @@ TEST(SVNTest, DiffPatch)
 }
 
 
-TEST(SVNTest, EmptyDiffPatch)
-{
+TEST(SVNTest, EmptyDiffPatch) {
   string source;
 
   while (Bytes(source.size()) < Megabytes(1)) {

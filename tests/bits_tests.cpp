@@ -12,10 +12,9 @@
 
 #include <gtest/gtest.h>
 
-#include <stout/bits.hpp>
+#include "stout/bits.hpp"
 
-TEST(BitsTest, CountSetBits)
-{
+TEST(BitsTest, CountSetBits) {
   EXPECT_EQ(0, bits::countSetBits(0));
   EXPECT_EQ(6, bits::countSetBits(0xf3));
   EXPECT_EQ(15, bits::countSetBits(0xffbf));

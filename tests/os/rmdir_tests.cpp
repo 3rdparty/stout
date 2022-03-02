@@ -15,25 +15,22 @@
 #include <set>
 #include <string>
 
-#include <stout/fs.hpp>
-#include <stout/os.hpp>
-#include <stout/path.hpp>
-
-#include <stout/os/getcwd.hpp>
-#include <stout/os/ls.hpp>
-#include <stout/os/mkdir.hpp>
-#include <stout/os/stat.hpp>
-#include <stout/os/touch.hpp>
-
-#include <stout/tests/utils.hpp>
+#include "stout/fs.hpp"
+#include "stout/os.hpp"
+#include "stout/os/getcwd.hpp"
+#include "stout/os/ls.hpp"
+#include "stout/os/mkdir.hpp"
+#include "stout/os/stat.hpp"
+#include "stout/os/touch.hpp"
+#include "stout/path.hpp"
+#include "stout/tests/utils.hpp"
 
 using std::list;
 using std::set;
 using std::string;
 
 
-static hashset<string> listfiles(const string& directory)
-{
+static hashset<string> listfiles(const string& directory) {
   hashset<string> fileset;
   Try<list<string>> entries = os::ls(directory);
   if (entries.isSome()) {
@@ -51,8 +48,7 @@ class RmdirTest : public TemporaryDirectoryTest {};
 // TODO(hausdorff): This test is almost copy-pasted from
 // `TrivialRemoveEmptyDirectoryRelativePath`; we should parameterize them to
 // reduce redundancy.
-TEST_F(RmdirTest, TrivialRemoveEmptyDirectoryAbsolutePath)
-{
+TEST_F(RmdirTest, TrivialRemoveEmptyDirectoryAbsolutePath) {
   const string tmpdir = os::getcwd();
 
   // Directory is initially empty.
@@ -61,7 +57,7 @@ TEST_F(RmdirTest, TrivialRemoveEmptyDirectoryAbsolutePath)
   // Successfully make directory using absolute path.
   const string newDirectoryName = "newDirectory";
   const string newDirectoryAbsolutePath = path::join(tmpdir, newDirectoryName);
-  const hashset<string> expectedListing = { newDirectoryName };
+  const hashset<string> expectedListing = {newDirectoryName};
 
   EXPECT_SOME(os::mkdir(newDirectoryAbsolutePath));
   EXPECT_EQ(expectedListing, listfiles(tmpdir));
@@ -73,8 +69,7 @@ TEST_F(RmdirTest, TrivialRemoveEmptyDirectoryAbsolutePath)
 }
 
 
-TEST_F(RmdirTest, TrivialRemoveEmptyDirectoryRelativePath)
-{
+TEST_F(RmdirTest, TrivialRemoveEmptyDirectoryRelativePath) {
   const string tmpdir = os::getcwd();
 
   // Directory is initially empty.
@@ -82,7 +77,7 @@ TEST_F(RmdirTest, TrivialRemoveEmptyDirectoryRelativePath)
 
   // Successfully make directory using relative path.
   const string newDirectoryName = "newDirectory";
-  const hashset<string> expectedListing = { newDirectoryName };
+  const hashset<string> expectedListing = {newDirectoryName};
 
   EXPECT_SOME(os::mkdir(newDirectoryName));
   EXPECT_EQ(expectedListing, listfiles(tmpdir));
@@ -95,8 +90,7 @@ TEST_F(RmdirTest, TrivialRemoveEmptyDirectoryRelativePath)
 
 
 // Tests behavior of `rmdir` when path points at a file instead of a directory.
-TEST_F(RmdirTest, RemoveFile)
-{
+TEST_F(RmdirTest, RemoveFile) {
   const string tmpdir = os::getcwd();
 
   // Directory is initially empty.
@@ -111,8 +105,8 @@ TEST_F(RmdirTest, RemoveFile)
       newDirectoryAbsolutePath,
       newFileName);
 
-  const hashset<string> expectedRootListing = { newDirectoryName };
-  const hashset<string> expectedSubListing = { newFileName };
+  const hashset<string> expectedRootListing = {newDirectoryName};
+  const hashset<string> expectedSubListing = {newFileName};
 
   EXPECT_SOME(os::mkdir(newDirectoryAbsolutePath));
   EXPECT_SOME(os::touch(newFileAbsolutePath));
@@ -151,8 +145,7 @@ TEST_F(RmdirTest, RemoveFile)
 }
 
 
-TEST_F(RmdirTest, RemoveRecursiveByDefault)
-{
+TEST_F(RmdirTest, RemoveRecursiveByDefault) {
   const string tmpdir = os::getcwd();
 
   // Directory is initially empty.
@@ -167,8 +160,8 @@ TEST_F(RmdirTest, RemoveRecursiveByDefault)
       newDirectoryAbsolutePath,
       newFileName);
 
-  const hashset<string> expectedRootListing = { newDirectoryName };
-  const hashset<string> expectedSubListing = { newFileName };
+  const hashset<string> expectedRootListing = {newDirectoryName};
+  const hashset<string> expectedSubListing = {newFileName};
 
   EXPECT_SOME(os::mkdir(newDirectoryAbsolutePath));
   EXPECT_SOME(os::touch(newFileAbsolutePath));
@@ -182,8 +175,7 @@ TEST_F(RmdirTest, RemoveRecursiveByDefault)
 }
 
 
-TEST_F(RmdirTest, TrivialFailToRemoveInvalidPath)
-{
+TEST_F(RmdirTest, TrivialFailToRemoveInvalidPath) {
   // Directory is initially empty.
   EXPECT_EQ(hashset<string>::EMPTY, listfiles(os::getcwd()));
 
@@ -196,8 +188,7 @@ TEST_F(RmdirTest, TrivialFailToRemoveInvalidPath)
 }
 
 
-TEST_F(RmdirTest, FailToRemoveNestedInvalidPath)
-{
+TEST_F(RmdirTest, FailToRemoveNestedInvalidPath) {
   const string tmpdir = os::getcwd();
 
   // Directory is initially empty.
@@ -207,7 +198,7 @@ TEST_F(RmdirTest, FailToRemoveNestedInvalidPath)
   const string newDirectoryName = "newDirectory";
   const string newDirectoryAbsolutePath = path::join(tmpdir, newDirectoryName);
 
-  const hashset<string> expectedRootListing = { newDirectoryName };
+  const hashset<string> expectedRootListing = {newDirectoryName};
 
   EXPECT_SOME(os::mkdir(newDirectoryAbsolutePath));
   EXPECT_EQ(expectedRootListing, listfiles(tmpdir));
@@ -227,18 +218,17 @@ TEST_F(RmdirTest, FailToRemoveNestedInvalidPath)
 }
 
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
 // This test verifies that `rmdir` can remove a directory with a
 // device file.
 //
 // NOTE: Enable this test if `os::rdev` and `os::mknod` are
 // implemented on Windows. 'os::rdev` calls `::lstat` and `::stat`.
-TEST_F(RmdirTest, RemoveDirectoryWithDeviceFile)
-{
+TEST_F(RmdirTest, RemoveDirectoryWithDeviceFile) {
 #ifdef __FreeBSD__
   // If we're in a jail on FreeBSD, we can't use mknod.
   if (isJailed()) {
-      return;
+    return;
   }
 #endif
 
@@ -252,8 +242,7 @@ TEST_F(RmdirTest, RemoveDirectoryWithDeviceFile)
 
   // Create a 'char' device file with major number same as that of
   // `/dev/null`.
-  const string deviceDirectory = path::join(os::getcwd(),
-      "deviceDirectory");
+  const string deviceDirectory = path::join(os::getcwd(), "deviceDirectory");
   ASSERT_SOME(os::mkdir(deviceDirectory));
 
   const string device = "null";
@@ -274,13 +263,12 @@ TEST_F(RmdirTest, RemoveDirectoryWithDeviceFile)
 
   EXPECT_SOME(os::rmdir(deviceDirectory));
 }
-#endif // __WINDOWS__
+#endif // _WIN32
 
 
 // This test verifies that `rmdir` can remove a directory with a
 // symlink that has no target.
-TEST_F(RmdirTest, SYMLINK_RmDirNoTargetSymbolicLink)
-{
+TEST_F(RmdirTest, SYMLINK_RmDirNoTargetSymbolicLink) {
   const string newDirectory = path::join(os::getcwd(), "newDirectory");
   ASSERT_SOME(os::mkdir(newDirectory));
 
@@ -295,8 +283,7 @@ TEST_F(RmdirTest, SYMLINK_RmDirNoTargetSymbolicLink)
 
 // This test verifies that `rmdir` can remove a directory with a
 // "hanging" symlink whose target has been deleted.
-TEST_F(RmdirTest, SYMLINK_RemoveDirectoryHangingSymlink)
-{
+TEST_F(RmdirTest, SYMLINK_RemoveDirectoryHangingSymlink) {
   const string newDirectory = path::join(os::getcwd(), "newDirectory");
   ASSERT_SOME(os::mkdir(newDirectory));
 
@@ -315,8 +302,7 @@ TEST_F(RmdirTest, SYMLINK_RemoveDirectoryHangingSymlink)
 
 // This test verifies that `rmdir` will only remove the symbolic link and not
 // the target directory.
-TEST_F(RmdirTest, SYMLINK_RemoveDirectoryWithSymbolicLinkTargetDirectory)
-{
+TEST_F(RmdirTest, SYMLINK_RemoveDirectoryWithSymbolicLinkTargetDirectory) {
   const string newDirectory = path::join(os::getcwd(), "newDirectory");
   ASSERT_SOME(os::mkdir(newDirectory));
 
@@ -338,8 +324,7 @@ TEST_F(RmdirTest, SYMLINK_RemoveDirectoryWithSymbolicLinkTargetDirectory)
 
 // This test verifies that `rmdir` will only remove the symbolic link and not
 // the target file.
-TEST_F(RmdirTest, SYMLINK_RemoveDirectoryWithSymbolicLinkTargetFile)
-{
+TEST_F(RmdirTest, SYMLINK_RemoveDirectoryWithSymbolicLinkTargetFile) {
   const string newDirectory = path::join(os::getcwd(), "newDirectory");
   ASSERT_SOME(os::mkdir(newDirectory));
 
@@ -362,8 +347,7 @@ TEST_F(RmdirTest, SYMLINK_RemoveDirectoryWithSymbolicLinkTargetFile)
 // This tests that when appropriately instructed, `rmdir` can remove
 // the files and subdirectories that appear in a directory but
 // preserve the directory itself.
-TEST_F(RmdirTest, RemoveDirectoryButPreserveRoot)
-{
+TEST_F(RmdirTest, RemoveDirectoryButPreserveRoot) {
   const string newDirectory = path::join(os::getcwd(), "newDirectory");
   ASSERT_SOME(os::mkdir(newDirectory));
 
@@ -385,11 +369,9 @@ TEST_F(RmdirTest, RemoveDirectoryButPreserveRoot)
 // This test fixture verifies that `rmdir` behaves correctly
 // with option `continueOnError` and makes sure the undeletable
 // files from tests are cleaned up during teardown.
-class RmdirContinueOnErrorTest : public RmdirTest
-{
-public:
-  void TearDown() override
-  {
+class RmdirContinueOnErrorTest : public RmdirTest {
+ public:
+  void TearDown() override {
     if (mountPoint.isSome()) {
       if (os::system("umount -f -l " + mountPoint.get()) != 0) {
         LOG(ERROR) << "Failed to unmount '" << mountPoint.get();
@@ -399,7 +381,7 @@ public:
     RmdirTest::TearDown();
   }
 
-protected:
+ protected:
   Option<string> mountPoint;
 };
 
@@ -407,8 +389,7 @@ protected:
 // This test creates a busy mount point which is not directly deletable
 // by rmdir and verifies that rmdir deletes all files that
 // it's able to delete if `continueOnError = true`.
-TEST_F(RmdirContinueOnErrorTest, RemoveWithContinueOnError)
-{
+TEST_F(RmdirContinueOnErrorTest, RemoveWithContinueOnError) {
   // Mounting a filesystem requires root permission.
   Result<string> user = os::user();
   ASSERT_SOME(user);
@@ -438,8 +419,9 @@ TEST_F(RmdirContinueOnErrorTest, RemoveWithContinueOnError)
   ASSERT_SOME(os::mkdir(mountPoint_));
   ASSERT_SOME(os::touch(regularFile));
 
-  ASSERT_SOME_EQ(0, os::system(
-      "mount --bind " + mountPoint_ + " " + mountPoint_));
+  ASSERT_SOME_EQ(
+      0,
+      os::system("mount --bind " + mountPoint_ + " " + mountPoint_));
 
   // Register the mount point for cleanup.
   mountPoint = Option<string>(mountPoint_);

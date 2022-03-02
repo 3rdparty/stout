@@ -10,28 +10,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
+#include <gtest/gtest.h>
 #include <stdio.h>
 
 #include <set>
 #include <string>
 #include <vector>
 
-#include <gtest/gtest.h>
-
-#include <stout/foreach.hpp>
-#include <stout/gtest.hpp>
-#include <stout/mac.hpp>
-#include <stout/net.hpp>
-#include <stout/stringify.hpp>
-#include <stout/strings.hpp>
+#include "stout/foreach.hpp"
+#include "stout/gtest.hpp"
+#include "stout/mac.hpp"
+#include "stout/net.hpp"
+#include "stout/stringify.hpp"
+#include "stout/strings.hpp"
 
 using std::set;
 using std::string;
 using std::vector;
 
 
-TEST(NetTest, Mac)
-{
+TEST(NetTest, Mac) {
   Try<set<string>> links = net::links();
   ASSERT_SOME(links);
 
@@ -60,16 +58,14 @@ TEST(NetTest, Mac)
 }
 
 
-TEST(NetTest, ConstructMAC)
-{
+TEST(NetTest, ConstructMAC) {
   uint8_t bytes[6] = {0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc};
 
   EXPECT_EQ("12:34:56:78:9a:bc", stringify(net::MAC(bytes)));
 }
 
 
-TEST(NetTest, ParseMAC)
-{
+TEST(NetTest, ParseMAC) {
   Try<net::MAC> mac = net::MAC::parse("12:34:56:78:9a:bc");
   ASSERT_SOME(mac);
 

@@ -10,31 +10,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
+#include <gtest/gtest.h>
+
 #include <list>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include <gtest/gtest.h>
+#include "stout/hashmap.hpp"
+#include "stout/lambda.hpp"
+#include "stout/numify.hpp"
 
-#include <stout/hashmap.hpp>
-#include <stout/lambda.hpp>
-#include <stout/numify.hpp>
+struct OnlyMoveable {
+  OnlyMoveable()
+    : i(-1) {}
+  OnlyMoveable(int i)
+    : i(i) {}
 
-struct OnlyMoveable
-{
-  OnlyMoveable() : i(-1) {}
-  OnlyMoveable(int i) : i(i) {}
-
-  OnlyMoveable(OnlyMoveable&& that)
-  {
+  OnlyMoveable(OnlyMoveable&& that) {
     *this = std::move(that);
   }
 
   OnlyMoveable(const OnlyMoveable&) = delete;
 
-  OnlyMoveable& operator=(OnlyMoveable&& that)
-  {
+  OnlyMoveable& operator=(OnlyMoveable&& that) {
     i = that.i;
     j = that.j;
     that.valid = false;
@@ -49,14 +48,12 @@ struct OnlyMoveable
 };
 
 
-std::vector<std::string> function()
-{
+std::vector<std::string> function() {
   return {"1", "2", "3"};
 }
 
 
-TEST(LambdaTest, Map)
-{
+TEST(LambdaTest, Map) {
   std::vector<int> expected = {1, 2, 3};
 
   EXPECT_EQ(
@@ -110,8 +107,7 @@ TEST(LambdaTest, Map)
 }
 
 
-TEST(LambdaTest, Zip)
-{
+TEST(LambdaTest, Zip) {
   std::vector<int> ints = {1, 2, 3, 4, 5, 6, 7, 8};
   std::list<std::string> strings = {"hello", "world"};
 
@@ -125,7 +121,7 @@ TEST(LambdaTest, Zip)
   strings = {"hello", "world", "!"};
 
   std::vector<std::pair<int, std::string>> zip2 =
-    lambda::zipto<std::vector>(ints, strings);
+      lambda::zipto<std::vector>(ints, strings);
 
   ASSERT_EQ(2u, zip2.size());
   EXPECT_EQ(std::make_pair(1, std::string("hello")), zip2.at(0));
@@ -135,12 +131,13 @@ TEST(LambdaTest, Zip)
 
 namespace {
 
-template <typename F, typename ...Args>
+/* clang-format off */
+template <typename F, typename... Args>
 auto callable(F&& f, Args&&... args)
-  -> decltype(std::forward<F>(f)(std::forward<Args>(args)...),
-              void(),
-              std::true_type());
-
+    -> decltype(std::forward<F>(f)(std::forward<Args>(args)...),
+                void(),
+                std::true_type());
+/* clang-format on */
 
 template <typename F>
 std::false_type callable(F&& f, ...);
@@ -151,23 +148,21 @@ std::false_type callable(F&& f, ...);
 // differentiating on return type. The first overload is selected only
 // when call expression is valid, and it has return type of std::true_type,
 // while second overload is selected for everything else.
-template <typename F, typename ...Args>
-void EXPECT_CALL_INVALID(F&& f, Args&&... args)
-{
+template <typename F, typename... Args>
+void EXPECT_CALL_INVALID(F&& f, Args&&... args) {
   static_assert(
-      !decltype(
-          callable(std::forward<F>(f), std::forward<Args>(args)...))::value,
-          "call expression is expected to be invalid");
+      !decltype(callable(
+          std::forward<F>(f),
+          std::forward<Args>(args)...))::value,
+      "call expression is expected to be invalid");
 }
 
-} // namespace {
-
+} // namespace
 
 
 namespace {
 
-int returnIntNoParams()
-{
+int returnIntNoParams() {
   return 8;
 }
 
@@ -178,19 +173,17 @@ void returnVoidStringParam(std::string s) {}
 void returnVoidStringCRefParam(const std::string& s) {}
 
 
-int returnIntOnlyMovableParam(OnlyMoveable o)
-{
+int returnIntOnlyMovableParam(OnlyMoveable o) {
   EXPECT_TRUE(o.valid);
   return 1;
 }
 
-} // namespace {
+} // namespace
 
 
 // This is mostly a compile time test of lambda::partial,
 // verifying that it works for different types of expressions.
-TEST(PartialTest, Test)
-{
+TEST(PartialTest, Test) {
   // standalone functions
   auto p1 = lambda::partial(returnIntNoParams);
   int p1r1 = p1();
@@ -225,21 +218,24 @@ TEST(PartialTest, Test)
   pl1();
   std::move(pl1)();
 
-  auto pl2 = lambda::partial([](OnlyMoveable&& m) { EXPECT_TRUE(m.valid); },
+  auto pl2 = lambda::partial(
+      [](OnlyMoveable&& m) { EXPECT_TRUE(m.valid); },
       lambda::_1);
   pl2(OnlyMoveable());
   pl2(OnlyMoveable());
   std::move(pl2)(OnlyMoveable());
 
-  auto pl3 = lambda::partial([](OnlyMoveable&& m) { EXPECT_TRUE(m.valid); },
+  auto pl3 = lambda::partial(
+      [](OnlyMoveable&& m) { EXPECT_TRUE(m.valid); },
       OnlyMoveable());
   EXPECT_CALL_INVALID(pl3);
   std::move(pl3)();
 
   // member functions
-  struct Object
-  {
-    int method() { return 0; };
+  struct Object {
+    int method() {
+      return 0;
+    };
   };
 
   auto mp1 = lambda::partial(&Object::method, lambda::_1);

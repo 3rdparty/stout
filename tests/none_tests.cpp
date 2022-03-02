@@ -10,50 +10,44 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
-#include <string>
-
 #include <gmock/gmock.h>
 
-#include <stout/gtest.hpp>
-#include <stout/none.hpp>
-#include <stout/option.hpp>
-#include <stout/result.hpp>
+#include <string>
+
+#include "stout/gtest.hpp"
+#include "stout/none.hpp"
+#include "stout/option.hpp"
+#include "stout/result.hpp"
 
 using std::string;
 
 
-None none1()
-{
+None none1() {
   return None();
 }
 
 
-Option<string> none2()
-{
+Option<string> none2() {
   return None();
 }
 
 
-Option<string> none3(const Option<string>& o)
-{
+Option<string> none3(const Option<string>& o) {
   return o;
 }
 
 
-Result<string> none4()
-{
+Result<string> none4() {
   return None();
 }
 
 
-Result<string> none5(const Result<string>& r)
-{
+Result<string> none5(const Result<string>& r) {
   return r;
 }
 
 
-TEST(NoneTest, Test)
-{
+TEST(NoneTest, Test) {
   Option<string> o = none1();
   EXPECT_TRUE(o.isNone());
   EXPECT_NONE(o);

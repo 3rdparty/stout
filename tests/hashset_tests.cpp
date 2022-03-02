@@ -10,22 +10,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
+#include <boost/functional/hash.hpp>
 #include <string>
 #include <utility>
 
-#include <boost/functional/hash.hpp>
-
-#include <stout/hashset.hpp>
-
-#include <gtest/gtest.h>
-
-#include <gmock/gmock.h>
+#include "stout/hashset.hpp"
 
 using std::string;
 
 
-TEST(HashsetTest, InitializerList)
-{
+TEST(HashsetTest, InitializerList) {
   hashset<string> set{"hello"};
   EXPECT_EQ(1u, set.size());
 
@@ -43,8 +40,7 @@ TEST(HashsetTest, InitializerList)
 }
 
 
-TEST(HashsetTest, FromStdSet)
-{
+TEST(HashsetTest, FromStdSet) {
   std::set<int> set1{1, 3, 5, 7};
 
   hashset<int> set2(set1);
@@ -58,8 +54,7 @@ TEST(HashsetTest, FromStdSet)
 }
 
 
-TEST(HashsetTest, FromRValueStdSet)
-{
+TEST(HashsetTest, FromRValueStdSet) {
   std::set<int> set1{1, 3};
 
   hashset<int> set2(std::move(set1));
@@ -73,12 +68,9 @@ TEST(HashsetTest, FromRValueStdSet)
 }
 
 
-TEST(HashsetTest, CustomHashAndEqual)
-{
-  struct CaseInsensitiveHash
-  {
-    size_t operator()(const string& key) const
-    {
+TEST(HashsetTest, CustomHashAndEqual) {
+  struct CaseInsensitiveHash {
+    size_t operator()(const string& key) const {
       size_t seed = 0;
       foreach (const char c, key) {
         boost::hash_combine(seed, ::tolower(c));
@@ -87,10 +79,8 @@ TEST(HashsetTest, CustomHashAndEqual)
     }
   };
 
-  struct CaseInsensitiveEqual
-  {
-    bool operator()(const string& left, const string& right) const
-    {
+  struct CaseInsensitiveEqual {
+    bool operator()(const string& left, const string& right) const {
       if (left.size() != right.size()) {
         return false;
       }
@@ -119,8 +109,7 @@ TEST(HashsetTest, CustomHashAndEqual)
 }
 
 
-TEST(HashsetTest, Insert)
-{
+TEST(HashsetTest, Insert) {
   hashset<string> hs1;
   hs1.insert(string("HS1"));
   hs1.insert(string("HS3"));
@@ -135,8 +124,7 @@ TEST(HashsetTest, Insert)
 }
 
 
-TEST(HashsetTest, Union)
-{
+TEST(HashsetTest, Union) {
   hashset<int> hs1;
   hs1.insert(1);
   hs1.insert(2);
@@ -163,8 +151,7 @@ TEST(HashsetTest, Union)
 }
 
 
-TEST(HashsetTest, Difference)
-{
+TEST(HashsetTest, Difference) {
   hashset<int> hs1;
   hs1.insert(1);
   hs1.insert(2);

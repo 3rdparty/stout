@@ -12,13 +12,16 @@
 
 #include <stdint.h>
 
-#if !defined(__linux__) && !defined(__WINDOWS__)
+#if !defined(__linux__) && !defined(_WIN32)
 #include <sys/time.h> // For gettimeofday.
 #endif
 #ifdef __FreeBSD__
 #include <sys/sysctl.h>
 #include <sys/types.h>
 #endif
+
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 #include <algorithm>
 #include <chrono>
@@ -30,50 +33,46 @@
 #include <string>
 #include <vector>
 
-#include <gmock/gmock.h>
+#include "stout/duration.hpp"
+#include "stout/foreach.hpp"
+#include "stout/fs.hpp"
+#include "stout/gtest.hpp"
+#include "stout/hashset.hpp"
+#include "stout/numify.hpp"
+#include "stout/os.hpp"
+#include "stout/stopwatch.hpp"
+#include "stout/strings.hpp"
+#include "stout/try.hpp"
+#include "stout/uuid.hpp"
 
-#include <gtest/gtest.h>
-
-#include <stout/duration.hpp>
-#include <stout/foreach.hpp>
-#include <stout/fs.hpp>
-#include <stout/gtest.hpp>
-#include <stout/hashset.hpp>
-#include <stout/numify.hpp>
-#include <stout/os.hpp>
-#include <stout/stopwatch.hpp>
-#include <stout/strings.hpp>
-#include <stout/try.hpp>
-#include <stout/uuid.hpp>
-
-#if defined(__WINDOWS__)
-#include <stout/windows.hpp>
+#if defined(_WIN32)
+#include "stout/windows.hpp"
 #endif
 
-#include <stout/os/environment.hpp>
-#include <stout/os/int_fd.hpp>
-#include <stout/os/kill.hpp>
-#include <stout/os/killtree.hpp>
-#include <stout/os/realpath.hpp>
-#include <stout/os/shell.hpp>
-#include <stout/os/stat.hpp>
-#include <stout/os/which.hpp>
-#include <stout/os/write.hpp>
+#include "stout/os/environment.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/os/kill.hpp"
+#include "stout/os/killtree.hpp"
+#include "stout/os/realpath.hpp"
+#include "stout/os/shell.hpp"
+#include "stout/os/stat.hpp"
+#include "stout/os/which.hpp"
+#include "stout/os/write.hpp"
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
-#include <stout/os/sysctl.hpp>
+#include "stout/os/sysctl.hpp"
 #endif
 
-#if defined(__WINDOWS__)
-#include <stout/os/shell.hpp>
+#if defined(_WIN32)
+#include "stout/os/shell.hpp"
 #endif
 
-#include <stout/tests/utils.hpp>
+#include "stout/tests/utils.hpp"
 
-#if !defined(__WINDOWS__)
+#if !defined(_WIN32)
 using os::Exec;
 using os::Fork;
-#endif // __WINDOWS__
+#endif // _WIN32
 using os::Process;
 using os::ProcessTree;
 
@@ -84,42 +83,43 @@ using std::set;
 using std::string;
 using std::vector;
 
-#if defined(__WINDOWS__)
+#if defined(_WIN32)
 // NOTE: These are used to partially implement tests which otherwise
 // relied on `os::Exec` and `os::Fork`.
 using ::internal::windows::ProcessData;
 
-ProcessData windows_fork()
-{
+ProcessData windows_fork() {
   // This will unfortunately generate some output.
   Try<ProcessData> process_data = ::internal::windows::create_process(
-      "", {"ping.exe", "127.0.0.1", "-n", "10"}, None());
+      "",
+      {"ping.exe", "127.0.0.1", "-n", "10"},
+      None());
   CHECK_SOME(process_data);
   return process_data.get();
 }
 
-void windows_kill(const ProcessData& p)
-{
+void windows_kill(const ProcessData& p) {
   CHECK_EQ(TRUE, ::TerminateProcess(p.process_handle.get_handle(), 0));
   CHECK_EQ(
-      WAIT_OBJECT_0, ::WaitForSingleObject(p.process_handle.get_handle(), 500));
+      WAIT_OBJECT_0,
+      ::WaitForSingleObject(p.process_handle.get_handle(), 500));
 }
 #endif
 
 class OsTest : public TemporaryDirectoryTest {};
 
 
-TEST_F(OsTest, Environment)
-{
+TEST_F(OsTest, Environment) {
   // Make sure the environment has some entries with '=' in the value.
   os::setenv("SOME_SPECIAL_FLAG", "--flag=foobar");
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
   char** raw_environ = os::raw::environment();
 #else
   std::vector<string> raw_environ;
   const std::unique_ptr<wchar_t[], decltype(&::FreeEnvironmentStringsW)> env(
-      ::GetEnvironmentStringsW(), &::FreeEnvironmentStringsW);
+      ::GetEnvironmentStringsW(),
+      &::FreeEnvironmentStringsW);
 
   for (size_t i = 0; env[i] != L'\0' && env[i + 1] != L'\0';
        /* incremented below */) {
@@ -135,15 +135,15 @@ TEST_F(OsTest, Environment)
 
     raw_environ.push_back(stringify(entry.substr(0)));
   }
-#endif // __WINDOWS__
+#endif // _WIN32
 
   hashmap<string, string> environment = os::environment();
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
   for (size_t index = 0; raw_environ[index] != nullptr; index++) {
 #else
   for (size_t index = 0; index < raw_environ.size(); index++) {
-#endif // __WINDOWS__
+#endif // _WIN32
     string entry(raw_environ[index]);
     // In practice, sometimes the key starts with `=` even though it
     // is not supposed to. If we don't skip it, we get an empty key.
@@ -160,8 +160,7 @@ TEST_F(OsTest, Environment)
 }
 
 
-TEST_F(OsTest, TrivialEnvironment)
-{
+TEST_F(OsTest, TrivialEnvironment) {
   // NOTE: Regression test that ensures Windows can get and set an environment
   // variable. This is easy to break: Windows maintains two non-compatible ways
   // to get and set environment variables: the CRT way (using `environ`,
@@ -189,8 +188,7 @@ TEST_F(OsTest, TrivialEnvironment)
 }
 
 
-TEST_F(OsTest, Argv)
-{
+TEST_F(OsTest, Argv) {
   vector<string> args = {"arg0", "arg1", "arg2"};
 
   os::raw::Argv _argv(args);
@@ -201,8 +199,7 @@ TEST_F(OsTest, Argv)
 }
 
 
-TEST_F(OsTest, System)
-{
+TEST_F(OsTest, System) {
   EXPECT_SOME_EQ(0, os::system("exit 0"));
   EXPECT_SOME_EQ(0, os::system(SLEEP_COMMAND(0)));
   EXPECT_SOME_NE(0, os::system("exit 1"));
@@ -215,14 +212,12 @@ TEST_F(OsTest, System)
 
 
 // NOTE: `os::cloexec` is a stub on Windows that returns `true`.
-#ifdef __WINDOWS__
-TEST_F(OsTest, Cloexec)
-{
+#ifdef _WIN32
+TEST_F(OsTest, Cloexec) {
   ASSERT_SOME_TRUE(os::isCloexec(int_fd(INVALID_HANDLE_VALUE)));
 }
 #else
-TEST_F(OsTest, Cloexec)
-{
+TEST_F(OsTest, Cloexec) {
   Try<int_fd> fd = os::open(
       "cloexec",
       O_CREAT | O_WRONLY | O_APPEND | O_CLOEXEC,
@@ -249,13 +244,12 @@ TEST_F(OsTest, Cloexec)
 
   close(fd.get());
 }
-#endif // __WINDOWS__
+#endif // _WIN32
 
 
 // NOTE: `os::isNonblock` is a stub on Windows that returns `true`.
-#ifdef __WINDOWS__
-TEST_F(OsTest, Nonblock)
-{
+#ifdef _WIN32
+TEST_F(OsTest, Nonblock) {
   // `os::isNonblock` is a stub on Windows that returns `true`.
   EXPECT_SOME_TRUE(os::isNonblock(int_fd(INVALID_HANDLE_VALUE)));
 
@@ -272,15 +266,18 @@ TEST_F(OsTest, Nonblock)
   // does not fail on a valid socket.
   ASSERT_TRUE(net::wsa_initialize());
   Try<int_fd> socket =
-    net::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP, WSA_FLAG_NO_HANDLE_INHERIT);
+      net::socket(
+          AF_INET,
+          SOCK_STREAM,
+          IPPROTO_TCP,
+          WSA_FLAG_NO_HANDLE_INHERIT);
   ASSERT_SOME(socket);
   EXPECT_SOME(os::nonblock(socket.get()));
   EXPECT_SOME(os::close(socket.get()));
   ASSERT_TRUE(net::wsa_cleanup());
 }
 #else
-TEST_F(OsTest, Nonblock)
-{
+TEST_F(OsTest, Nonblock) {
   int pipes[2];
   ASSERT_NE(-1, pipe(pipes));
 
@@ -298,15 +295,14 @@ TEST_F(OsTest, Nonblock)
   EXPECT_ERROR(os::nonblock(pipes[0]));
   EXPECT_ERROR(os::nonblock(pipes[1]));
 }
-#endif // __WINDOWS__
+#endif // _WIN32
 
 
 // Tests whether a file's size is reported by os::stat::size as expected.
 // Tests all four combinations of following a link or not and of a file
 // or a link as argument. Also tests that an error is returned for a
 // non-existing file.
-TEST_F(OsTest, SYMLINK_Size)
-{
+TEST_F(OsTest, SYMLINK_Size) {
   const string file = path::join(os::getcwd(), id::UUID::random().toString());
 
   const Bytes size = 1053;
@@ -315,9 +311,9 @@ TEST_F(OsTest, SYMLINK_Size)
 
   // The reported file size should be the same whether following links
   // or not, given that the input parameter is not a link.
-  EXPECT_SOME_EQ(size,
-      os::stat::size(file, FollowSymlink::FOLLOW_SYMLINK));
-  EXPECT_SOME_EQ(size,
+  EXPECT_SOME_EQ(size, os::stat::size(file, FollowSymlink::FOLLOW_SYMLINK));
+  EXPECT_SOME_EQ(
+      size,
       os::stat::size(file, FollowSymlink::DO_NOT_FOLLOW_SYMLINK));
 
   EXPECT_ERROR(os::stat::size("aFileThatDoesNotExist"));
@@ -329,7 +325,7 @@ TEST_F(OsTest, SYMLINK_Size)
   // Following links we expect the file's size, not the link's.
   EXPECT_SOME_EQ(size, os::stat::size(link, FollowSymlink::FOLLOW_SYMLINK));
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
   // On Windows, the reported size of a symlink is zero.
   EXPECT_SOME_EQ(
       Bytes(0),
@@ -339,12 +335,11 @@ TEST_F(OsTest, SYMLINK_Size)
   EXPECT_SOME_EQ(
       Bytes(file.size()),
       os::stat::size(link, FollowSymlink::DO_NOT_FOLLOW_SYMLINK));
-#endif // __WINDOWS__
+#endif // _WIN32
 }
 
 
-TEST_F(OsTest, BootId)
-{
+TEST_F(OsTest, BootId) {
   Try<string> bootId = os::bootId();
   ASSERT_SOME(bootId);
   EXPECT_NE("", bootId.get());
@@ -353,7 +348,7 @@ TEST_F(OsTest, BootId)
   Try<string> read = os::read("/proc/sys/kernel/random/boot_id");
   ASSERT_SOME(read);
   EXPECT_EQ(bootId.get(), strings::trim(read.get()));
-#elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__WINDOWS__)
+#elif defined(__APPLE__) || defined(__FreeBSD__) || defined(_WIN32)
   // For OS X, FreeBSD, and Windows systems, the boot id is the system
   // boot time in seconds, so assert it can be numified and is a
   // reasonable value.
@@ -365,13 +360,12 @@ TEST_F(OsTest, BootId)
   EXPECT_LT(
       Seconds(numified.get()),
       Seconds(duration_cast<seconds>(system_clock::now().time_since_epoch())
-                .count()));
+                  .count()));
 #endif // APPLE / FreeBSD / WINDOWS
 }
 
 
-TEST_F(OsTest, Sleep)
-{
+TEST_F(OsTest, Sleep) {
   Duration duration = Milliseconds(10);
   Stopwatch stopwatch;
   stopwatch.start();
@@ -383,8 +377,7 @@ TEST_F(OsTest, Sleep)
 
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
-TEST_F(OsTest, Sysctl)
-{
+TEST_F(OsTest, Sysctl) {
   // String test.
   Try<os::UTSInfo> uname = os::uname();
 
@@ -405,7 +398,7 @@ TEST_F(OsTest, Sysctl)
 
   // Table test.
   Try<vector<kinfo_proc>> processes =
-    os::sysctl(CTL_KERN, KERN_PROC, KERN_PROC_ALL).table(maxproc.get());
+      os::sysctl(CTL_KERN, KERN_PROC, KERN_PROC_ALL).table(maxproc.get());
 
   ASSERT_SOME(processes);
 
@@ -434,18 +427,17 @@ TEST_F(OsTest, Sysctl)
 #endif // __APPLE__ || __FreeBSD__
 
 
-TEST_F(OsTest, Children)
-{
+TEST_F(OsTest, Children) {
   Try<set<pid_t>> children = os::children(getpid());
 
   ASSERT_SOME(children);
   EXPECT_TRUE(children->empty());
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
   Try<ProcessTree> tree =
-    Fork(None(),                   // Child.
-         Fork(Exec(SLEEP_COMMAND(10))),   // Grandchild.
-         Exec(SLEEP_COMMAND(10)))();
+      Fork(None(), // Child.
+           Fork(Exec(SLEEP_COMMAND(10))), // Grandchild.
+           Exec(SLEEP_COMMAND(10)))();
 
   ASSERT_SOME(tree);
   ASSERT_EQ(1u, tree->children.size());
@@ -458,7 +450,7 @@ TEST_F(OsTest, Children)
   const size_t existing_children = children.get().size();
   ProcessData process_data = windows_fork();
   pid_t child = process_data.pid;
-#endif // __WINDOWS__
+#endif // _WIN32
 
   // Ensure the non-recursive children does not include the
   // grandchild.
@@ -466,11 +458,11 @@ TEST_F(OsTest, Children)
 
   ASSERT_SOME(children);
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
   EXPECT_EQ(1u, children->size());
 #else
   EXPECT_EQ(existing_children + 1u, children->size());
-#endif // __WINDOWS__
+#endif // _WIN32
 
   EXPECT_EQ(1u, children->count(child));
 
@@ -478,7 +470,7 @@ TEST_F(OsTest, Children)
 
   ASSERT_SOME(children);
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
   // Depending on whether or not the shell has fork/exec'ed in each
   // above 'Exec', we could have 2 or 4 children. That is, some shells
   // might simply for exec the command above (i.e., 'sleep 10') while
@@ -506,30 +498,28 @@ TEST_F(OsTest, Children)
 #endif
 }
 
-#ifndef __WINDOWS__
-void dosetsid()
-{
+#ifndef _WIN32
+void dosetsid() {
   if (::setsid() == -1) {
     ABORT(string("Failed to setsid: ") + os::strerror(errno));
   }
 }
-#endif // __WINDOWS__
+#endif // _WIN32
 
 
-TEST_F(OsTest, Killtree)
-{
+TEST_F(OsTest, Killtree) {
   // NOTE: This test is written differently for Windows since there is
   // no implementation of `fork` and `exec` on Windows.
-#ifndef __WINDOWS__
+#ifndef _WIN32
   Try<ProcessTree> tree =
-    Fork(&dosetsid,                        // Child.
-         Fork(None(),                      // Grandchild.
-              Fork(None(),                 // Great-grandchild.
-                   Fork(&dosetsid,         // Great-great-granchild.
-                        Exec(SLEEP_COMMAND(10))),
-                   Exec(SLEEP_COMMAND(10))),
-              Exec("exit 0")),
-         Exec(SLEEP_COMMAND(10)))();
+      Fork(&dosetsid, // Child.
+           Fork(None(), // Grandchild.
+                Fork(None(), // Great-grandchild.
+                     Fork(&dosetsid, // Great-great-granchild.
+                          Exec(SLEEP_COMMAND(10))),
+                     Exec(SLEEP_COMMAND(10))),
+                Exec("exit 0")),
+           Exec(SLEEP_COMMAND(10)))();
 
   ASSERT_SOME(tree);
 
@@ -557,7 +547,7 @@ TEST_F(OsTest, Killtree)
   pid_t grandchild = tree->children.front();
   pid_t greatGrandchild = tree->children.front().children.front();
   pid_t greatGreatGrandchild =
-    tree->children.front().children.front().children.front();
+      tree->children.front().children.front().children.front();
 
   // Now wait for the grandchild to exit splitting the process tree.
   Duration elapsed = Duration::zero();
@@ -582,7 +572,7 @@ TEST_F(OsTest, Killtree)
   // Kill the process tree and follow sessions and groups to make sure
   // we cross the broken link due to the grandchild.
   Try<list<ProcessTree>> trees =
-    os::killtree(child, SIGKILL, true, true);
+      os::killtree(child, SIGKILL, true, true);
 
   ASSERT_SOME(trees);
 
@@ -603,8 +593,9 @@ TEST_F(OsTest, Killtree)
       EXPECT_TRUE(tree.contains(greatGreatGrandchild)) << tree;
     } else {
       FAIL()
-        << "Not expecting a process tree rooted at "
-        << tree.process.pid << "\n" << tree;
+          << "Not expecting a process tree rooted at "
+          << tree.process.pid << "\n"
+          << tree;
     }
   }
 
@@ -615,10 +606,10 @@ TEST_F(OsTest, Killtree)
     Result<os::Process> _child = os::process(child);
     ASSERT_SOME(_child);
 
-    if (os::process(greatGreatGrandchild).isNone() &&
-        os::process(greatGrandchild).isNone() &&
-        os::process(grandchild).isNone() &&
-        _child->zombie) {
+    if (os::process(greatGreatGrandchild).isNone()
+        && os::process(greatGrandchild).isNone()
+        && os::process(grandchild).isNone()
+        && _child->zombie) {
       break;
     }
 
@@ -663,22 +654,20 @@ TEST_F(OsTest, Killtree)
   children = os::children(getpid());
   ASSERT_SOME(children);
   ASSERT_EQ(existing_children, children->size());
-#endif // __WINDOWS__
+#endif // _WIN32
 }
 
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
 // NOTE: This test is disabled for Windows since there is
 // no implementation of `fork` and `exec` on Windows.
-TEST_F(OsTest, KilltreeNoRoot)
-{
+TEST_F(OsTest, KilltreeNoRoot) {
   Try<ProcessTree> tree =
-    Fork(&dosetsid,       // Child.
-         Fork(None(),     // Grandchild.
-              Fork(None(),
-                   Exec(SLEEP_COMMAND(100))),
-              Exec(SLEEP_COMMAND(100))),
-         Exec("exit 0"))();
+      Fork(&dosetsid, // Child.
+           Fork(None(), // Grandchild.
+                Fork(None(), Exec(SLEEP_COMMAND(100))),
+                Exec(SLEEP_COMMAND(100))),
+           Exec("exit 0"))();
   ASSERT_SOME(tree);
 
   // The process tree we instantiate initially looks like this:
@@ -749,10 +738,10 @@ TEST_F(OsTest, KilltreeNoRoot)
 #if __FreeBSD__
   if (!isJailed()) {
 #endif
-  // Check that grandchild's parent is also not a zombie.
-  Result<os::Process> currentParent = os::process(_grandchild->parent);
-  ASSERT_SOME(currentParent);
-  ASSERT_FALSE(currentParent->zombie);
+    // Check that grandchild's parent is also not a zombie.
+    Result<os::Process> currentParent = os::process(_grandchild->parent);
+    ASSERT_SOME(currentParent);
+    ASSERT_FALSE(currentParent->zombie);
 #ifdef __FreeBSD__
   }
 #endif
@@ -769,8 +758,8 @@ TEST_F(OsTest, KilltreeNoRoot)
   // All processes should be reparented and reaped by init.
   elapsed = Duration::zero();
   while (true) {
-    if (os::process(grandchild).isNone() &&
-        os::process(greatGrandchild).isNone()) {
+    if (os::process(grandchild).isNone()
+        && os::process(greatGrandchild).isNone()) {
       break;
     }
 
@@ -785,17 +774,16 @@ TEST_F(OsTest, KilltreeNoRoot)
   EXPECT_NONE(os::process(grandchild));
   EXPECT_NONE(os::process(greatGrandchild));
 }
-#endif // __WINDOWS__
+#endif // _WIN32
 
 
-TEST_F(OsTest, ProcessExists)
-{
+TEST_F(OsTest, ProcessExists) {
   // Check we exist.
   EXPECT_TRUE(os::exists(::getpid()));
 
   // NOTE: Some of this test is disabled for Windows since there is no
   // implementation of `fork` and `exec` on Windows.
-#if !defined(__WINDOWS__)
+#if !defined(_WIN32)
 
   // In a FreeBSD jail, pid 1 may not exist.
 #if !defined(__FreeBSD__)
@@ -812,7 +800,9 @@ TEST_F(OsTest, ProcessExists)
 
   if (pid == 0) {
     // In child process.
-    while (true) { sleep(1); }
+    while (true) {
+      sleep(1);
+    }
 
     ABORT("Child should not reach this statement");
   }
@@ -861,15 +851,14 @@ TEST_F(OsTest, ProcessExists)
 
   os::sleep(Milliseconds(500));
   EXPECT_FALSE(os::exists(child));
-#endif // __WINDOWS__
+#endif // _WIN32
 }
 
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
 // NOTE: Enable this test when there is an implementation of
 // `os::getuid` and `os::chown` for Windows.
-TEST_F(OsTest, User)
-{
+TEST_F(OsTest, User) {
   Try<string> user_ = os::shell("id -un");
   EXPECT_SOME(user_);
 
@@ -905,7 +894,7 @@ TEST_F(OsTest, User)
   EXPECT_SOME(gids_);
 
   Try<vector<string>> tokens =
-    strings::split(strings::trim(gids_.get(), strings::ANY, "\n"), " ");
+      strings::split(strings::trim(gids_.get(), strings::ANY, "\n"), " ");
 
   ASSERT_SOME(tokens);
   std::sort(tokens->begin(), tokens->end());
@@ -931,15 +920,14 @@ TEST_F(OsTest, User)
   EXPECT_SOME(os::setgroups(gids.get(), uid.get()));
   EXPECT_SOME(os::setuid(uid.get()));
 }
-#endif // __WINDOWS__
+#endif // _WIN32
 
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
 // NOTE: Enable this test if there are ever implementations of
 // `os::getuid`, `os::getgid`, `os::chmod` and `os::chown` for
 // Windows.
-TEST_F(OsTest, SYMLINK_Chown)
-{
+TEST_F(OsTest, SYMLINK_Chown) {
   Result<uid_t> uid = os::getuid();
   ASSERT_SOME(uid);
 
@@ -965,55 +953,68 @@ TEST_F(OsTest, SYMLINK_Chown)
   // symlink does not chown that subtree.
   EXPECT_SOME(fs::symlink("chown/one/two", "two.link"));
   EXPECT_SOME(os::chown(9, 9, "two.link", true));
-  EXPECT_SOME_EQ(9u,
+  EXPECT_SOME_EQ(
+      9u,
       os::stat::uid("two.link", FollowSymlink::DO_NOT_FOLLOW_SYMLINK));
-  EXPECT_SOME_EQ(0u,
+  EXPECT_SOME_EQ(
+      0u,
       os::stat::uid("chown", FollowSymlink::DO_NOT_FOLLOW_SYMLINK));
-  EXPECT_SOME_EQ(0u,
-      os::stat::uid("chown/one/two/three/file",
-                    FollowSymlink::DO_NOT_FOLLOW_SYMLINK));
+  EXPECT_SOME_EQ(
+      0u,
+      os::stat::uid(
+          "chown/one/two/three/file",
+          FollowSymlink::DO_NOT_FOLLOW_SYMLINK));
 
   // Recursively chown the whole tree.
   EXPECT_SOME(os::chown(9, 9, "chown", true));
-  EXPECT_SOME_EQ(9u,
+  EXPECT_SOME_EQ(
+      9u,
       os::stat::uid("chown", FollowSymlink::DO_NOT_FOLLOW_SYMLINK));
-  EXPECT_SOME_EQ(9u,
-      os::stat::uid("chown/one/two/three/file",
-                    FollowSymlink::DO_NOT_FOLLOW_SYMLINK));
-  EXPECT_SOME_EQ(9u,
-      os::stat::uid("chown/one/two/three/link",
-                    FollowSymlink::DO_NOT_FOLLOW_SYMLINK));
+  EXPECT_SOME_EQ(
+      9u,
+      os::stat::uid(
+          "chown/one/two/three/file",
+          FollowSymlink::DO_NOT_FOLLOW_SYMLINK));
+  EXPECT_SOME_EQ(
+      9u,
+      os::stat::uid(
+          "chown/one/two/three/link",
+          FollowSymlink::DO_NOT_FOLLOW_SYMLINK));
 
   // Chown the subtree with the embedded link back and verify that it
   // doesn't follow back to the top of the tree.
   EXPECT_SOME(os::chown(0, 0, "chown/one/two/three", true));
-  EXPECT_SOME_EQ(9u,
+  EXPECT_SOME_EQ(
+      9u,
       os::stat::uid("chown", FollowSymlink::DO_NOT_FOLLOW_SYMLINK));
-  EXPECT_SOME_EQ(0u,
-      os::stat::uid("chown/one/two/three",
-                    FollowSymlink::DO_NOT_FOLLOW_SYMLINK));
-  EXPECT_SOME_EQ(0u,
-      os::stat::uid("chown/one/two/three/link",
-                    FollowSymlink::DO_NOT_FOLLOW_SYMLINK));
+  EXPECT_SOME_EQ(
+      0u,
+      os::stat::uid(
+          "chown/one/two/three",
+          FollowSymlink::DO_NOT_FOLLOW_SYMLINK));
+  EXPECT_SOME_EQ(
+      0u,
+      os::stat::uid(
+          "chown/one/two/three/link",
+          FollowSymlink::DO_NOT_FOLLOW_SYMLINK));
 
   // Verify that non-recursive chown changes the directory and not
   // its contents.
   EXPECT_SOME(os::chown(0, 0, "chown/one", false));
-  EXPECT_SOME_EQ(0u,
-      os::stat::uid("chown/one",
-                    FollowSymlink::DO_NOT_FOLLOW_SYMLINK));
-  EXPECT_SOME_EQ(9u,
-      os::stat::uid("chown/one/file",
-                    FollowSymlink::DO_NOT_FOLLOW_SYMLINK));
+  EXPECT_SOME_EQ(
+      0u,
+      os::stat::uid("chown/one", FollowSymlink::DO_NOT_FOLLOW_SYMLINK));
+  EXPECT_SOME_EQ(
+      9u,
+      os::stat::uid("chown/one/file", FollowSymlink::DO_NOT_FOLLOW_SYMLINK));
 }
-#endif // __WINDOWS__
+#endif // _WIN32
 
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
 // NOTE: Enable this test when there is an implementation of
 // `os::getuid`, `os::getgid`, `os::chmod` and `os::chown` for Windows.
-TEST_F(OsTest, ChownNoAccess)
-{
+TEST_F(OsTest, ChownNoAccess) {
   Result<uid_t> uid = os::getuid();
   Result<gid_t> gid = os::getgid();
 
@@ -1047,29 +1048,27 @@ TEST_F(OsTest, ChownNoAccess)
   // Restore directory access so the rmdir can work.
   ASSERT_SOME(os::chmod("one/two", 0755));
 }
-#endif // __WINDOWS__
+#endif // _WIN32
 
 
-TEST_F(OsTest, TrivialUser)
-{
+TEST_F(OsTest, TrivialUser) {
   const Result<string> user1 = os::user();
   ASSERT_SOME(user1);
   ASSERT_NE("", user1.get());
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
   const Result<string> user2 = os::user(INT_MAX);
   ASSERT_ERROR(user2);
-#endif // __WINDOWS__
+#endif // _WIN32
 }
 
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
 // Test setting/resetting/appending to LD_LIBRARY_PATH environment
 // variable (DYLD_LIBRARY_PATH on OS X).
 //
 // NOTE: This will never be enabled on Windows as there is no equivalent.
-TEST_F(OsTest, Libraries)
-{
+TEST_F(OsTest, Libraries) {
   const string path1 = "/tmp/path1";
   const string path2 = "/tmp/path1";
   string ldLibraryPath;
@@ -1104,22 +1103,21 @@ TEST_F(OsTest, Libraries)
   os::libraries::setPaths(originalLibraryPath);
   EXPECT_EQ(os::libraries::paths(), originalLibraryPath);
 }
-#endif // __WINDOWS__
+#endif // _WIN32
 
 
-TEST_F(OsTest, Shell)
-{
+TEST_F(OsTest, Shell) {
   Try<string> result = os::shell("echo %s", "hello world");
-#ifdef __WINDOWS__
+#ifdef _WIN32
   EXPECT_SOME_EQ("hello world\r\n", result);
 #else
   EXPECT_SOME_EQ("hello world\n", result);
-#endif // __WINDOWS__
+#endif // _WIN32
 
   result = os::shell("foobar");
   EXPECT_ERROR(result);
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
   // NOTE: This relies on the strange semantics of Windows' echo,
   // where quotes are not removed. We are testing that a quoted
   // argument with a space in it remains quoted by `os::shell`.
@@ -1131,11 +1129,11 @@ TEST_F(OsTest, Shell)
   // them to `echo`.
   result = os::shell("echo \"foo\" \"bar\"");
   EXPECT_SOME_EQ("foo bar\r\n", result);
-#endif // __WINDOWS__
+#endif // _WIN32
 
   // The `|| true`` necessary so that os::shell() sees a success
   // exit code and returns stdout (which we have piped stderr to).
-#ifdef __WINDOWS__
+#ifdef _WIN32
   result = os::shell("dir foobar889076 2>&1 || exit /b 0");
   ASSERT_SOME(result);
   EXPECT_TRUE(strings::contains(result.get(), "File Not Found"));
@@ -1143,50 +1141,49 @@ TEST_F(OsTest, Shell)
   result = os::shell("LC_ALL=C ls /tmp/foobar889076 2>&1 || true");
   ASSERT_SOME(result);
   EXPECT_TRUE(strings::contains(result.get(), "No such file or directory"));
-#endif // __WINDOWS__
+#endif // _WIN32
 
   // Testing a command that wrote a substantial amount of data.
   const string output(2 * os::pagesize(), 'c');
   const string outfile = path::join(sandbox.get(), "out.txt");
   ASSERT_SOME(os::write(outfile, output));
-#ifdef __WINDOWS__
+#ifdef _WIN32
   result = os::shell("type %s", outfile.c_str());
 #else
   result = os::shell("cat %s", outfile.c_str());
-#endif // __WINDOWS__
+#endif // _WIN32
   EXPECT_SOME_EQ(output, result);
 
   // Testing a more ambitious command that mutates the filesystem.
   const string path = path::join(sandbox.get(), "os_tests.txt");
-#ifdef __WINDOWS__
+#ifdef _WIN32
   result = os::shell("copy /y nul %s", path.c_str());
   ASSERT_SOME(result);
   EXPECT_EQ("1 file(s) copied.", strings::trim(result.get()));
 #else
   result = os::shell("touch %s", path.c_str());
   EXPECT_SOME_EQ("", result);
-#endif // __WINDOWS__
+#endif // _WIN32
   EXPECT_TRUE(os::exists(path));
 
   // Let's clean up, and ensure this worked too.
-#ifdef __WINDOWS__
+#ifdef _WIN32
   result = os::shell("del %s", path.c_str());
 #else
   result = os::shell("rm %s", path.c_str());
-#endif // __WINDOWS__
+#endif // _WIN32
   EXPECT_SOME_EQ("", result);
   EXPECT_FALSE(os::exists(path));
 }
 
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
 // NOTE: Disabled on Windows because `mknod` does not exist.
-TEST_F(OsTest, Mknod)
-{
+TEST_F(OsTest, Mknod) {
 #ifdef __FreeBSD__
   // If we're in a jail on FreeBSD, we can't use mknod.
   if (isJailed()) {
-      return;
+    return;
   }
 #endif
 
@@ -1216,11 +1213,10 @@ TEST_F(OsTest, Mknod)
 
   EXPECT_SOME(os::rm(another));
 }
-#endif // __WINDOWS__
+#endif // _WIN32
 
 
-TEST_F(OsTest, SYMLINK_Realpath)
-{
+TEST_F(OsTest, SYMLINK_Realpath) {
   // Create a file.
   const Try<string> _testFile = os::mktemp();
   ASSERT_SOME(_testFile);
@@ -1232,12 +1228,15 @@ TEST_F(OsTest, SYMLINK_Realpath)
   ASSERT_SOME(fs::symlink(testFile, testLink));
 
   // Validate the symlink.
-#ifdef __WINDOWS__
+#ifdef _WIN32
   Try<int_fd> handle = os::open(testFile, O_RDONLY);
   ASSERT_SOME(handle);
   FILE_ID_INFO fileInfo;
   BOOL result = ::GetFileInformationByHandleEx(
-    handle.get(), FileIdInfo, &fileInfo, sizeof(fileInfo));
+      handle.get(),
+      FileIdInfo,
+      &fileInfo,
+      sizeof(fileInfo));
   ASSERT_SOME(os::close(handle.get()));
   ASSERT_EQ(TRUE, result);
 
@@ -1245,23 +1244,26 @@ TEST_F(OsTest, SYMLINK_Realpath)
   ASSERT_SOME(handle);
   FILE_ID_INFO linkInfo;
   result = ::GetFileInformationByHandleEx(
-    handle.get(), FileIdInfo, &linkInfo, sizeof(linkInfo));
+      handle.get(),
+      FileIdInfo,
+      &linkInfo,
+      sizeof(linkInfo));
   ASSERT_SOME(os::close(handle.get()));
   ASSERT_EQ(TRUE, result);
 
   ASSERT_EQ(fileInfo.VolumeSerialNumber, linkInfo.VolumeSerialNumber);
   ASSERT_TRUE(std::equal(
-    std::begin(fileInfo.FileId.Identifier),
-    std::end(fileInfo.FileId.Identifier),
-    std::begin(linkInfo.FileId.Identifier),
-    std::end(linkInfo.FileId.Identifier)));
+      std::begin(fileInfo.FileId.Identifier),
+      std::end(fileInfo.FileId.Identifier),
+      std::begin(linkInfo.FileId.Identifier),
+      std::end(linkInfo.FileId.Identifier)));
 #else
   const Try<ino_t> fileInode = os::stat::inode(testFile);
   ASSERT_SOME(fileInode);
   const Try<ino_t> linkInode = os::stat::inode(testLink);
   ASSERT_SOME(linkInode);
   ASSERT_EQ(fileInode.get(), linkInode.get());
-#endif // __WINDOWS__
+#endif // _WIN32
 
   // Verify that the symlink resolves correctly.
   Result<string> resolved = os::realpath(testLink);
@@ -1279,8 +1281,7 @@ TEST_F(OsTest, SYMLINK_Realpath)
 }
 
 
-TEST_F(OsTest, Which)
-{
+TEST_F(OsTest, Which) {
   // TODO(jieyu): Test PATH search ordering and file execution bit.
   Option<string> which = os::which("ping");
   ASSERT_SOME(which);

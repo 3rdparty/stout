@@ -11,23 +11,20 @@
 // limitations under the License
 
 #include <ctype.h>
-
-#include <map>
-#include <string>
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <boost/functional/hash.hpp>
+#include <map>
+#include <string>
 
-#include <stout/gtest.hpp>
-#include <stout/hashmap.hpp>
+#include "stout/gtest.hpp"
+#include "stout/hashmap.hpp"
 
 using std::string;
 
 
-TEST(HashMapTest, InitializerList)
-{
+TEST(HashMapTest, InitializerList) {
   hashmap<string, int> map{{"hello", 1}};
   EXPECT_EQ(1u, map.size());
 
@@ -42,8 +39,7 @@ TEST(HashMapTest, InitializerList)
 }
 
 
-TEST(HashMapTest, FromStdMap)
-{
+TEST(HashMapTest, FromStdMap) {
   std::map<int, int> map1{{1, 2}, {2, 3}};
 
   hashmap<int, int> map2(map1);
@@ -59,8 +55,7 @@ TEST(HashMapTest, FromStdMap)
 }
 
 
-TEST(HashMapTest, FromRValueStdMap)
-{
+TEST(HashMapTest, FromRValueStdMap) {
   std::map<int, int> map1{{1, 2}, {2, 3}};
 
   hashmap<int, int> map2(std::move(map1));
@@ -73,8 +68,7 @@ TEST(HashMapTest, FromRValueStdMap)
 }
 
 
-TEST(HashMapTest, Insert)
-{
+TEST(HashMapTest, Insert) {
   hashmap<string, int> map;
   map["abc"] = 1;
   map.put("def", 2);
@@ -88,8 +82,7 @@ TEST(HashMapTest, Insert)
 }
 
 
-TEST(HashMapTest, Contains)
-{
+TEST(HashMapTest, Contains) {
   hashmap<string, int> map;
   map["abc"] = 1;
 
@@ -101,12 +94,9 @@ TEST(HashMapTest, Contains)
 }
 
 
-TEST(HashMapTest, CustomHashAndEqual)
-{
-  struct CaseInsensitiveHash
-  {
-    size_t operator()(const string& key) const
-    {
+TEST(HashMapTest, CustomHashAndEqual) {
+  struct CaseInsensitiveHash {
+    size_t operator()(const string& key) const {
       size_t seed = 0;
       foreach (const char c, key) {
         boost::hash_combine(seed, ::tolower(c));
@@ -115,10 +105,8 @@ TEST(HashMapTest, CustomHashAndEqual)
     }
   };
 
-  struct CaseInsensitiveEqual
-  {
-    bool operator()(const string& left, const string& right) const
-    {
+  struct CaseInsensitiveEqual {
+    bool operator()(const string& left, const string& right) const {
       if (left.size() != right.size()) {
         return false;
       }

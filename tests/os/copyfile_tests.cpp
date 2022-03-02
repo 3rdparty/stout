@@ -12,15 +12,13 @@
 
 #include <string>
 
-#include <stout/os.hpp>
-#include <stout/path.hpp>
-
-#include <stout/os/copyfile.hpp>
-#include <stout/os/getcwd.hpp>
-#include <stout/os/mkdir.hpp>
-#include <stout/os/write.hpp>
-
-#include <stout/tests/utils.hpp>
+#include "stout/os.hpp"
+#include "stout/os/copyfile.hpp"
+#include "stout/os/getcwd.hpp"
+#include "stout/os/mkdir.hpp"
+#include "stout/os/write.hpp"
+#include "stout/path.hpp"
+#include "stout/tests/utils.hpp"
 
 using std::string;
 
@@ -28,8 +26,7 @@ using std::string;
 class CopyFileTest : public TemporaryDirectoryTest {};
 
 
-TEST_F(CopyFileTest, CopyWithAbsolutePath)
-{
+TEST_F(CopyFileTest, CopyWithAbsolutePath) {
   const string fileContents = "Some file content";
 
   const string sourceFile = path::join(sandbox.get(), "source-file");
@@ -47,8 +44,7 @@ TEST_F(CopyFileTest, CopyWithAbsolutePath)
 }
 
 
-TEST_F(CopyFileTest, CopyToDirectoryDestinationFails)
-{
+TEST_F(CopyFileTest, CopyToDirectoryDestinationFails) {
   const string sourceFile = path::join(sandbox.get(), "source-file");
   EXPECT_SOME(os::write(sourceFile, "Some file content"));
 
@@ -61,8 +57,7 @@ TEST_F(CopyFileTest, CopyToDirectoryDestinationFails)
 }
 
 
-TEST_F(CopyFileTest, DestinationEndsInSlashFails)
-{
+TEST_F(CopyFileTest, DestinationEndsInSlashFails) {
   const string sourceFile = path::join(sandbox.get(), "source-file");
   EXPECT_SOME(os::write(sourceFile, "Some file content"));
 
@@ -74,8 +69,7 @@ TEST_F(CopyFileTest, DestinationEndsInSlashFails)
 }
 
 
-TEST_F(CopyFileTest, CopyToRelativeFilenameFails)
-{
+TEST_F(CopyFileTest, CopyToRelativeFilenameFails) {
   const string sourceFile = path::join(sandbox.get(), "source-file");
   EXPECT_SOME(os::write(sourceFile, "Some file content"));
 

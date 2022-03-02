@@ -10,20 +10,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <string>
-
 #include <gmock/gmock.h>
 
-#include <stout/error.hpp>
-#include <stout/gtest.hpp>
-#include <stout/result.hpp>
-#include <stout/try.hpp>
+#include <string>
+
+#include "stout/error.hpp"
+#include "stout/gtest.hpp"
+#include "stout/result.hpp"
+#include "stout/try.hpp"
 
 using std::string;
 
 // Verify Try to Result conversion.
-TEST(ResultTest, TryToResultConversion)
-{
+TEST(ResultTest, TryToResultConversion) {
   // Test with implicit Result(Try&) contructor.
   Try<int> foo = 5;
   Result<int> bar = foo;
@@ -49,8 +48,7 @@ TEST(ResultTest, TryToResultConversion)
 }
 
 
-TEST(ResultTest, ArrowOperator)
-{
+TEST(ResultTest, ArrowOperator) {
   Result<string> s = string("hello");
   EXPECT_EQ(5u, s->size());
 
@@ -59,25 +57,23 @@ TEST(ResultTest, ArrowOperator)
 }
 
 
-TEST(ResultTest, StarOperator)
-{
+TEST(ResultTest, StarOperator) {
   // A test class with a `moved` flag where we can verify if an object
   // has been moved.
-  struct Foo
-  {
+  struct Foo {
     bool moved = false;
     string s;
 
-    Foo(const string& s) { this->s = s; };
+    Foo(const string& s) {
+      this->s = s;
+    };
 
-    Foo(Foo&& that)
-    {
+    Foo(Foo&& that) {
       s = std::move(that.s);
       that.moved = true;
     };
 
-    Foo& operator=(Foo&& that)
-    {
+    Foo& operator=(Foo&& that) {
       s = std::move(that.s);
       that.moved = true;
 

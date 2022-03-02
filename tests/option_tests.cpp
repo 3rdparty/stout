@@ -10,20 +10,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
+#include <gmock/gmock.h>
+
 #include <algorithm>
 #include <string>
 
-#include <gmock/gmock.h>
-
-#include <stout/gtest.hpp>
-#include <stout/hashset.hpp>
-#include <stout/none.hpp>
-#include <stout/option.hpp>
+#include "stout/gtest.hpp"
+#include "stout/hashset.hpp"
+#include "stout/none.hpp"
+#include "stout/option.hpp"
 
 using std::string;
 
-TEST(OptionTest, Min)
-{
+TEST(OptionTest, Min) {
   Option<int> none1 = None();
   Option<int> none2 = None();
   Option<int> value1 = 10;
@@ -55,8 +54,7 @@ TEST(OptionTest, Min)
 }
 
 
-TEST(OptionTest, Max)
-{
+TEST(OptionTest, Max) {
   Option<int> none1 = None();
   Option<int> none2 = None();
   Option<int> value1 = 10;
@@ -88,8 +86,7 @@ TEST(OptionTest, Max)
 }
 
 
-TEST(OptionTest, Comparison)
-{
+TEST(OptionTest, Comparison) {
   Option<int> none = None();
   EXPECT_NE(none, 1);
   EXPECT_FALSE(none == 1);
@@ -110,16 +107,14 @@ TEST(OptionTest, Comparison)
 }
 
 
-TEST(OptionTest, NonConstReference)
-{
+TEST(OptionTest, NonConstReference) {
   Option<string> s = string("hello");
   s.get() += " world";
   EXPECT_EQ("hello world", s.get());
 }
 
 
-TEST(OptionTest, ArrowOperator)
-{
+TEST(OptionTest, ArrowOperator) {
   Option<string> s = string("hello");
   EXPECT_EQ(5u, s->size());
 
@@ -128,25 +123,23 @@ TEST(OptionTest, ArrowOperator)
 }
 
 
-TEST(OptionTest, StarOperator)
-{
+TEST(OptionTest, StarOperator) {
   // A test class with a `moved` flag where we can verify if an object
   // has been moved.
-  struct Foo
-  {
+  struct Foo {
     bool moved = false;
     string s;
 
-    Foo(const string& s) { this->s = s; };
+    Foo(const string& s) {
+      this->s = s;
+    };
 
-    Foo(Foo&& that)
-    {
+    Foo(Foo&& that) {
       s = std::move(that.s);
       that.moved = true;
     };
 
-    Foo& operator=(Foo&& that)
-    {
+    Foo& operator=(Foo&& that) {
       s = std::move(that.s);
       that.moved = true;
 
@@ -163,16 +156,14 @@ TEST(OptionTest, StarOperator)
 }
 
 
-struct NonCopyable
-{
+struct NonCopyable {
   NonCopyable() = default;
   NonCopyable(NonCopyable&&) = default;
   NonCopyable(const NonCopyable& that) = delete;
 };
 
 
-TEST(OptionTest, NonCopyable)
-{
+TEST(OptionTest, NonCopyable) {
   Option<NonCopyable> o1(NonCopyable{});
   ASSERT_SOME(o1);
 
@@ -202,8 +193,7 @@ TEST(OptionTest, NonCopyable)
 }
 
 
-TEST(OptionTest, GetOrElse)
-{
+TEST(OptionTest, GetOrElse) {
   Option<string> something = string("Something");
   Option<string> none = None();
   EXPECT_EQ("Something", something.getOrElse("Else"));
@@ -211,8 +201,7 @@ TEST(OptionTest, GetOrElse)
 }
 
 
-TEST(OptionTest, Hash)
-{
+TEST(OptionTest, Hash) {
   hashset<Option<int>> set;
   set.insert(None());
 

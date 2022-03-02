@@ -10,6 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
+#include <gmock/gmock.h>
 #include <unistd.h> // For getpid, getppid.
 
 #include <condition_variable>
@@ -20,26 +21,23 @@
 #include <string>
 #include <thread>
 
-#include <gmock/gmock.h>
-
-#include <stout/abort.hpp>
-#include <stout/gtest.hpp>
-#include <stout/numify.hpp>
-#include <stout/os.hpp>
-#include <stout/proc.hpp>
-#include <stout/synchronized.hpp>
-#include <stout/try.hpp>
+#include "stout/abort.hpp"
+#include "stout/gtest.hpp"
+#include "stout/numify.hpp"
+#include "stout/os.hpp"
+#include "stout/proc.hpp"
+#include "stout/synchronized.hpp"
+#include "stout/try.hpp"
 
 using proc::CPU;
-using proc::SystemStatus;
 using proc::ProcessStatus;
+using proc::SystemStatus;
 
 using std::set;
 using std::string;
 
 
-TEST(ProcTest, Pids)
-{
+TEST(ProcTest, Pids) {
   Try<set<pid_t>> pids = proc::pids();
 
   ASSERT_SOME(pids);
@@ -49,8 +47,7 @@ TEST(ProcTest, Pids)
 }
 
 
-TEST(ProcTest, Cpus)
-{
+TEST(ProcTest, Cpus) {
   Try<std::list<CPU>> cpus = proc::cpus();
 
   ASSERT_SOME(cpus);
@@ -58,8 +55,7 @@ TEST(ProcTest, Cpus)
 }
 
 
-TEST(ProcTest, SystemStatus)
-{
+TEST(ProcTest, SystemStatus) {
   Try<SystemStatus> status = proc::status();
 
   ASSERT_SOME(status);
@@ -67,8 +63,7 @@ TEST(ProcTest, SystemStatus)
 }
 
 
-TEST(ProcTest, ProcessStatus)
-{
+TEST(ProcTest, ProcessStatus) {
   Result<ProcessStatus> status = proc::status(getpid());
 
   ASSERT_SOME(status);
@@ -78,8 +73,7 @@ TEST(ProcTest, ProcessStatus)
 
 
 // NOTE: This test assumes there is a single thread running for the test.
-TEST(ProcTest, SingleThread)
-{
+TEST(ProcTest, SingleThread) {
   // Check we have the expected number of threads.
   Try<set<pid_t>> threads = proc::threads(::getpid());
 
@@ -90,8 +84,7 @@ TEST(ProcTest, SingleThread)
 
 
 // NOTE: This test assumes there is only a single thread running for the test.
-TEST(ProcTest, MultipleThreads)
-{
+TEST(ProcTest, MultipleThreads) {
   const size_t numThreads = 5;
 
   std::thread* runningThreads[numThreads];
@@ -104,7 +97,7 @@ TEST(ProcTest, MultipleThreads)
   for (size_t i = 0; i < numThreads; i++) {
     runningThreads[i] = new std::thread([&mutex, &cond, &stop]() {
       // Wait until the main thread tells us to exit.
-      synchronized (mutex) {
+      synchronized(mutex) {
         while (!stop) {
           synchronized_wait(&cond, &mutex);
         }
@@ -120,7 +113,7 @@ TEST(ProcTest, MultipleThreads)
   EXPECT_EQ(1u, threads->count(::getpid()));
 
   // Terminate the additional threads.
-  synchronized (mutex) {
+  synchronized(mutex) {
     stop = true;
     cond.notify_all();
   }

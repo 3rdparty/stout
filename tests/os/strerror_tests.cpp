@@ -11,20 +11,17 @@
 // limitations under the License
 
 #include <errno.h> // For errno defines.
+#include <gtest/gtest.h>
 
 #include <limits>
 
-#include <gtest/gtest.h>
-
-#include <stout/os.hpp>
-
-#include <stout/os/strerror.hpp>
+#include "stout/os.hpp"
+#include "stout/os/strerror.hpp"
 
 using std::string;
 
 
-TEST(StrerrorTest, ValidErrno)
-{
+TEST(StrerrorTest, ValidErrno) {
   EXPECT_EQ(::strerror(ENODEV), os::strerror(ENODEV));
   EXPECT_EQ(::strerror(ERANGE), os::strerror(ERANGE));
 }
@@ -32,17 +29,17 @@ TEST(StrerrorTest, ValidErrno)
 
 // Test that we behave correctly for invalid errnos
 // where GLIBC does not use an internal buffer.
-TEST(StrerrorTest, InvalidErrno)
-{
+TEST(StrerrorTest, InvalidErrno) {
   EXPECT_EQ(::strerror(-1), os::strerror(-1));
 
   // Check the longest possible "Unknown error N" error message.
-  EXPECT_EQ(::strerror(std::numeric_limits<int>::max()),
-            os::strerror(std::numeric_limits<int>::max()));
+  EXPECT_EQ(
+      ::strerror(std::numeric_limits<int>::max()),
+      os::strerror(std::numeric_limits<int>::max()));
 }
 
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
 // The Linux documentation[1] on `herrno` indicates there are only 4 possible
 // values that `h_errno` can have.
 //
@@ -50,8 +47,7 @@ TEST(StrerrorTest, InvalidErrno)
 //
 // NOTE: This test is permanently disabled on Windows since it tests
 // against POSIX values of POSIX function `::hstrerror`.
-TEST(StrerrorTest, ValidHerrno)
-{
+TEST(StrerrorTest, ValidHerrno) {
   EXPECT_EQ(::hstrerror(ENODEV), os::hstrerror(ENODEV));
   EXPECT_EQ(::hstrerror(EINTR), os::hstrerror(EINTR));
   EXPECT_EQ(::hstrerror(HOST_NOT_FOUND), os::hstrerror(HOST_NOT_FOUND));
@@ -59,4 +55,4 @@ TEST(StrerrorTest, ValidHerrno)
   EXPECT_EQ(::hstrerror(NO_RECOVERY), os::hstrerror(NO_RECOVERY));
   EXPECT_EQ(::hstrerror(TRY_AGAIN), os::hstrerror(TRY_AGAIN));
 }
-#endif // __WINDOWS__
+#endif // _WIN32

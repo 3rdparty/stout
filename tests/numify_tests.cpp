@@ -10,16 +10,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <limits>
-
 #include <gtest/gtest.h>
 
-#include <stout/gtest.hpp>
-#include <stout/numify.hpp>
+#include <limits>
+
+#include "stout/gtest.hpp"
+#include "stout/numify.hpp"
 
 
-TEST(NumifyTest, DecNumberTest)
-{
+TEST(NumifyTest, DecNumberTest) {
   Try<unsigned int> num1 = numify<unsigned int>("10");
   EXPECT_SOME_EQ(10u, num1);
 
@@ -38,8 +37,7 @@ TEST(NumifyTest, DecNumberTest)
 }
 
 
-TEST(NumifyTest, HexNumberTest)
-{
+TEST(NumifyTest, HexNumberTest) {
   Try<unsigned int> num1 = numify<unsigned int>("0xdeadbeef");
   EXPECT_SOME_EQ(0xdeadbeefu, num1);
 

@@ -12,13 +12,12 @@
 
 #include <gtest/gtest.h>
 
-#include <stout/foreach.hpp>
-#include <stout/interval.hpp>
-#include <stout/stringify.hpp>
+#include "stout/foreach.hpp"
+#include "stout/interval.hpp"
+#include "stout/stringify.hpp"
 
 
-TEST(IntervalTest, Interval)
-{
+TEST(IntervalTest, Interval) {
   Interval<int> i1 = (Bound<int>::open(1), Bound<int>::closed(3));
 
   EXPECT_EQ(2, i1.lower());
@@ -72,8 +71,7 @@ TEST(IntervalTest, Interval)
 }
 
 
-TEST(IntervalTest, EmptyInterval)
-{
+TEST(IntervalTest, EmptyInterval) {
   Interval<int> i1 = (Bound<int>::closed(1), Bound<int>::open(0));
 
   EXPECT_EQ(1, i1.lower());
@@ -131,8 +129,7 @@ TEST(IntervalTest, EmptyInterval)
 }
 
 
-TEST(IntervalTest, IntervalEqual)
-{
+TEST(IntervalTest, IntervalEqual) {
   Interval<int> interval((Bound<int>::closed(1), Bound<int>::open(3)));
   Interval<int> interval2((Bound<int>::closed(1), Bound<int>::open(3)));
   Interval<int> interval3((Bound<int>::open(1), Bound<int>::open(1)));
@@ -147,8 +144,7 @@ TEST(IntervalTest, IntervalEqual)
 }
 
 
-TEST(IntervalTest, Constructor)
-{
+TEST(IntervalTest, Constructor) {
   IntervalSet<int> set(0);
 
   EXPECT_TRUE(set.contains(0));
@@ -164,8 +160,7 @@ TEST(IntervalTest, Constructor)
 }
 
 
-TEST(IntervalTest, Contains)
-{
+TEST(IntervalTest, Contains) {
   IntervalSet<int> set;
 
   set += (Bound<int>::closed(1), Bound<int>::closed(10));
@@ -195,8 +190,7 @@ TEST(IntervalTest, Contains)
 }
 
 
-TEST(IntervalTest, Addition)
-{
+TEST(IntervalTest, Addition) {
   IntervalSet<int> set;
 
   set += 1;
@@ -236,8 +230,7 @@ TEST(IntervalTest, Addition)
 }
 
 
-TEST(IntervalTest, Subtraction)
-{
+TEST(IntervalTest, Subtraction) {
   IntervalSet<int> set;
 
   set += (Bound<int>::closed(1), Bound<int>::closed(10));
@@ -275,8 +268,7 @@ TEST(IntervalTest, Subtraction)
 }
 
 
-TEST(IntervalTest, Intersection)
-{
+TEST(IntervalTest, Intersection) {
   IntervalSet<int> set;
 
   set += (Bound<int>::closed(1), Bound<int>::closed(3));
@@ -302,8 +294,7 @@ TEST(IntervalTest, Intersection)
 }
 
 
-TEST(IntervalTest, IntersectionTest)
-{
+TEST(IntervalTest, IntersectionTest) {
   Interval<int> interval((Bound<int>::open(4), Bound<int>::closed(6)));
   Interval<int> interval2((Bound<int>::closed(1), Bound<int>::closed(5)));
   Interval<int> interval3((Bound<int>::closed(7), Bound<int>::closed(8)));
@@ -330,8 +321,7 @@ TEST(IntervalTest, IntersectionTest)
 }
 
 
-TEST(IntervalTest, LargeInterval)
-{
+TEST(IntervalTest, LargeInterval) {
   IntervalSet<int> set;
 
   set += (Bound<int>::open(1), Bound<int>::open(100));
@@ -347,8 +337,7 @@ TEST(IntervalTest, LargeInterval)
 }
 
 
-TEST(IntervalTest, IntervalIteration)
-{
+TEST(IntervalTest, IntervalIteration) {
   IntervalSet<int> set;
 
   set += (Bound<int>::closed(0), Bound<int>::closed(1));
@@ -379,11 +368,12 @@ TEST(IntervalTest, IntervalIteration)
 }
 
 
-TEST(IntervalTest, Stream)
-{
+TEST(IntervalTest, Stream) {
   EXPECT_EQ("[1,3)", stringify((Bound<int>::closed(1), Bound<int>::open(3))));
   EXPECT_EQ("[1,4)", stringify((Bound<int>::open(0), Bound<int>::closed(3))));
-  EXPECT_EQ("[0,5)", stringify((Bound<int>::closed(0), Bound<int>::closed(4))));
+  EXPECT_EQ(
+      "[0,5)",
+      stringify((Bound<int>::closed(0), Bound<int>::closed(4))));
   EXPECT_EQ("[2,3)", stringify((Bound<int>::open(1), Bound<int>::open(3))));
   EXPECT_EQ("[)", stringify((Bound<int>::closed(1), Bound<int>::open(1))));
 
@@ -400,8 +390,7 @@ TEST(IntervalTest, Stream)
 }
 
 
-TEST(IntervalTest, InfixOperator)
-{
+TEST(IntervalTest, InfixOperator) {
   IntervalSet<int> set1(Bound<int>::closed(0), Bound<int>::closed(1));
   IntervalSet<int> set2(Bound<int>::closed(2), Bound<int>::open(3));
   IntervalSet<int> set3(Bound<int>::closed(0), Bound<int>::closed(2));

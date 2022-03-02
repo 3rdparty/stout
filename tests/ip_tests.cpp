@@ -10,35 +10,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
+#include <gtest/gtest.h>
 #include <stdio.h>
 
 #include <set>
 #include <string>
 #include <vector>
 
-#include <gtest/gtest.h>
-
-#include <stout/foreach.hpp>
-#include <stout/gtest.hpp>
-#include <stout/ip.hpp>
-#include <stout/net.hpp>
-#include <stout/numify.hpp>
-#include <stout/stringify.hpp>
-#include <stout/strings.hpp>
+#include "stout/foreach.hpp"
+#include "stout/gtest.hpp"
+#include "stout/ip.hpp"
+#include "stout/net.hpp"
+#include "stout/numify.hpp"
+#include "stout/stringify.hpp"
+#include "stout/strings.hpp"
 
 using std::set;
 using std::string;
 using std::vector;
 
 
-TEST(NetTest, LinkDevice)
-{
+TEST(NetTest, LinkDevice) {
   Try<set<string>> links = net::links();
   ASSERT_SOME(links);
 
   foreach (const string& link, links.get()) {
     Result<net::IP::Network> network =
-      net::IP::Network::fromLinkDevice(link, AF_INET);
+        net::IP::Network::fromLinkDevice(link, AF_INET);
 
     EXPECT_FALSE(network.isError());
 
@@ -49,7 +47,7 @@ TEST(NetTest, LinkDevice)
       EXPECT_EQ(network->prefix(), numify<int>(prefix).get());
 
       vector<string> tokens =
-        strings::split(addr.substr(0, addr.find('/')), ".");
+          strings::split(addr.substr(0, addr.find('/')), ".");
 
       EXPECT_EQ(4u, tokens.size());
 
@@ -65,8 +63,7 @@ TEST(NetTest, LinkDevice)
 }
 
 
-TEST(NetTest, ConstructIPv4)
-{
+TEST(NetTest, ConstructIPv4) {
   EXPECT_SOME(net::IP::parse("127.0.0.1", AF_INET));
   EXPECT_SOME(net::IP::parse("1.2.3.4", AF_INET));
 
@@ -94,8 +91,7 @@ TEST(NetTest, ConstructIPv4)
 }
 
 
-TEST(NetTest, ConstructIPv6)
-{
+TEST(NetTest, ConstructIPv6) {
   EXPECT_SOME(net::IP::parse("::1", AF_INET6));
   EXPECT_SOME(net::IP::parse("fe80::eef4:bbff:fe33:a9c7", AF_INET6));
   EXPECT_SOME(net::IPv6::parse("fe80::eef4:bbff:fe33:a9c7"));
@@ -129,8 +125,7 @@ TEST(NetTest, ConstructIPv6)
 }
 
 
-TEST(NetTest, ConstructIPv4Network)
-{
+TEST(NetTest, ConstructIPv4Network) {
   EXPECT_SOME(net::IP::Network::parse("10.135.0.1/8"));
   EXPECT_SOME(net::IP::Network::parse("192.168.1.1/16"));
   EXPECT_SOME(net::IP::Network::parse("172.39.13.123/31"));
@@ -164,8 +159,12 @@ TEST(NetTest, ConstructIPv4Network)
   Try<net::IP::Network> n2 = net::IP::Network::create(net::IP(0x12345678), 32);
   Try<net::IP::Network> n3 = net::IP::Network::create(net::IP(0x12345678), 0);
 
-  EXPECT_SOME_EQ(net::IP::Network::parse("18.52.86.120/16", AF_INET).get(), n1);
-  EXPECT_SOME_EQ(net::IP::Network::parse("18.52.86.120/32", AF_INET).get(), n2);
+  EXPECT_SOME_EQ(
+      net::IP::Network::parse("18.52.86.120/16", AF_INET).get(),
+      n1);
+  EXPECT_SOME_EQ(
+      net::IP::Network::parse("18.52.86.120/32", AF_INET).get(),
+      n2);
   EXPECT_SOME_EQ(net::IP::Network::parse("18.52.86.120/0", AF_INET).get(), n3);
 
   EXPECT_ERROR(net::IP::Network::create(net::IP(0x12345678), 123));
@@ -190,8 +189,7 @@ TEST(NetTest, ConstructIPv4Network)
 }
 
 
-TEST(NetTest, ConstructIPv6Network)
-{
+TEST(NetTest, ConstructIPv6Network) {
   EXPECT_SOME(net::IP::Network::parse("::/128"));
   EXPECT_SOME(net::IP::Network::parse("fe80::d/64"));
   EXPECT_SOME(net::IP::Network::parse(
@@ -225,7 +223,7 @@ TEST(NetTest, ConstructIPv6Network)
   EXPECT_ERROR(net::IP::Network::create(loopback, 182));
 
   Try<net::IP::Network> network =
-    net::IP::Network::create(address.get(), netmask1.get());
+      net::IP::Network::create(address.get(), netmask1.get());
 
   ASSERT_SOME(network);
   EXPECT_EQ(address.get(), network->address());
@@ -233,7 +231,7 @@ TEST(NetTest, ConstructIPv6Network)
   EXPECT_EQ("2001:cdba::3257:9652/9", stringify(network.get()));
 
   Try<net::IP::Network> network2 =
-    net::IP::Network::parse(stringify(network.get()));
+      net::IP::Network::parse(stringify(network.get()));
 
   ASSERT_SOME(network2);
   EXPECT_EQ(network.get(), network2.get());
@@ -241,8 +239,7 @@ TEST(NetTest, ConstructIPv6Network)
 
 
 // Check the copy assignment operator for `net::IP::Network` works.
-TEST(NetTest, CopyIPNetwork)
-{
+TEST(NetTest, CopyIPNetwork) {
   Try<net::IP::Network> network = net::IP::Network::parse("192.168.1.1/16");
   EXPECT_SOME(network);
 

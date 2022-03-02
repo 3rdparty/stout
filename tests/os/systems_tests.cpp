@@ -12,7 +12,7 @@
 
 #include <stout/os.hpp>
 
-#include <stout/tests/utils.hpp>
+#include "stout/tests/utils.hpp"
 
 using std::string;
 
@@ -20,8 +20,7 @@ using std::string;
 class SystemsTests : public TemporaryDirectoryTest {};
 
 
-TEST_F(SystemsTests, Uname)
-{
+TEST_F(SystemsTests, Uname) {
   const Try<os::UTSInfo> info = os::uname();
 
   ASSERT_SOME(info);
@@ -45,8 +44,7 @@ TEST_F(SystemsTests, Uname)
 }
 
 
-TEST_F(SystemsTests, Sysname)
-{
+TEST_F(SystemsTests, Sysname) {
   const Try<string> name = os::sysname();
 
   ASSERT_SOME(name);
@@ -58,8 +56,7 @@ TEST_F(SystemsTests, Sysname)
 }
 
 
-TEST_F(SystemsTests, Release)
-{
+TEST_F(SystemsTests, Release) {
   const Try<Version> info = os::release();
 
   ASSERT_SOME(info);

@@ -12,35 +12,29 @@
 
 #include <string>
 
-#ifdef __WINDOWS__
-#include <stout/windows.hpp>
+#ifdef _WIN32
+#include "stout/windows.hpp"
 #endif
 
-#include <stout/archiver.hpp>
-#include <stout/base64.hpp>
-#include <stout/gtest.hpp>
-#include <stout/os.hpp>
-#include <stout/uuid.hpp>
-
-#include <stout/os/write.hpp>
-
-#include <stout/tests/utils.hpp>
+#include "stout/archiver.hpp"
+#include "stout/base64.hpp"
+#include "stout/gtest.hpp"
+#include "stout/os.hpp"
+#include "stout/os/write.hpp"
+#include "stout/tests/utils.hpp"
+#include "stout/uuid.hpp"
 
 using std::string;
-
 
 class ArchiverTest : public TemporaryDirectoryTest {};
 
 // No input file should return some error, not read from stdin.
-TEST_F(ArchiverTest, ExtractEmptyInputFile)
-{
+TEST_F(ArchiverTest, ExtractEmptyInputFile) {
   EXPECT_ERROR(archiver::extract("", ""));
 }
 
-
 // File that does not exist should return some error.
-TEST_F(ArchiverTest, ExtractInputFileNotFound)
-{
+TEST_F(ArchiverTest, ExtractInputFileNotFound) {
   // Construct a temporary file path that is guarenteed unique.
   Try<string> dir = os::mkdtemp(path::join(sandbox.get(), "XXXXXX"));
   ASSERT_SOME(dir);
@@ -50,9 +44,7 @@ TEST_F(ArchiverTest, ExtractInputFileNotFound)
   EXPECT_ERROR(archiver::extract(path, ""));
 }
 
-
-TEST_F(ArchiverTest, ExtractTarGzFile)
-{
+TEST_F(ArchiverTest, ExtractTarGzFile) {
   // Construct a hello.tar.gz file that can be extracted.
   string dir = path::join(sandbox.get(), "somedir");
   ASSERT_SOME(os::mkdir(dir));
@@ -66,11 +58,15 @@ TEST_F(ArchiverTest, ExtractTarGzFile)
   // --------  -------                  ------- ------
   //       22       22                  1 file
 
-  ASSERT_SOME(os::write(path.get(), base64::decode(
-      "H4sICE61jVoAA2hlbGxvLnRhcgDtzjEOwjAQRNGtOcXSU9hx7FyBa0RgK0IR"
-      "RsYIcfsEaGhQqggh/VfsFLPFDHEcs6zLzEJon2k7bz7zrQliXdM6Nx/vxVgb"
-      "uiBqVt71crvWvqjKKaZ0yOnr31L/p/b5fnxoHWKJO730pZ5j2W5+vQoAAAAA"
-      "AAAAAAAAAAAAsGQC2DPIjgAoAAA=").get()));
+  ASSERT_SOME(
+      os::write(
+          path.get(),
+          base64::decode(
+              "H4sICE61jVoAA2hlbGxvLnRhcgDtzjEOwjAQRNGtOcXSU9hx7FyBa0RgK0IR"
+              "RsYIcfsEaGhQqggh/VfsFLPFDHEcs6zLzEJon2k7bz7zrQliXdM6Nx/vxVgb"
+              "uiBqVt71crvWvqjKKaZ0yOnr31L/p/b5fnxoHWKJO730pZ5j2W5+vQoAAAAA"
+              "AAAAAAAAAAAAsGQC2DPIjgAoAAA=")
+              .get()));
 
   // Note: The file does NOT have a .tar.gz extension. We could rename
   // it, but libarchive doesn't care about extensions. It determines
@@ -84,9 +80,7 @@ TEST_F(ArchiverTest, ExtractTarGzFile)
   ASSERT_SOME_EQ("Howdy there, partner!\n", os::read(extractedFile));
 }
 
-
-TEST_F(ArchiverTest, ExtractTarFile)
-{
+TEST_F(ArchiverTest, ExtractTarFile) {
   // Construct a hello.tar file that can be extracted.
   string dir = path::join(sandbox.get(), "somedir");
   ASSERT_SOME(os::mkdir(dir));
@@ -120,10 +114,9 @@ TEST_F(ArchiverTest, ExtractTarFile)
       "AAAAAAAAAAAAAAAAAAAAAABIb3dkeSB0aGVyZSwgcGFydG5lciEgKC50YXIp"
       "CgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 
-  for (int i = 0; i < 214; i++)
-  {
-      tarContents +=
-          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+  for (int i = 0; i < 214; i++) {
+    tarContents +=
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
   }
 
   tarContents += "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==";
@@ -139,9 +132,7 @@ TEST_F(ArchiverTest, ExtractTarFile)
   ASSERT_SOME_EQ("Howdy there, partner! (.tar)\n", os::read(extractedFile));
 }
 
-
-TEST_F(ArchiverTest, ExtractZipFile)
-{
+TEST_F(ArchiverTest, ExtractZipFile) {
   // Construct a hello.zip file that can be extracted.
   string dir = path::join(sandbox.get(), "somedir");
   ASSERT_SOME(os::mkdir(dir));
@@ -155,12 +146,16 @@ TEST_F(ArchiverTest, ExtractZipFile)
   // --------  -------                  ------- ------
   //      189      189                  1 file
 
-  ASSERT_SOME(os::write(path.get(), base64::decode(
-      "UEsDBAoAAAAAAMZ4WkxFOXeVHQAAAB0AAAAFABwAaGVsbG9VVAkAA+SSlFrk"
-      "kpRadXgLAAEE6AMAAAToAwAASG93ZHkgdGhlcmUsIHBhcnRuZXIhICguemlw"
-      "KQpQSwECHgMKAAAAAADGeFpMRTl3lR0AAAAdAAAABQAYAAAAAAABAAAAtIEA"
-      "AAAAaGVsbG9VVAUAA+SSlFp1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBL"
-      "AAAAXAAAAAAA").get()));
+  ASSERT_SOME(
+      os::write(
+          path.get(),
+          base64::decode(
+              "UEsDBAoAAAAAAMZ4WkxFOXeVHQAAAB0AAAAFABwAaGVsbG9VVAkAA+SSlFrk"
+              "kpRadXgLAAEE6AMAAAToAwAASG93ZHkgdGhlcmUsIHBhcnRuZXIhICguemlw"
+              "KQpQSwECHgMKAAAAAADGeFpMRTl3lR0AAAAdAAAABQAYAAAAAAABAAAAtIEA"
+              "AAAAaGVsbG9VVAUAA+SSlFp1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBL"
+              "AAAAXAAAAAAA")
+              .get()));
 
   EXPECT_SOME(archiver::extract(path.get(), ""));
 
@@ -170,9 +165,7 @@ TEST_F(ArchiverTest, ExtractZipFile)
   ASSERT_SOME_EQ("Howdy there, partner! (.zip)\n", os::read(extractedFile));
 }
 
-
-TEST_F(ArchiverTest, ExtractInvalidZipFile)
-{
+TEST_F(ArchiverTest, ExtractInvalidZipFile) {
   // Construct a hello.zip file that can be extracted.
   string dir = path::join(sandbox.get(), "somedir");
   ASSERT_SOME(os::mkdir(dir));
@@ -188,18 +181,20 @@ TEST_F(ArchiverTest, ExtractInvalidZipFile)
   // --------                                            ------- ------
   //       12                                            1 file
 
-  ASSERT_SOME(os::write(path.get(), base64::decode(
-      "UEsDBAoAAAAAABBRc0gtOwivDAAAAAwAAAAFABwAd29ybG9VVAkAAxAX7VYQ"
-      "F+1WdXgLAAEE6AMAAARkAAAAaGVsbG8gaGVsbG8KUEsBAh4DCgAAAAAAEFFz"
-      "SC07CK8MAAAADAAAAAUAGAAAAAAAAQAAAKSBAAAAAHdvcmxkVVQFAAMQF+1W"
-      "dXgLAAEE6AMAAARkAAAAUEsFBgAAAAABAAEASwAAAEsAAAAAAA==").get()));
+  ASSERT_SOME(
+      os::write(
+          path.get(),
+          base64::decode(
+              "UEsDBAoAAAAAABBRc0gtOwivDAAAAAwAAAAFABwAd29ybG9VVAkAAxAX7VYQ"
+              "F+1WdXgLAAEE6AMAAARkAAAAaGVsbG8gaGVsbG8KUEsBAh4DCgAAAAAAEFFz"
+              "SC07CK8MAAAADAAAAAUAGAAAAAAAAQAAAKSBAAAAAHdvcmxkVVQFAAMQF+1W"
+              "dXgLAAEE6AMAAARkAAAAUEsFBgAAAAABAAEASwAAAEsAAAAAAA==")
+              .get()));
 
   EXPECT_ERROR(archiver::extract(path.get(), ""));
 }
 
-
-TEST_F(ArchiverTest, ExtractZipFileWithDuplicatedEntries)
-{
+TEST_F(ArchiverTest, ExtractZipFileWithDuplicatedEntries) {
   string dir = path::join(sandbox.get(), "somedir");
   ASSERT_SOME(os::mkdir(dir));
 
@@ -215,11 +210,15 @@ TEST_F(ArchiverTest, ExtractZipFileWithDuplicatedEntries)
   // --------          -------  ---                           ------- -------
   //       2                2   0%                            2 files
 
-  ASSERT_SOME(os::write(path.get(), base64::decode(
-      "UEsDBBQAAAAAADC2cki379yDAQAAAAEAAAABAAAAQTFQSwMEFAAAAAAAMrZy"
-      "SA2+1RoBAAAAAQAAAAEAAABBMlBLAQIUAxQAAAAAADC2cki379yDAQAAAAEA"
-      "AAABAAAAAAAAAAAAAACAAQAAAABBUEsBAhQDFAAAAAAAMrZySA2+1RoBAAAA"
-      "AQAAAAEAAAAAAAAAAAAAAIABIAAAAEFQSwUGAAAAAAIAAgBeAAAAQAAAAAAA").get()));
+  ASSERT_SOME(
+      os::write(
+          path.get(),
+          base64::decode(
+              "UEsDBBQAAAAAADC2cki379yDAQAAAAEAAAABAAAAQTFQSwMEFAAAAAAAMrZy"
+              "SA2+1RoBAAAAAQAAAAEAAABBMlBLAQIUAxQAAAAAADC2cki379yDAQAAAAEA"
+              "AAABAAAAAAAAAAAAAACAAQAAAABBUEsBAhQDFAAAAAAAMrZySA2+1RoBAAAA"
+              "AQAAAAEAAAAAAAAAAAAAAIABIAAAAEFQSwUGAAAAAAIAAgBeAAAAQAAAAAAA")
+              .get()));
 
   EXPECT_SOME(archiver::extract(path.get(), ""));
 
@@ -229,9 +228,7 @@ TEST_F(ArchiverTest, ExtractZipFileWithDuplicatedEntries)
   ASSERT_SOME_EQ("2", os::read(extractedFile));
 }
 
-
-TEST_F(ArchiverTest, ExtractTarXZFile)
-{
+TEST_F(ArchiverTest, ExtractTarXZFile) {
   string dir = path::join(sandbox.get(), "somedir");
   ASSERT_SOME(os::mkdir(dir));
 
@@ -246,12 +243,16 @@ TEST_F(ArchiverTest, ExtractTarXZFile)
   // --------  -------                  ------- ------
   //      192      192                  1 file
 
-  ASSERT_SOME(os::write(path.get(), base64::decode(
-       "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4Cf/AH5dADQZSe6N1/i4P8k3jGgA"
-       "rB4mJjQrf8ka7ajHWIxeYZoS+eGuA0Br4ooXZVdW4dnh8GpgDlbdfMQrOOPA"
-       "aJE3B9L56mP0ThtjwNuMhhc8/xiXsFOVeUf/xbgcqognut0NZNetr0p+FA/O"
-       "K6NqFHAjzSaANcbNj+iFfqY3sC/mAAAAADpda78LIiMIAAGaAYBQAADDUC3D"
-       "scRn+wIAAAAABFla").get()));
+  ASSERT_SOME(
+      os::write(
+          path.get(),
+          base64::decode(
+              "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4Cf/AH5dADQZSe6N1/i4P8k3jGgA"
+              "rB4mJjQrf8ka7ajHWIxeYZoS+eGuA0Br4ooXZVdW4dnh8GpgDlbdfMQrOOPA"
+              "aJE3B9L56mP0ThtjwNuMhhc8/xiXsFOVeUf/xbgcqognut0NZNetr0p+FA/O"
+              "K6NqFHAjzSaANcbNj+iFfqY3sC/mAAAAADpda78LIiMIAAGaAYBQAADDUC3D"
+              "scRn+wIAAAAABFla")
+              .get()));
 
   EXPECT_SOME(archiver::extract(path.get(), ""));
 
@@ -261,9 +262,7 @@ TEST_F(ArchiverTest, ExtractTarXZFile)
   ASSERT_SOME_EQ("Hello world (xz)\n", os::read(extractedFile));
 }
 
-
-TEST_F(ArchiverTest, ExtractTarBZ2File)
-{
+TEST_F(ArchiverTest, ExtractTarBZ2File) {
   string dir = path::join(sandbox.get(), "somedir");
   ASSERT_SOME(os::mkdir(dir));
 
@@ -278,11 +277,15 @@ TEST_F(ArchiverTest, ExtractTarBZ2File)
   // --------  -------                  ------- ------
   //      148      148                  1 file
 
-  ASSERT_SOME(os::write(path.get(), base64::decode(
-       "QlpoOTFBWSZTWZo+haYAAH//hMIRAgBAYH+AAEAACH903pAABAAIIAB0EpEa"
-       "IeiMJtAIeRP1BlNCA00AAAA+x2lRZBAgaACRM0TvUjA5RJAR6BfGS3MjVUIh"
-       "IUI0Yww9tmran651Du0Hk5ZN4pbSxgs5xlAlIjtgOImyv+auHhIXnipV/xXy"
-       "iIHQu5IpwoSE0fQtMA==").get()));
+  ASSERT_SOME(
+      os::write(
+          path.get(),
+          base64::decode(
+              "QlpoOTFBWSZTWZo+haYAAH//hMIRAgBAYH+AAEAACH903pAABAAIIAB0EpEa"
+              "IeiMJtAIeRP1BlNCA00AAAA+x2lRZBAgaACRM0TvUjA5RJAR6BfGS3MjVUIh"
+              "IUI0Yww9tmran651Du0Hk5ZN4pbSxgs5xlAlIjtgOImyv+auHhIXnipV/xXy"
+              "iIHQu5IpwoSE0fQtMA==")
+              .get()));
 
   EXPECT_SOME(archiver::extract(path.get(), ""));
 
@@ -292,9 +295,7 @@ TEST_F(ArchiverTest, ExtractTarBZ2File)
   ASSERT_SOME_EQ("Hello world (bzip2)\n", os::read(extractedFile));
 }
 
-
-TEST_F(ArchiverTest, ExtractTarBz2GzFile)
-{
+TEST_F(ArchiverTest, ExtractTarBz2GzFile) {
   string dir = path::join(sandbox.get(), "somedir");
   ASSERT_SOME(os::mkdir(dir));
 
@@ -312,12 +313,16 @@ TEST_F(ArchiverTest, ExtractTarBz2GzFile)
   // --------  -------                  ------- ------
   //      185      185                  1 file
 
-  ASSERT_SOME(os::write(path.get(), base64::decode(
-       "H4sICOPtlVoAA2hlbGxvLnRhci5iejIAAZQAa/9CWmg5MUFZJlNZmj6FpgAA"
-       "f/+EwhECAEBgf4AAQAAIf3TekAAEAAggAHQSkRoh6Iwm0Ah5E/UGU0IDTQAA"
-       "AD7HaVFkECBoAJEzRO9SMDlEkBHoF8ZLcyNVQiEhQjRjDD22atqfrnUO7QeT"
-       "lk3iltLGCznGUCUiO2A4ibK/5q4eEheeKlX/FfKIgdC7kinChITR9C0wSQeY"
-       "TJQAAAA=").get()));
+  ASSERT_SOME(
+      os::write(
+          path.get(),
+          base64::decode(
+              "H4sICOPtlVoAA2hlbGxvLnRhci5iejIAAZQAa/9CWmg5MUFZJlNZmj6FpgAA"
+              "f/+EwhECAEBgf4AAQAAIf3TekAAEAAggAHQSkRoh6Iwm0Ah5E/UGU0IDTQAA"
+              "AD7HaVFkECBoAJEzRO9SMDlEkBHoF8ZLcyNVQiEhQjRjDD22atqfrnUO7QeT"
+              "lk3iltLGCznGUCUiO2A4ibK/5q4eEheeKlX/FfKIgdC7kinChITR9C0wSQeY"
+              "TJQAAAA=")
+              .get()));
 
   EXPECT_SOME(archiver::extract(path.get(), ""));
 
@@ -327,9 +332,7 @@ TEST_F(ArchiverTest, ExtractTarBz2GzFile)
   ASSERT_SOME_EQ("Hello world (bzip2)\n", os::read(extractedFile));
 }
 
-
-TEST_F(ArchiverTest, ExtractBz2FileFails)
-{
+TEST_F(ArchiverTest, ExtractBz2FileFails) {
   string dir = path::join(sandbox.get(), "somedir");
   ASSERT_SOME(os::mkdir(dir));
 
@@ -348,16 +351,18 @@ TEST_F(ArchiverTest, ExtractBz2FileFails)
   // --------  -------                  ------- ------
   //       63       63                  1 file
 
-  ASSERT_SOME(os::write(path.get(), base64::decode(
-       "QlpoOTFBWSZTWTMaBKkAAANdgAAQQGAQAABAFiTQkCAAIhGCD1HoUwAE0auv"
-       "Imhs/86EgGxdyRThQkDMaBKk").get()));
+  ASSERT_SOME(
+      os::write(
+          path.get(),
+          base64::decode(
+              "QlpoOTFBWSZTWTMaBKkAAANdgAAQQGAQAABAFiTQkCAAIhGCD1HoUwAE0auv"
+              "Imhs/86EgGxdyRThQkDMaBKk")
+              .get()));
 
   EXPECT_ERROR(archiver::extract(path.get(), ""));
 }
 
-
-TEST_F(ArchiverTest, ExtractGzFileFails)
-{
+TEST_F(ArchiverTest, ExtractGzFileFails) {
   string dir = path::join(sandbox.get(), "somedir");
   ASSERT_SOME(os::mkdir(dir));
 
@@ -376,18 +381,21 @@ TEST_F(ArchiverTest, ExtractGzFileFails)
   // --------  -------                  ------- ------
   //       43       43                  1 file
 
-  ASSERT_SOME(os::write(path.get(), base64::decode(
-      "H4sICNjxsloAA2hlbGxvAPNIzcnJVyjPL8pJUdBIr9LkAgAwtvTdEQAAAA==").get()));
+  ASSERT_SOME(
+      os::write(
+          path.get(),
+          base64::decode(
+              "H4sICNjxsloAA2hlbGxvAPNIzcnJVyjPL8pJUdBIr9LkAgAwtvTdEQAAAA==")
+              .get()));
 
   EXPECT_ERROR(archiver::extract(path.get(), ""));
 }
 
-
 // TODO(josephw): Libarchive currently does not support creating symlinks
 // on Windows (hardlinks are fine).
 TEST_F_TEMP_DISABLED_ON_WINDOWS(
-    ArchiverTest, SYMLINK_ExtractTarGzFileWithLinks)
-{
+    ArchiverTest,
+    SYMLINK_ExtractTarGzFileWithLinks) {
   // Construct a tarball containing a hardlink and symlink.
   string dir = path::join(sandbox.get(), "somedir");
   ASSERT_SOME(os::mkdir(dir));
@@ -401,12 +409,16 @@ TEST_F_TEMP_DISABLED_ON_WINDOWS(
   //   ln -s target symlink
   //   tar -czf foo.tar.gz target hardlink symlink
   //   cat foo.tar.gz | base64
-  ASSERT_SOME(os::write(path.get(), base64::decode(
-      "H4sIADbiKlsAA+3UTQ6CMBCG4a49xezctqWlZ/AYJIL4gxqoMd5efhITF4obM"
-      "Mb32UxIJmXIxzRm9SaPalJa69Q56WpIfV+1HZ4H1opJEmN9ql1wok1ig1eipx"
-      "1rcGliVrej7E5Nfi6vl1d9bVtRvDln+BJ51B+xWlaSyWF73Evsf4XFtyfCnMq"
-      "sXnfpT/mO0f1v9+V5/33bqcTEGS6nP9//5lZNHX+fu/ef5e9tl78L2iix5A8A"
-      "AAAAAAAAAAAAADDqDhr0y40AKAAA").get()));
+  ASSERT_SOME(
+      os::write(
+          path.get(),
+          base64::decode(
+              "H4sIADbiKlsAA+3UTQ6CMBCG4a49xezctqWlZ/AYJIL4gxqoMd5efhITF4obM"
+              "Mb32UxIJmXIxzRm9SaPalJa69Q56WpIfV+1HZ4H1opJEmN9ql1wok1ig1eipx"
+              "1rcGliVrej7E5Nfi6vl1d9bVtRvDln+BJ51B+xWlaSyWF73Evsf4XFtyfCnMq"
+              "sXnfpT/mO0f1v9+V5/33bqcTEGS6nP9//5lZNHX+fu/ef5e9tl78L2iix5A8A"
+              "AAAAAAAAAAAAADDqDhr0y40AKAAA")
+              .get()));
 
   EXPECT_SOME(archiver::extract(path.get(), dir));
 
@@ -422,9 +434,7 @@ TEST_F_TEMP_DISABLED_ON_WINDOWS(
   ASSERT_SOME_EQ("I'm a link target\n", os::read(extractedFile3));
 }
 
-
-TEST_F(ArchiverTest, ExtractTarGzFileWithDestinationDir)
-{
+TEST_F(ArchiverTest, ExtractTarGzFileWithDestinationDir) {
   // Construct a hello.tar.gz file that can be extracted.
   string dir = path::join(sandbox.get(), "somedir");
   ASSERT_SOME(os::mkdir(dir));
@@ -438,11 +448,15 @@ TEST_F(ArchiverTest, ExtractTarGzFileWithDestinationDir)
   // --------  -------                  ------- ------
   //       22       22                  1 file
 
-  ASSERT_SOME(os::write(sourcePath.get(), base64::decode(
-      "H4sICE61jVoAA2hlbGxvLnRhcgDtzjEOwjAQRNGtOcXSU9hx7FyBa0RgK0IR"
-      "RsYIcfsEaGhQqggh/VfsFLPFDHEcs6zLzEJon2k7bz7zrQliXdM6Nx/vxVgb"
-      "uiBqVt71crvWvqjKKaZ0yOnr31L/p/b5fnxoHWKJO730pZ5j2W5+vQoAAAAA"
-      "AAAAAAAAAAAAsGQC2DPIjgAoAAA=").get()));
+  ASSERT_SOME(
+      os::write(
+          sourcePath.get(),
+          base64::decode(
+              "H4sICE61jVoAA2hlbGxvLnRhcgDtzjEOwjAQRNGtOcXSU9hx7FyBa0RgK0IR"
+              "RsYIcfsEaGhQqggh/VfsFLPFDHEcs6zLzEJon2k7bz7zrQliXdM6Nx/vxVgb"
+              "uiBqVt71crvWvqjKKaZ0yOnr31L/p/b5fnxoHWKJO730pZ5j2W5+vQoAAAAA"
+              "AAAAAAAAAAAAsGQC2DPIjgAoAAA=")
+              .get()));
 
   // Make a destination directory to extract the archive to.
   string destDir = path::join(dir, "somedestination");
@@ -463,9 +477,7 @@ TEST_F(ArchiverTest, ExtractTarGzFileWithDestinationDir)
   ASSERT_SOME_EQ("Howdy there, partner!\n", os::read(extractedFile));
 }
 
-
-TEST_F(ArchiverTest, ExtractZipFileWithDestinationDir)
-{
+TEST_F(ArchiverTest, ExtractZipFileWithDestinationDir) {
   // Construct a hello.zip file that can be extracted.
   string dir = path::join(sandbox.get(), "somedir");
   ASSERT_SOME(os::mkdir(dir));
@@ -479,12 +491,16 @@ TEST_F(ArchiverTest, ExtractZipFileWithDestinationDir)
   // --------  -------                  ------- ------
   //      189      189                  1 file
 
-  ASSERT_SOME(os::write(sourcePath.get(), base64::decode(
-      "UEsDBAoAAAAAAMZ4WkxFOXeVHQAAAB0AAAAFABwAaGVsbG9VVAkAA+SSlFrk"
-      "kpRadXgLAAEE6AMAAAToAwAASG93ZHkgdGhlcmUsIHBhcnRuZXIhICguemlw"
-      "KQpQSwECHgMKAAAAAADGeFpMRTl3lR0AAAAdAAAABQAYAAAAAAABAAAAtIEA"
-      "AAAAaGVsbG9VVAUAA+SSlFp1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBL"
-      "AAAAXAAAAAAA").get()));
+  ASSERT_SOME(
+      os::write(
+          sourcePath.get(),
+          base64::decode(
+              "UEsDBAoAAAAAAMZ4WkxFOXeVHQAAAB0AAAAFABwAaGVsbG9VVAkAA+SSlFrk"
+              "kpRadXgLAAEE6AMAAAToAwAASG93ZHkgdGhlcmUsIHBhcnRuZXIhICguemlw"
+              "KQpQSwECHgMKAAAAAADGeFpMRTl3lR0AAAAdAAAABQAYAAAAAAABAAAAtIEA"
+              "AAAAaGVsbG9VVAUAA+SSlFp1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBL"
+              "AAAAXAAAAAAA")
+              .get()));
 
   // Make a destination directory to extract the archive to.
   string destDir = path::join(dir, "somedestination");
@@ -498,9 +514,7 @@ TEST_F(ArchiverTest, ExtractZipFileWithDestinationDir)
   ASSERT_SOME_EQ("Howdy there, partner! (.zip)\n", os::read(extractedFile));
 }
 
-
-TEST_F(ArchiverTest, ExtractZipFileWithLongDestinationDir)
-{
+TEST_F(ArchiverTest, ExtractZipFileWithLongDestinationDir) {
   // Construct a hello.zip file that can be extracted.
   string dir = path::join(sandbox.get(), "somedir");
   ASSERT_SOME(os::mkdir(dir));
@@ -514,12 +528,16 @@ TEST_F(ArchiverTest, ExtractZipFileWithLongDestinationDir)
   // --------  -------                  ------- ------
   //      189      189                  1 file
 
-  ASSERT_SOME(os::write(sourcePath.get(), base64::decode(
-      "UEsDBAoAAAAAAMZ4WkxFOXeVHQAAAB0AAAAFABwAaGVsbG9VVAkAA+SSlFrk"
-      "kpRadXgLAAEE6AMAAAToAwAASG93ZHkgdGhlcmUsIHBhcnRuZXIhICguemlw"
-      "KQpQSwECHgMKAAAAAADGeFpMRTl3lR0AAAAdAAAABQAYAAAAAAABAAAAtIEA"
-      "AAAAaGVsbG9VVAUAA+SSlFp1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBL"
-      "AAAAXAAAAAAA").get()));
+  ASSERT_SOME(
+      os::write(
+          sourcePath.get(),
+          base64::decode(
+              "UEsDBAoAAAAAAMZ4WkxFOXeVHQAAAB0AAAAFABwAaGVsbG9VVAkAA+SSlFrk"
+              "kpRadXgLAAEE6AMAAAToAwAASG93ZHkgdGhlcmUsIHBhcnRuZXIhICguemlw"
+              "KQpQSwECHgMKAAAAAADGeFpMRTl3lR0AAAAdAAAABQAYAAAAAAABAAAAtIEA"
+              "AAAAaGVsbG9VVAUAA+SSlFp1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBL"
+              "AAAAXAAAAAAA")
+              .get()));
 
   // Make a destination directory to extract the archive to.
   const size_t max_path_length = 260;
@@ -538,9 +556,7 @@ TEST_F(ArchiverTest, ExtractZipFileWithLongDestinationDir)
   ASSERT_SOME_EQ("Howdy there, partner! (.zip)\n", os::read(extractedFile));
 }
 
-
-TEST_F(ArchiverTest, ExtractZipWithDotDot)
-{
+TEST_F(ArchiverTest, ExtractZipWithDotDot) {
   // Construct a exploit.zip file that should not be extracted.
   string dir = path::join(sandbox.get(), "somedir");
   ASSERT_SOME(os::mkdir(dir));
@@ -557,11 +573,15 @@ TEST_F(ArchiverTest, ExtractZipWithDotDot)
   //   zip.writestr("../unsecure_file.txt", "content")
   //   zip.close()
 
-  ASSERT_SOME(os::write(path.get(), base64::decode(
-      "UEsDBBQAAAAAACZbZk6pMMX+BwAAAAcAAAAUAAAALi4vdW5zZWN1cmVfZmls"
-      "ZS50eHRjb250ZW50UEsBAhQDFAAAAAAAJltmTqkwxf4HAAAABwAAABQAAAAA"
-      "AAAAAAAAAIABAAAAAC4uL3Vuc2VjdXJlX2ZpbGUudHh0UEsFBgAAAAABAAEA"
-      "QgAAADkAAAAAAA==").get()));
+  ASSERT_SOME(
+      os::write(
+          path.get(),
+          base64::decode(
+              "UEsDBBQAAAAAACZbZk6pMMX+BwAAAAcAAAAUAAAALi4vdW5zZWN1cmVfZmls"
+              "ZS50eHRjb250ZW50UEsBAhQDFAAAAAAAJltmTqkwxf4HAAAABwAAABQAAAAA"
+              "AAAAAAAAAIABAAAAAC4uL3Vuc2VjdXJlX2ZpbGUudHh0UEsFBgAAAAABAAEA"
+              "QgAAADkAAAAAAA==")
+              .get()));
 
   string extractedFile = path::join(sandbox.get(), "unsecure_file.txt");
 

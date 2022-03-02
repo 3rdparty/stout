@@ -10,18 +10,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
-#include <vector>
-
 #include <gtest/gtest.h>
 
-#include <stout/adaptor.hpp>
-#include <stout/foreach.hpp>
+#include <vector>
+
+#include "stout/adaptor.hpp"
+#include "stout/foreach.hpp"
 
 using std::vector;
 
-
-TEST(AdaptorTest, Reversed)
-{
+TEST(AdaptorTest, Reversed) {
   vector<int> input = {1, 2, 3};
   vector<int> output;
 

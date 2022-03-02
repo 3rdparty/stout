@@ -10,30 +10,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
 #include <process.h>
-#endif // __WINDOWS__
-
-#include <set>
+#endif // _WIN32
 
 #include <gtest/gtest.h>
 
-#include <stout/os.hpp>
+#include <set>
 
-#ifndef __WINDOWS__
-#include <stout/os/fork.hpp>
-#endif // __WINDOWS__
-#include <stout/os/pstree.hpp>
+#include "stout/os.hpp"
 
-#include <stout/tests/utils.hpp>
+#ifndef _WIN32
+#include "stout/os/fork.hpp"
+#endif // _WIN32
+#include "stout/os/pstree.hpp"
+#include "stout/tests/utils.hpp"
 
 
 class ProcessTest : public TemporaryDirectoryTest {};
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
 using os::Exec;
 using os::Fork;
-#endif // __WINDOWS__
+#endif // _WIN32
 using os::Process;
 using os::ProcessTree;
 
@@ -43,22 +42,21 @@ using std::string;
 
 
 const unsigned int init_pid =
-#ifdef __WINDOWS__
+#ifdef _WIN32
     // NOTE: This is also known as the System Idle Process.
     0;
 #else
     1;
-#endif // __WINDOWS__
+#endif // _WIN32
 
 
-#ifdef __WINDOWS__
-int getppid()
-{
+#ifdef _WIN32
+int getppid() {
   const int pid = getpid();
   HANDLE h = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
   std::shared_ptr<void> sh(h, CloseHandle);
 
-  PROCESSENTRY32 pe = { 0 };
+  PROCESSENTRY32 pe = {0};
   pe.dwSize = sizeof(PROCESSENTRY32);
 
   if (Process32First(h, &pe)) {
@@ -71,10 +69,9 @@ int getppid()
 
   return -1;
 }
-#endif // __WINDOWS__
+#endif // _WIN32
 
-TEST_F(ProcessTest, Process)
-{
+TEST_F(ProcessTest, Process) {
   const Result<Process> process = os::process(getpid());
 
   ASSERT_SOME(process);
@@ -82,10 +79,10 @@ TEST_F(ProcessTest, Process)
   EXPECT_EQ(getppid(), process->parent);
   ASSERT_SOME(process->session);
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
   // NOTE: `getsid` does not have a meaningful interpretation on Windows.
   EXPECT_EQ(getsid(0), process->session.get());
-#endif // __WINDOWS__
+#endif // _WIN32
 
   ASSERT_SOME(process->rss);
   EXPECT_GT(process->rss.get(), 0);
@@ -105,7 +102,7 @@ TEST_F(ProcessTest, Process)
 
   // Assert init.
   Result<Process> init_process = os::process(init_pid);
-#ifdef __WINDOWS__
+#ifdef _WIN32
   // NOTE: On Windows, the init process is a pseudo-process, and it is not
   // possible to get a handle to it. So we expect it to error out instead of
   // succeed, unlike the POSIX version.
@@ -113,18 +110,17 @@ TEST_F(ProcessTest, Process)
 #elif __FreeBSD__
   // In a FreeBSD jail, we wont find an init process.
   if (!isJailed()) {
-      EXPECT_SOME(init_process);
+    EXPECT_SOME(init_process);
   } else {
-      EXPECT_NONE(init_process);
+    EXPECT_NONE(init_process);
   }
 #else
   EXPECT_SOME(init_process);
-#endif // __WINDOWS__
+#endif // _WIN32
 }
 
 
-TEST_F(ProcessTest, Processes)
-{
+TEST_F(ProcessTest, Processes) {
   const Try<list<Process>> processes = os::processes();
 
   ASSERT_SOME(processes);
@@ -139,10 +135,10 @@ TEST_F(ProcessTest, Processes)
       EXPECT_EQ(getppid(), process.parent);
       ASSERT_SOME(process.session);
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
       // NOTE: `getsid` does not have a meaningful interpretation on Windows.
       EXPECT_EQ(getsid(0), process.session.get());
-#endif // __WINDOWS__
+#endif // _WIN32
 
       ASSERT_SOME(process.rss);
       EXPECT_GT(process.rss.get(), 0);
@@ -164,8 +160,7 @@ TEST_F(ProcessTest, Processes)
 }
 
 
-TEST_F(ProcessTest, Pids)
-{
+TEST_F(ProcessTest, Pids) {
   Try<set<pid_t>> pids = os::pids();
   ASSERT_SOME(pids);
   EXPECT_FALSE(pids->empty());
@@ -175,19 +170,19 @@ TEST_F(ProcessTest, Pids)
 #ifdef __FreeBSD__
   if (!isJailed()) {
 #endif
-#ifdef __WINDOWS__
+#ifdef _WIN32
     // On Windows, we explicitly do not return the PID of the System Idle
     // Process, because doing so can cause unexpected bugs.
     EXPECT_EQ(0u, pids.get().count(init_pid));
 #else
-    // Elsewhere we always expect exactly 1 init PID.
-    EXPECT_EQ(1u, pids->count(init_pid));
+  // Elsewhere we always expect exactly 1 init PID.
+  EXPECT_EQ(1u, pids->count(init_pid));
 #endif
 #ifdef __FreeBSD__
   }
 #endif
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
   // NOTE: `getpgid` does not have a meaningful interpretation on Windows.
   pids = os::pids(getpgid(0), None());
   EXPECT_SOME(pids);
@@ -207,28 +202,28 @@ TEST_F(ProcessTest, Pids)
   // NOTE: This test is not meaningful on Windows because process IDs are
   // expected to be non-negative.
   EXPECT_ERROR(os::pids(None(), -1));
-#endif // __WINDOWS__
+#endif // _WIN32
 }
 
 
-#ifdef __WINDOWS__
-TEST_F(ProcessTest, Pstree)
-{
+#ifdef _WIN32
+TEST_F(ProcessTest, Pstree) {
   Try<ProcessTree> tree = os::pstree(getpid());
   ASSERT_SOME(tree);
 
   // Windows spawns `conhost.exe` if we're running from VS, so the count of
   // children could be 0 or 1.
   const size_t total_children = tree.get().children.size();
-  EXPECT_TRUE(0u == total_children ||
-              1u == total_children) << stringify(tree.get());
+  EXPECT_TRUE(
+      0u == total_children || 1u == total_children)
+      << stringify(tree.get());
   const bool conhost_spawned = total_children == 1;
 
   Try<internal::windows::ProcessData> process_data =
-    internal::windows::create_process(
-        "powershell",
-        {"powershell", "-NoProfile", "-Command", "Start-Sleep", "2"},
-        None());
+      internal::windows::create_process(
+          "powershell",
+          {"powershell", "-NoProfile", "-Command", "Start-Sleep", "2"},
+          None());
   ASSERT_SOME(process_data);
 
   Try<ProcessTree> tree_after_spawn = os::pstree(getpid());
@@ -237,26 +232,27 @@ TEST_F(ProcessTest, Pstree)
   // Windows spawns conhost.exe if we're running from VS, so the count of
   // children could be 0 or 1.
   const size_t children_after_span = tree_after_spawn.get().children.size();
-  EXPECT_TRUE((!conhost_spawned && 1u == children_after_span) ||
-              (conhost_spawned && 2u == children_after_span)
-              ) << stringify(tree_after_spawn.get());
+  EXPECT_TRUE(
+      (!conhost_spawned && 1u == children_after_span)
+      || (conhost_spawned && 2u == children_after_span))
+      << stringify(tree_after_spawn.get());
 
   // Wait for the process synchronously.
   ::WaitForSingleObject(
-      process_data.get().process_handle.get_handle(), INFINITE);
+      process_data.get().process_handle.get_handle(),
+      INFINITE);
 }
 #else
-TEST_F(ProcessTest, Pstree)
-{
+TEST_F(ProcessTest, Pstree) {
   Try<ProcessTree> tree = os::pstree(getpid());
 
   ASSERT_SOME(tree);
   EXPECT_TRUE(tree->children.empty()) << stringify(tree.get());
 
   tree =
-    Fork(None(),                   // Child.
-      Fork(Exec(SLEEP_COMMAND(10))),   // Grandchild.
-      Exec(SLEEP_COMMAND(10)))();
+      Fork(None(), // Child.
+           Fork(Exec(SLEEP_COMMAND(10))), // Grandchild.
+           Exec(SLEEP_COMMAND(10)))();
 
   ASSERT_SOME(tree);
 
@@ -287,4 +283,4 @@ TEST_F(ProcessTest, Pstree)
   // We have to reap the child for running the tests in repetition.
   ASSERT_EQ(child, waitpid(child, nullptr, 0));
 }
-#endif // __WINDOWS__
+#endif // _WIN32

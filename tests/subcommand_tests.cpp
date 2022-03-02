@@ -10,29 +10,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <gtest/gtest.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <string>
 #include <vector>
 
-#include <gtest/gtest.h>
-
-#include <stout/flags.hpp>
-#include <stout/foreach.hpp>
-#include <stout/subcommand.hpp>
+#include "stout/flags.hpp"
+#include "stout/foreach.hpp"
+#include "stout/subcommand.hpp"
 
 using std::string;
 using std::vector;
 
 
-class TestSubcommand : public Subcommand
-{
-public:
-  struct Flags : public virtual flags::FlagsBase
-  {
-    Flags()
-    {
+class TestSubcommand : public Subcommand {
+ public:
+  struct Flags : public virtual flags::FlagsBase {
+    Flags() {
       add(&Flags::b, "b", "bool");
       add(&Flags::i, "i", "int");
       add(&Flags::s, "s", "string");
@@ -43,8 +39,7 @@ public:
       add(&Flags::j, "j", "JSON::Object");
     }
 
-    void populate()
-    {
+    void populate() {
       b = true;
       i = 42;
       s = "hello";
@@ -82,21 +77,25 @@ public:
     Option<JSON::Object> j;
   };
 
-  explicit TestSubcommand(const string& name) : Subcommand(name) {}
+  explicit TestSubcommand(const string& name)
+    : Subcommand(name) {}
 
   Flags flags;
 
-protected:
-  int execute() override { return 0; }
-  flags::FlagsBase* getFlags() override { return &flags; }
+ protected:
+  int execute() override {
+    return 0;
+  }
+  flags::FlagsBase* getFlags() override {
+    return &flags;
+  }
 };
 
 
 // Generates a vector of arguments from flags.
-static vector<string> getArgv(const flags::FlagsBase& flags)
-{
+static vector<string> getArgv(const flags::FlagsBase& flags) {
   vector<string> argv;
-  foreachpair (const string& name, const flags::Flag& flag, flags) {
+  foreachpair(const string& name, const flags::Flag& flag, flags) {
     Option<string> value = flag.stringify(flags);
     if (value.isSome()) {
       argv.push_back("--" + name + "=" + value.get());
@@ -106,8 +105,7 @@ static vector<string> getArgv(const flags::FlagsBase& flags)
 }
 
 
-TEST(SubcommandTest, Flags)
-{
+TEST(SubcommandTest, Flags) {
   TestSubcommand::Flags flags;
   flags.populate();
 
@@ -123,11 +121,7 @@ TEST(SubcommandTest, Flags)
 
   TestSubcommand subcommand("subcommand");
 
-  ASSERT_EQ(0, Subcommand::dispatch(
-      None(),
-      argc,
-      argv,
-      &subcommand));
+  ASSERT_EQ(0, Subcommand::dispatch(None(), argc, argv, &subcommand));
 
   EXPECT_EQ(flags.b, subcommand.flags.b);
   EXPECT_EQ(flags.i, subcommand.flags.i);
@@ -145,35 +139,23 @@ TEST(SubcommandTest, Flags)
 }
 
 
-TEST(SubcommandTest, Dispatch)
-{
+TEST(SubcommandTest, Dispatch) {
   TestSubcommand subcommand("subcommand");
   TestSubcommand subcommand2("subcommand2");
 
   int argc = 2;
   char* argv[] = {
-    (char*) "command",
-    (char*) "subcommand"
-  };
+      (char*) "command",
+      (char*) "subcommand"};
 
-  EXPECT_EQ(1, Subcommand::dispatch(
-      None(),
-      argc,
-      argv,
-      &subcommand2));
+  EXPECT_EQ(1, Subcommand::dispatch(None(), argc, argv, &subcommand2));
 
   // Duplicated subcommand names.
-  EXPECT_EQ(1, Subcommand::dispatch(
-      None(),
-      argc,
-      argv,
-      &subcommand,
-      &subcommand));
+  EXPECT_EQ(
+      1,
+      Subcommand::dispatch(None(), argc, argv, &subcommand, &subcommand));
 
-  EXPECT_EQ(0, Subcommand::dispatch(
-      None(),
-      argc,
-      argv,
-      &subcommand,
-      &subcommand2));
+  EXPECT_EQ(
+      0,
+      Subcommand::dispatch(None(), argc, argv, &subcommand, &subcommand2));
 }
