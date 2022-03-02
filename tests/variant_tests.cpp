@@ -10,35 +10,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <string>
-
 #include <gtest/gtest.h>
 
-#include <stout/gtest.hpp>
-#include <stout/stringify.hpp>
-#include <stout/variant.hpp>
+#include <string>
+
+#include "stout/gtest.hpp"
+#include "stout/stringify.hpp"
+#include "stout/variant.hpp"
 
 
-TEST(VariantTest, Visit)
-{
+TEST(VariantTest, Visit) {
   Variant<int, std::string> v1 = "hello world";
 
   EXPECT_TRUE(
-      v1.visit([](int) { return false; },
-               [](const std::string&) { return true; }));
+      v1.visit(
+          [](int) { return false; },
+          [](const std::string&) { return true; }));
 
   EXPECT_TRUE(
-      v1.visit([](int) { return false; },
-               [](std::string&) { return true; }));
+      v1.visit([](int) { return false; }, [](std::string&) { return true; }));
 
   EXPECT_TRUE(
-      v1.visit([](int) { return false; },
-               [](std::string) { return true; }));
+      v1.visit([](int) { return false; }, [](std::string) { return true; }));
 
   EXPECT_EQ(
       "hello world",
-      v1.visit([](int i) { return stringify(i); },
-               [](const std::string& s) { return s; }));
+      v1.visit(
+          [](int i) { return stringify(i); },
+          [](const std::string& s) { return s; }));
 
   // NOTE: we're explicitly using `const` here as it tests both that
   // our generic constructor properly works (see comments in
@@ -47,22 +46,22 @@ TEST(VariantTest, Visit)
   const Variant<int, std::string> v2 = 42;
 
   EXPECT_TRUE(
-      v2.visit([](int) { return true; },
-               [](const std::string&) { return false; }));
+      v2.visit(
+          [](int) { return true; },
+          [](const std::string&) { return false; }));
 
   EXPECT_TRUE(
-      v2.visit([](int) { return true; },
-               [](std::string) { return false; }));
+      v2.visit([](int) { return true; }, [](std::string) { return false; }));
 
   EXPECT_EQ(
       "42",
-      v2.visit([](int i) { return stringify(i); },
-               [](const std::string& s) { return s; }));
+      v2.visit(
+          [](int i) { return stringify(i); },
+          [](const std::string& s) { return s; }));
 }
 
 
-TEST(VariantTest, Equality)
-{
+TEST(VariantTest, Equality) {
   Variant<int, std::string> v1 = "hello world";
   Variant<int, std::string> v2 = "hello world";
   EXPECT_EQ(v1, v2);

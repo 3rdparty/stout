@@ -10,15 +10,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <gtest/gtest.h>
+
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
 
-#include <gtest/gtest.h>
-
-#include <stout/jsonify.hpp>
-#include <stout/json.hpp>
+#include "stout/json.hpp"
+#include "stout/jsonify.hpp"
 
 using std::map;
 using std::multimap;
@@ -27,16 +27,14 @@ using std::string;
 using std::vector;
 
 // Tests that booleans are jsonified correctly.
-TEST(JsonifyTest, Boolean)
-{
+TEST(JsonifyTest, Boolean) {
   EXPECT_EQ("true", string(jsonify(true)));
   EXPECT_EQ("false", string(jsonify(false)));
 }
 
 
 // Tests that `JSON::Boolean`s are jsonified correctly.
-TEST(JsonifyTest, JSONBoolean)
-{
+TEST(JsonifyTest, JSONBoolean) {
   EXPECT_EQ("true", string(jsonify(JSON::True())));
   EXPECT_EQ("false", string(jsonify(JSON::False())));
 
@@ -45,17 +43,16 @@ TEST(JsonifyTest, JSONBoolean)
 }
 
 
-// Tests that `JSON::Boolean`s wrapped in `JSON::Value` are jsonified correctly.
-TEST(JsonifyTest, JSONBooleanValue)
-{
+// Tests that `JSON::Boolean`s wrapped in `JSON::Value` are
+// jsonified correctly.
+TEST(JsonifyTest, JSONBooleanValue) {
   EXPECT_EQ("true", string(jsonify(JSON::Value(true))));
   EXPECT_EQ("false", string(jsonify(JSON::Value(false))));
 }
 
 
 // Tests that numbers are jsonified correctly.
-TEST(JsonifyTest, Number)
-{
+TEST(JsonifyTest, Number) {
   // Test whole numbers (as doubles).
   EXPECT_EQ("0.0", string(jsonify(0.0)));
   EXPECT_EQ("1.0", string(jsonify(1.0)));
@@ -74,8 +71,7 @@ TEST(JsonifyTest, Number)
 
 
 // Tests that `JSON::Number`s are jsonified correctly.
-TEST(JsonifyTest, JSONNumber)
-{
+TEST(JsonifyTest, JSONNumber) {
   // Test whole numbers (as doubles).
   EXPECT_EQ("0.0", string(jsonify(JSON::Number(0.0))));
   EXPECT_EQ("1.0", string(jsonify(JSON::Number(1.0))));
@@ -90,13 +86,13 @@ TEST(JsonifyTest, JSONNumber)
 
   // Expect at least 15 digits of precision.
   EXPECT_EQ(
-      "1234567890.12345", string(jsonify(JSON::Number(1234567890.12345))));
+      "1234567890.12345",
+      string(jsonify(JSON::Number(1234567890.12345))));
 }
 
 
 // Tests that `JSON::Number`s wrapped in `JSON::Value` are jsonified correctly.
-TEST(JsonifyTest, JSONNumberValue)
-{
+TEST(JsonifyTest, JSONNumberValue) {
   // Test whole numbers (as doubles).
   EXPECT_EQ("0.0", string(jsonify(JSON::Value(0.0))));
   EXPECT_EQ("1.0", string(jsonify(JSON::Value(1.0))));
@@ -110,13 +106,14 @@ TEST(JsonifyTest, JSONNumberValue)
   EXPECT_EQ("-2", string(jsonify(JSON::Value(-2))));
 
   // Expect at least 15 digits of precision.
-  EXPECT_EQ("1234567890.12345", string(jsonify(JSON::Value(1234567890.12345))));
+  EXPECT_EQ(
+      "1234567890.12345",
+      string(jsonify(JSON::Value(1234567890.12345))));
 }
 
 
 // Tests that strings are jsonified correctly, including escaping.
-TEST(JsonifyTest, String)
-{
+TEST(JsonifyTest, String) {
   EXPECT_EQ("\"hello world!\"", string(jsonify("hello world!")));
 
   // We don't use the optional \uXXXX escaping for UTF-8,
@@ -135,8 +132,7 @@ TEST(JsonifyTest, String)
 
 
 // Tests that `JSON::String`s are jsonified correctly, including escaping.
-TEST(JsonifyTest, JSONString)
-{
+TEST(JsonifyTest, JSONString) {
   EXPECT_EQ("\"hello world!\"", string(jsonify(JSON::String("hello world!"))));
 
   // We don't use the optional \uXXXX escaping for UTF-8,
@@ -157,8 +153,7 @@ TEST(JsonifyTest, JSONString)
 
 // Tests that `JSON::String`s wrapped in `JSON::Value` are jsonified correctly,
 // including escaping.
-TEST(JsonifyTest, JSONStringValue)
-{
+TEST(JsonifyTest, JSONStringValue) {
   EXPECT_EQ("\"hello world!\"", string(jsonify(JSON::Value("hello world!"))));
 
   // We don't use the optional \uXXXX escaping for UTF-8,
@@ -166,7 +161,8 @@ TEST(JsonifyTest, JSONStringValue)
   // characters U+0000 to U+001F).
   EXPECT_EQ(
       "\"Hello! \\u0001\\u001F\\\"\\\\ \xF0\x9F\x98\x80\"",
-      string(jsonify(JSON::Value("Hello! \x01\x1F\x22\x5C \xF0\x9F\x98\x80"))));
+      string(
+          jsonify(JSON::Value("Hello! \x01\x1F\x22\x5C \xF0\x9F\x98\x80"))));
 
   // There currently is no validation either when constructing
   // invalid UTF-8 string, or during serialization. Here, we
@@ -179,42 +175,37 @@ TEST(JsonifyTest, JSONStringValue)
 namespace store {
 
 // A simple object consisting of primitive types.
-struct Name
-{
+struct Name {
   string first;
   string last;
 };
 
 
 // A simple object consisting of primitive types as well as a sub-object.
-struct Customer
-{
+struct Customer {
   Name name;
   int age;
 };
 
 
 // `json` overload for `Name`.
-void json(JSON::ObjectWriter* writer, const Name& name)
-{
+void json(JSON::ObjectWriter* writer, const Name& name) {
   writer->field("first_name", name.first);
   writer->field("last_name", name.last);
 }
 
 
 // `json` overload for `Customer`.
-void json(JSON::ObjectWriter* writer, const Customer& customer)
-{
-  json(writer, customer.name);  // Composition of `json` functions!
+void json(JSON::ObjectWriter* writer, const Customer& customer) {
+  json(writer, customer.name); // Composition of `json` functions!
   writer->field("age", customer.age);
 }
 
-} // namespace store {
+} // namespace store
 
 
 // Tests that objects are jsonified correctly.
-TEST(JsonifyTest, Object)
-{
+TEST(JsonifyTest, Object) {
   store::Name name{"michael", "park"};
   EXPECT_EQ(
       "{\"first_name\":\"michael\",\"last_name\":\"park\"}",
@@ -228,15 +219,16 @@ TEST(JsonifyTest, Object)
 
 
 // Tests that `JSON::Object`s are jsonified correctly.
-TEST(JsonifyTest, JSONObject)
-{
+TEST(JsonifyTest, JSONObject) {
   JSON::Object name = {{"first_name", "michael"}, {"last_name", "park"}};
   EXPECT_EQ(
       "{\"first_name\":\"michael\",\"last_name\":\"park\"}",
       string(jsonify(name)));
 
   JSON::Object customer = {
-    {"age", 25}, {"first_name", "michael"}, {"last_name", "park"}};
+      {"age", 25},
+      {"first_name", "michael"},
+      {"last_name", "park"}};
 
   EXPECT_EQ(
       "{\"age\":25,\"first_name\":\"michael\",\"last_name\":\"park\"}",
@@ -245,17 +237,19 @@ TEST(JsonifyTest, JSONObject)
 
 
 // Tests that `JSON::Object`s wrapped in `JSON::Value` are jsonified correctly.
-TEST(JsonifyTest, JSONObjectValue)
-{
+TEST(JsonifyTest, JSONObjectValue) {
   JSON::Value name =
-    JSON::Object{{"first_name", "michael"}, {"last_name", "park"}};
+      JSON::Object{{"first_name", "michael"}, {"last_name", "park"}};
 
   EXPECT_EQ(
       "{\"first_name\":\"michael\",\"last_name\":\"park\"}",
       string(jsonify(name)));
 
   JSON::Value customer =
-    JSON::Object{{"first_name", "michael"}, {"last_name", "park"}, {"age", 25}};
+      JSON::Object{
+          {"first_name", "michael"},
+          {"last_name", "park"},
+          {"age", 25}};
 
   EXPECT_EQ(
       "{\"age\":25,\"first_name\":\"michael\",\"last_name\":\"park\"}",
@@ -264,8 +258,7 @@ TEST(JsonifyTest, JSONObjectValue)
 
 
 // Tests that iterable types are jsonified as array correctly.
-TEST(JsonifyTest, Array)
-{
+TEST(JsonifyTest, Array) {
   bool booleans[] = {true, true, false};
   EXPECT_EQ("[true,true,false]", string(jsonify(booleans)));
 
@@ -286,8 +279,7 @@ TEST(JsonifyTest, Array)
 
 
 // Tests that `JSON::Array`s types are jsonified as array correctly.
-TEST(JsonifyTest, JSONArray)
-{
+TEST(JsonifyTest, JSONArray) {
   JSON::Array booleans = {true, true, false};
   EXPECT_EQ("[true,true,false]", string(jsonify(booleans)));
 
@@ -298,7 +290,9 @@ TEST(JsonifyTest, JSONArray)
   EXPECT_EQ("[[1,2,3],[1,1,1]]", string(jsonify(numbers_list)));
 
   JSON::Array names = {JSON::Object{
-    {"first_name", "michael"}, {"last_name", "park"}, {"age", 25}}};
+      {"first_name", "michael"},
+      {"last_name", "park"},
+      {"age", 25}}};
 
   EXPECT_EQ(
       "[{\"age\":25,\"first_name\":\"michael\",\"last_name\":\"park\"}]",
@@ -308,8 +302,7 @@ TEST(JsonifyTest, JSONArray)
 
 // Tests that `JSON::Array`s wrapped in `JSON::Value` types are jsonified as
 // array correctly.
-TEST(JsonifyTest, JSONArrayValue)
-{
+TEST(JsonifyTest, JSONArrayValue) {
   JSON::Value booleans = JSON::Array{true, true, false};
   EXPECT_EQ("[true,true,false]", string(jsonify(booleans)));
 
@@ -317,12 +310,14 @@ TEST(JsonifyTest, JSONArrayValue)
   EXPECT_EQ("[1,2,3]", string(jsonify(numbers)));
 
   JSON::Value numbers_list =
-    JSON::Array{JSON::Array{1, 2, 3}, JSON::Array{1, 1, 1}};
+      JSON::Array{JSON::Array{1, 2, 3}, JSON::Array{1, 1, 1}};
 
   EXPECT_EQ("[[1,2,3],[1,1,1]]", string(jsonify(numbers_list)));
 
   JSON::Value names = JSON::Array{JSON::Object{
-    {"first_name", "michael"}, {"last_name", "park"}, {"age", 25}}};
+      {"first_name", "michael"},
+      {"last_name", "park"},
+      {"age", 25}}};
 
   EXPECT_EQ(
       "[{\"age\":25,\"first_name\":\"michael\",\"last_name\":\"park\"}]",
@@ -332,8 +327,7 @@ TEST(JsonifyTest, JSONArrayValue)
 
 // Tests that dictionary types of primitive a member typedef `mapped_type` are
 // considered dictionaries and therefore are jsonified as objects correctly.
-TEST(JsonifyTest, Dictionary)
-{
+TEST(JsonifyTest, Dictionary) {
   map<string, bool> booleans = {{"x", true}, {"y", false}};
   EXPECT_EQ("{\"x\":true,\"y\":false}", string(jsonify(booleans)));
 
@@ -341,10 +335,9 @@ TEST(JsonifyTest, Dictionary)
   EXPECT_EQ("{\"foo\":{\"x\":1}}", string(jsonify(nested_numbers)));
 
   multimap<string, store::Name> names = {
-    {"kobe", {"kobe", "bryant"}},
-    {"michael", {"michael", "jordan"}},
-    {"michael", {"michael", "park"}}
-  };
+      {"kobe", {"kobe", "bryant"}},
+      {"michael", {"michael", "jordan"}},
+      {"michael", {"michael", "park"}}};
 
   string expected = strings::remove(
       "{"
@@ -359,8 +352,7 @@ TEST(JsonifyTest, Dictionary)
 
 
 // Tests that `JSON::Null`s are jsonified as array correctly.
-TEST(JsonifyTest, JSONNull)
-{
+TEST(JsonifyTest, JSONNull) {
   JSON::Null null;
   EXPECT_EQ("null", string(jsonify(null)));
 

@@ -10,26 +10,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
+#include <glog/logging.h>
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
 #include <memory>
 #include <string>
 #include <vector>
 
-#include <glog/logging.h>
-
-#include <gmock/gmock.h>
-
-#include <gtest/gtest.h>
-
-#include <stout/check.hpp>
-#include <stout/exit.hpp>
-#include <stout/fs.hpp>
-
-#include <stout/os/mkdtemp.hpp>
-#include <stout/os/rmdir.hpp>
-#include <stout/os/socket.hpp> // For `wsa_*` on Windows.
-#include <stout/os/touch.hpp>
-
-#include <stout/tests/environment.hpp>
+#include "stout/check.hpp"
+#include "stout/exit.hpp"
+#include "stout/fs.hpp"
+#include "stout/os/mkdtemp.hpp"
+#include "stout/os/rmdir.hpp"
+#include "stout/os/socket.hpp" // For `wsa_*` on Windows.
+#include "stout/os/touch.hpp"
+#include "stout/tests/environment.hpp"
 
 using stout::internal::tests::Environment;
 using stout::internal::tests::TestFilter;
@@ -42,11 +38,10 @@ using std::vector;
 
 // Attempt to create a symlink. If creating a symlink fails, disable
 // all unit tests that rely on the creation of symlinks.
-class SymlinkFilter : public TestFilter
-{
-public:
-  SymlinkFilter() : temp_path(CHECK_NOTERROR(os::mkdtemp()))
-  {
+class SymlinkFilter : public TestFilter {
+ public:
+  SymlinkFilter()
+    : temp_path(CHECK_NOTERROR(os::mkdtemp())) {
     const string file = path::join(temp_path, "file");
     const string link = path::join(temp_path, "link");
 
@@ -57,30 +52,28 @@ public:
 
     if (!can_create_symlinks) {
       std::cerr
-        << "-------------------------------------------------------------\n"
-        << "Unable to create symlinks, so no symlink tests will be run\n"
-        << "-------------------------------------------------------------"
-        << std::endl;
+          << "-------------------------------------------------------------\n"
+          << "Unable to create symlinks, so no symlink tests will be run\n"
+          << "-------------------------------------------------------------"
+          << std::endl;
     }
   }
 
-  ~SymlinkFilter() override
-  {
+  ~SymlinkFilter() override {
     os::rmdir(temp_path);
   }
 
-  bool disable(const ::testing::TestInfo* test) const override
-  {
+  bool disable(const ::testing::TestInfo* test) const override {
     return matches(test, "SYMLINK_") && !can_create_symlinks;
   }
 
-private:
+ private:
   bool can_create_symlinks;
   string temp_path;
 };
 
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
 // A no-op parameter validator. We use this to prevent the Windows
 // implementation of the C runtime from calling `abort` during our test suite.
 // See comment in `main.cpp`.
@@ -89,19 +82,17 @@ static void noop_invalid_parameter_handler(
     const wchar_t* function,
     const wchar_t* file,
     unsigned int line,
-    uintptr_t reserved)
-{
+    uintptr_t reserved) {
   return;
 }
-#endif // __WINDOWS__
+#endif // _WIN32
 
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
   // Initialize Google Mock/Test.
   testing::InitGoogleMock(&argc, argv);
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
   // Install glog's signal handler.
   // NOTE: this function is declared but not defined on Windows, so if we
   // attempt to compile this on Windows, we get a linker error.
@@ -118,7 +109,7 @@ int main(int argc, char** argv)
   // returning an error value. Since we expect some tests to pass invalid
   // paramaters to these functions, we disable this for testing.
   _set_invalid_parameter_handler(noop_invalid_parameter_handler);
-#endif // __WINDOWS__
+#endif // _WIN32
 
   vector<shared_ptr<TestFilter>> filters = {make_shared<SymlinkFilter>()};
   Environment* environment = new Environment(filters);
@@ -131,13 +122,13 @@ int main(int argc, char** argv)
   // code; but, if the tests passed, we still want to return an error if the
   // WSA teardown failed. If both succeeded, return 0.
   const bool teardown_failed =
-#ifdef __WINDOWS__
-    !net::wsa_cleanup();
+#ifdef _WIN32
+      !net::wsa_cleanup();
 #else
-    false;
-#endif // __WINDOWS__
+      false;
+#endif // _WIN32
 
   return test_results > 0
-    ? test_results
-    : teardown_failed;
+      ? test_results
+      : teardown_failed;
 }

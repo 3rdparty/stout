@@ -10,25 +10,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
+#include <gtest/gtest.h>
+
 #include <deque>
 #include <string>
 
-#include <gtest/gtest.h>
-
-#include <stout/error.hpp>
-#include <stout/gtest.hpp>
-#include <stout/recordio.hpp>
-#include <stout/some.hpp>
-#include <stout/strings.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/gtest.hpp"
+#include "stout/recordio.hpp"
+#include "stout/some.hpp"
+#include "stout/strings.hpp"
+#include "stout/try.hpp"
 
 using std::deque;
 using std::string;
 
 
 template <typename T>
-bool operator==(Try<T> lhs, Try<T> rhs)
-{
+bool operator==(Try<T> lhs, Try<T> rhs) {
   if (lhs.isSome() != rhs.isSome()) {
     return false;
   }
@@ -42,15 +41,13 @@ bool operator==(Try<T> lhs, Try<T> rhs)
 
 
 template <typename T>
-bool operator!=(Try<T> lhs, Try<T> rhs)
-{
+bool operator!=(Try<T> lhs, Try<T> rhs) {
   return !(lhs == rhs);
 }
 
 
 template <typename T>
-bool operator==(deque<T> rhs, deque<T> lhs)
-{
+bool operator==(deque<T> rhs, deque<T> lhs) {
   if (rhs.size() != lhs.size()) {
     return false;
   }
@@ -71,8 +68,7 @@ bool operator==(deque<T> rhs, deque<T> lhs)
 }
 
 
-TEST(RecordIOTest, Encoder)
-{
+TEST(RecordIOTest, Encoder) {
   recordio::Encoder<string> encoder(strings::upper);
 
   string data;
@@ -105,8 +101,7 @@ TEST(RecordIOTest, Encoder)
 }
 
 
-TEST(RecordIOTest, Decoder)
-{
+TEST(RecordIOTest, Decoder) {
   // Deserializing brings to lower case, but add an
   // error case to test deserialization failures.
   auto deserialize = [](const string& data) -> Try<string> {

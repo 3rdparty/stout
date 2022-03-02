@@ -10,19 +10,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
+#include <gtest/gtest.h>
+
 #include <string>
 #include <vector>
 
-#include <gtest/gtest.h>
-
-#include <stout/gtest.hpp>
-#include <stout/linkedhashmap.hpp>
+#include "stout/gtest.hpp"
+#include "stout/linkedhashmap.hpp"
 
 using std::string;
 using std::vector;
 
-TEST(LinkedHashmapTest, Put)
-{
+TEST(LinkedHashmapTest, Put) {
   LinkedHashMap<string, int> map;
 
   map["foo"] = 1;
@@ -39,8 +38,7 @@ TEST(LinkedHashmapTest, Put)
 }
 
 
-TEST(LinkedHashmapTest, Contains)
-{
+TEST(LinkedHashmapTest, Contains) {
   LinkedHashMap<string, int> map;
   map["foo"] = 1;
   map["bar"] = 2;
@@ -50,8 +48,7 @@ TEST(LinkedHashmapTest, Contains)
 }
 
 
-TEST(LinkedHashmapTest, Erase)
-{
+TEST(LinkedHashmapTest, Erase) {
   LinkedHashMap<string, int> map;
 
   map["foo"] = 1;
@@ -66,8 +63,7 @@ TEST(LinkedHashmapTest, Erase)
 }
 
 
-TEST(LinkedHashmapTest, Keys)
-{
+TEST(LinkedHashmapTest, Keys) {
   LinkedHashMap<string, int> map;
 
   vector<string> keys = {"foo", "bar", "food", "rad", "cat"};
@@ -83,8 +79,7 @@ TEST(LinkedHashmapTest, Keys)
 }
 
 
-TEST(LinkedHashmapTest, Values)
-{
+TEST(LinkedHashmapTest, Values) {
   LinkedHashMap<string, int> map;
 
   map["foo"] = 1;
@@ -99,8 +94,7 @@ TEST(LinkedHashmapTest, Values)
 }
 
 
-TEST(LinkedHashMapTest, Foreach)
-{
+TEST(LinkedHashMapTest, Foreach) {
   LinkedHashMap<string, int> map;
 
   map["foo"] = 1;
@@ -117,7 +111,7 @@ TEST(LinkedHashMapTest, Foreach)
 
   {
     int i = 0;
-    foreachpair (const string& key, int value, map) {
+    foreachpair(const string& key, int value, map) {
       EXPECT_EQ(keys[i], key);
       EXPECT_EQ(values[i], value);
       i++;
@@ -126,7 +120,7 @@ TEST(LinkedHashMapTest, Foreach)
 
   {
     int i = 0;
-    foreachkey (const string& key, map) {
+    foreachkey(const string& key, map) {
       EXPECT_EQ(keys[i], key);
       i++;
     }
@@ -134,7 +128,7 @@ TEST(LinkedHashMapTest, Foreach)
 
   {
     int i = 0;
-    foreachvalue (int value, map) {
+    foreachvalue(int value, map) {
       EXPECT_EQ(values[i], value);
       i++;
     }
@@ -144,8 +138,7 @@ TEST(LinkedHashMapTest, Foreach)
 
 // Check that `foreach`-style loops can be used with a const ref to
 // LinkedHashMap.
-TEST(LinkedHashMapTest, ForeachConst)
-{
+TEST(LinkedHashMapTest, ForeachConst) {
   LinkedHashMap<string, int> map;
 
   map["foo"] = 1;
@@ -154,24 +147,23 @@ TEST(LinkedHashMapTest, ForeachConst)
 
   const LinkedHashMap<string, int>& constMap = map;
 
-  foreachkey (const string& key, constMap) {
+  foreachkey(const string& key, constMap) {
     EXPECT_NE("qux", key);
   }
-  foreachvalue (int value, constMap) {
+  foreachvalue(int value, constMap) {
     EXPECT_NE(0, value);
   }
 }
 
 
-TEST(LinkedHashMapTest, ForeachMutate)
-{
+TEST(LinkedHashMapTest, ForeachMutate) {
   LinkedHashMap<int, string> map;
 
   map[1] = "foo";
   map[2] = "bar";
   map[3] = "caz";
 
-  foreachpair (int key, string& value, map) {
+  foreachpair(int key, string& value, map) {
     if (key == 2) {
       value = "qux";
     }
@@ -184,8 +176,7 @@ TEST(LinkedHashMapTest, ForeachMutate)
 
 // TODO(bmahler): Simplify this test once LinkedHashMap
 // has equality operators.
-TEST(LinkedHashMapTest, CopyConstruction)
-{
+TEST(LinkedHashMapTest, CopyConstruction) {
   LinkedHashMap<int, string> map;
 
   map[1] = "1";
@@ -212,8 +203,7 @@ TEST(LinkedHashMapTest, CopyConstruction)
 
 // TODO(bmahler): Simplify this test once LinkedHashMap
 // has equality operators.
-TEST(LinkedHashMapTest, Assignment)
-{
+TEST(LinkedHashMapTest, Assignment) {
   LinkedHashMap<int, string> map;
 
   map[1] = "1";

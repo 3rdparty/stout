@@ -12,10 +12,9 @@
 
 #include <gtest/gtest.h>
 
-#include <stout/os.hpp>
-#include <stout/os/environment.hpp>
-
-#include <stout/tests/utils.hpp>
+#include "stout/os.hpp"
+#include "stout/os/environment.hpp"
+#include "stout/tests/utils.hpp"
 
 using std::string;
 
@@ -23,8 +22,7 @@ using std::string;
 class EnvTest : public TemporaryDirectoryTest {};
 
 
-TEST(EnvTest, SimpleEnvTest)
-{
+TEST(EnvTest, SimpleEnvTest) {
   const string key = "key";
   const string value_1 = "value_1";
 
@@ -65,13 +63,12 @@ TEST(EnvTest, SimpleEnvTest)
 }
 
 
-TEST(EnvTest, EraseEnv)
-{
+TEST(EnvTest, EraseEnv) {
   os::setenv("key", "value");
 
   std::map<string, string> pre = os::environment();
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
   Option<string> value = os::getenv("key");
   EXPECT_SOME_EQ("value", value);
 #else
@@ -81,15 +78,15 @@ TEST(EnvTest, EraseEnv)
   // making them unavailable.
   char* value = ::getenv("key");
   EXPECT_STREQ("value", value);
-#endif // __WINDOWS__
+#endif // _WIN32
 
   os::eraseenv("key");
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
   // On POSIX, we check that the pointer itself was cleared. This does
   // not apply to Windows.
   EXPECT_STREQ("", value);
-#endif // __WINDOWS__
+#endif // _WIN32
 
   EXPECT_NONE(os::getenv("key"));
 

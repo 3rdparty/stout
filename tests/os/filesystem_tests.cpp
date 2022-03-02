@@ -16,39 +16,36 @@
 #include <set>
 #include <string>
 
-#include <stout/foreach.hpp>
-#include <stout/fs.hpp>
-#include <stout/hashset.hpp>
-#include <stout/path.hpp>
-#include <stout/try.hpp>
-#include <stout/uuid.hpp>
-
-#include <stout/os/access.hpp>
-#include <stout/os/dup.hpp>
-#include <stout/os/find.hpp>
-#include <stout/os/getcwd.hpp>
-#include <stout/os/int_fd.hpp>
-#include <stout/os/ls.hpp>
-#include <stout/os/lseek.hpp>
-#include <stout/os/mkdir.hpp>
-#include <stout/os/pipe.hpp>
-#include <stout/os/read.hpp>
-#include <stout/os/realpath.hpp>
-#include <stout/os/rename.hpp>
-#include <stout/os/rm.hpp>
-#include <stout/os/touch.hpp>
-#include <stout/os/write.hpp>
-#include <stout/os/xattr.hpp>
-
-#include <stout/tests/utils.hpp>
+#include "stout/foreach.hpp"
+#include "stout/fs.hpp"
+#include "stout/hashset.hpp"
+#include "stout/os/access.hpp"
+#include "stout/os/dup.hpp"
+#include "stout/os/find.hpp"
+#include "stout/os/getcwd.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/os/ls.hpp"
+#include "stout/os/lseek.hpp"
+#include "stout/os/mkdir.hpp"
+#include "stout/os/pipe.hpp"
+#include "stout/os/read.hpp"
+#include "stout/os/realpath.hpp"
+#include "stout/os/rename.hpp"
+#include "stout/os/rm.hpp"
+#include "stout/os/touch.hpp"
+#include "stout/os/write.hpp"
+#include "stout/os/xattr.hpp"
+#include "stout/path.hpp"
+#include "stout/tests/utils.hpp"
+#include "stout/try.hpp"
+#include "stout/uuid.hpp"
 
 using std::list;
 using std::set;
 using std::string;
 
 
-static hashset<string> listfiles(const string& directory)
-{
+static hashset<string> listfiles(const string& directory) {
   hashset<string> fileset;
   Try<list<string>> entries = os::ls(directory);
   if (entries.isSome()) {
@@ -63,10 +60,9 @@ static hashset<string> listfiles(const string& directory)
 class FsTest : public TemporaryDirectoryTest {};
 
 
-TEST_F(FsTest, Find)
-{
+TEST_F(FsTest, Find) {
   const string testdir =
-    path::join(os::getcwd(), id::UUID::random().toString());
+      path::join(os::getcwd(), id::UUID::random().toString());
   const string subdir = path::join(testdir, "test1");
   ASSERT_SOME(os::mkdir(subdir)); // Create the directories.
 
@@ -94,10 +90,9 @@ TEST_F(FsTest, Find)
 }
 
 
-TEST_F(FsTest, ReadWriteString)
-{
+TEST_F(FsTest, ReadWriteString) {
   const string testfile =
-    path::join(os::getcwd(), id::UUID::random().toString());
+      path::join(os::getcwd(), id::UUID::random().toString());
   const string teststr = "line1\nline2";
 
   ASSERT_SOME(os::write(testfile, teststr));
@@ -108,8 +103,7 @@ TEST_F(FsTest, ReadWriteString)
 }
 
 
-TEST_F(FsTest, Mkdir)
-{
+TEST_F(FsTest, Mkdir) {
   const hashset<string> EMPTY;
   const string tmpdir = os::getcwd();
 
@@ -146,8 +140,7 @@ TEST_F(FsTest, Mkdir)
 }
 
 
-TEST_F(FsTest, Exists)
-{
+TEST_F(FsTest, Exists) {
   const hashset<string> EMPTY;
   const string tmpdir = os::getcwd();
 
@@ -178,20 +171,18 @@ TEST_F(FsTest, Exists)
 }
 
 
-TEST_F(FsTest, Touch)
-{
+TEST_F(FsTest, Touch) {
   const string testfile =
-    path::join(os::getcwd(), id::UUID::random().toString());
+      path::join(os::getcwd(), id::UUID::random().toString());
 
   ASSERT_SOME(os::touch(testfile));
   ASSERT_TRUE(os::exists(testfile));
 }
 
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
 // This tests the expected behavior of the `longpath` helper.
-TEST_F(FsTest, WindowsInternalLongPath)
-{
+TEST_F(FsTest, WindowsInternalLongPath) {
   using ::internal::windows::longpath;
 
   // Not absolute.
@@ -218,22 +209,22 @@ TEST_F(FsTest, WindowsInternalLongPath)
   EXPECT_EQ(longpath(path), wide_stringify(os::LONGPATH_PREFIX + path));
 
   // Idempotency.
-  EXPECT_EQ(longpath(os::LONGPATH_PREFIX + path),
-            wide_stringify(os::LONGPATH_PREFIX + path));
+  EXPECT_EQ(
+      longpath(os::LONGPATH_PREFIX + path),
+      wide_stringify(os::LONGPATH_PREFIX + path));
 }
-#endif // __WINDOWS__
+#endif // _WIN32
 
 
 // This test attempts to perform some basic file operations on a file
 // with an absolute path at exactly the internal `MAX_PATH` of 248.
 //
 // NOTE: This tests an edge case on Windows, but is a cross-platform test.
-TEST_F(FsTest, CreateDirectoryAtMaxPath)
-{
+TEST_F(FsTest, CreateDirectoryAtMaxPath) {
   const size_t max_path_length = 248;
   const string testdir = path::join(
-    sandbox.get(),
-    string(max_path_length - sandbox->length() - 1 /* separator */, 'c'));
+      sandbox.get(),
+      string(max_path_length - sandbox->length() - 1 /* separator */, 'c'));
 
   EXPECT_EQ(testdir.length(), max_path_length);
   ASSERT_SOME(os::mkdir(testdir));
@@ -251,8 +242,7 @@ TEST_F(FsTest, CreateDirectoryAtMaxPath)
 // with an absolute path longer than the `MAX_PATH`.
 //
 // NOTE: This tests an edge case on Windows, but is a cross-platform test.
-TEST_F(FsTest, CreateDirectoryLongerThanMaxPath)
-{
+TEST_F(FsTest, CreateDirectoryLongerThanMaxPath) {
   string testdir = sandbox.get();
   const size_t max_path_length = 260;
   while (testdir.length() <= max_path_length) {
@@ -274,8 +264,7 @@ TEST_F(FsTest, CreateDirectoryLongerThanMaxPath)
 // This test ensures that `os::realpath` will work on open files.
 //
 // NOTE: This tests an edge case on Windows, but is a cross-platform test.
-TEST_F(FsTest, RealpathValidationOnOpenFile)
-{
+TEST_F(FsTest, RealpathValidationOnOpenFile) {
   // Open a file to write, with "SHARE" read/write permissions,
   // then call `os::realpath` on that file.
   const string file = path::join(sandbox.get(), id::UUID::random().toString());
@@ -291,8 +280,7 @@ TEST_F(FsTest, RealpathValidationOnOpenFile)
 }
 
 
-TEST_F(FsTest, SYMLINK_Symlink)
-{
+TEST_F(FsTest, SYMLINK_Symlink) {
   const string temp_path = os::getcwd();
   const string link = path::join(temp_path, "sym.link");
   const string file = path::join(temp_path, id::UUID::random().toString());
@@ -310,8 +298,7 @@ TEST_F(FsTest, SYMLINK_Symlink)
 }
 
 
-TEST_F(FsTest, SYMLINK_Rm)
-{
+TEST_F(FsTest, SYMLINK_Rm) {
   const string tmpdir = os::getcwd();
 
   hashset<string> expectedListing;
@@ -370,10 +357,9 @@ TEST_F(FsTest, SYMLINK_Rm)
 }
 
 
-TEST_F(FsTest, List)
-{
+TEST_F(FsTest, List) {
   const string testdir =
-    path::join(os::getcwd(), id::UUID::random().toString());
+      path::join(os::getcwd(), id::UUID::random().toString());
   ASSERT_SOME(os::mkdir(testdir)); // Create the directories.
 
   // Now write some files.
@@ -407,10 +393,9 @@ TEST_F(FsTest, List)
 }
 
 
-TEST_F(FsTest, Rename)
-{
+TEST_F(FsTest, Rename) {
   const string testdir =
-    path::join(os::getcwd(), id::UUID::random().toString());
+      path::join(os::getcwd(), id::UUID::random().toString());
   ASSERT_SOME(os::mkdir(testdir)); // Create the directories.
 
   // Now write some files.
@@ -467,9 +452,8 @@ TEST_F(FsTest, Rename)
 }
 
 
-#ifdef __WINDOWS__
-TEST_F(FsTest, IntFD)
-{
+#ifdef _WIN32
+TEST_F(FsTest, IntFD) {
   const int_fd fd(INVALID_HANDLE_VALUE);
   EXPECT_EQ(int_fd::Type::HANDLE, fd.type());
   EXPECT_FALSE(fd.is_valid());
@@ -478,7 +462,7 @@ TEST_F(FsTest, IntFD)
   EXPECT_LT(fd, 0);
   EXPECT_GT(0, fd);
 }
-#endif // __WINDOWS__
+#endif // _WIN32
 
 
 // NOTE: These tests may not make a lot of sense on Linux, as `open`
@@ -486,20 +470,19 @@ TEST_F(FsTest, IntFD)
 // Windows we map the POSIX semantics of `open` to `CreateFile`, which
 // this checks. These tests passing on Linux assert that the tests
 // themselves are correct.
-TEST_F(FsTest, Open)
-{
+TEST_F(FsTest, Open) {
   const string testfile =
-    path::join(os::getcwd(), id::UUID::random().toString());
+      path::join(os::getcwd(), id::UUID::random().toString());
   const string data = "data";
 
   // Without `O_CREAT`, opening a non-existing file should fail.
   EXPECT_FALSE(os::exists(testfile));
   EXPECT_ERROR(os::open(testfile, O_RDONLY));
-#ifdef __WINDOWS__
+#ifdef _WIN32
   // `O_EXCL` without `O_CREAT` is undefined, but on Windows, we error.
   EXPECT_ERROR(os::open(testfile, O_RDONLY | O_EXCL));
   EXPECT_ERROR(os::open(testfile, O_RDONLY | O_EXCL | O_TRUNC));
-#endif // __WINDOWS__
+#endif // _WIN32
   EXPECT_ERROR(os::open(testfile, O_RDONLY | O_TRUNC));
 
   // With `O_CREAT | O_EXCL`, open a non-existing file should succeed.
@@ -564,7 +547,7 @@ TEST_F(FsTest, Open)
 
   // `O_CREAT | O_TRUNC` should create an empty file.
   const string testtruncfile =
-    path::join(os::getcwd(), id::UUID::random().toString());
+      path::join(os::getcwd(), id::UUID::random().toString());
   fd = os::open(testtruncfile, O_CREAT | O_TRUNC | O_RDWR, S_IRWXU);
   ASSERT_SOME(fd);
   EXPECT_NONE(os::read(fd.get(), 1));
@@ -576,10 +559,9 @@ TEST_F(FsTest, Open)
 }
 
 
-TEST_F(FsTest, Close)
-{
+TEST_F(FsTest, Close) {
   const string testfile =
-    path::join(os::getcwd(), id::UUID::random().toString());
+      path::join(os::getcwd(), id::UUID::random().toString());
 
   ASSERT_SOME(os::touch(testfile));
   ASSERT_TRUE(os::exists(testfile));
@@ -591,10 +573,10 @@ TEST_F(FsTest, Close)
   // before we close it, and fails after.
   const Try<int_fd> fd = os::open(testfile, O_CREAT | O_RDWR);
   ASSERT_SOME(fd);
-#ifdef __WINDOWS__
+#ifdef _WIN32
   ASSERT_EQ(fd->type(), os::WindowsFD::Type::HANDLE);
   ASSERT_TRUE(fd->is_valid());
-#endif // __WINDOWS__
+#endif // _WIN32
 
   ASSERT_SOME(os::write(fd.get(), test_message1));
 
@@ -611,19 +593,18 @@ TEST_F(FsTest, Close)
   // conversion to `int_fd` maps `-1` to `INVALID_HANDLE_VALUE` on Windows.
   EXPECT_ERROR(os::close(static_cast<int>(-1)));
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
   // Try `close` with invalid `HANDLE` and `SOCKET`.
   EXPECT_ERROR(os::close(int_fd(INVALID_HANDLE_VALUE)));
   EXPECT_ERROR(os::close(int_fd(INVALID_SOCKET)));
-#endif // __WINDOWS__
+#endif // _WIN32
 }
 
 
 #if defined(__linux__) || defined(__APPLE__)
 // NOTE: This test is otherwise disabled since it uses `os::setxattr`
 // and `os::getxattr` which are not available elsewhere.
-TEST_F(FsTest, Xattr)
-{
+TEST_F(FsTest, Xattr) {
   const string file = path::join(os::getcwd(), id::UUID::random().toString());
 
   // Create file.
@@ -658,12 +639,11 @@ TEST_F(FsTest, Xattr)
 #endif // __linux__ || __APPLE__
 
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
 // Check if the overlapped field is set properly on Windows.
-TEST_F(FsTest, Overlapped)
-{
+TEST_F(FsTest, Overlapped) {
   const string testfile =
-    path::join(sandbox.get(), id::UUID::random().toString());
+      path::join(sandbox.get(), id::UUID::random().toString());
 
   // Case 1: `os::open` should return non-overlapped handles.
   const Try<int_fd> fd1 = os::open(testfile, O_CREAT | O_TRUNC | O_RDWR);
@@ -714,8 +694,7 @@ TEST_F(FsTest, Overlapped)
 }
 
 
-TEST_F(FsTest, ReadWriteAsync)
-{
+TEST_F(FsTest, ReadWriteAsync) {
   const Try<std::array<int_fd, 2>> pipes = os::pipe(true, true);
   ASSERT_SOME(pipes);
 
@@ -759,8 +738,7 @@ TEST_F(FsTest, ReadWriteAsync)
 }
 
 
-TEST_F(FsTest, ReadWriteAsyncLargeBuffer)
-{
+TEST_F(FsTest, ReadWriteAsyncLargeBuffer) {
   const Try<std::array<int_fd, 2>> pipes = os::pipe(true, true);
   ASSERT_SOME(pipes);
 
@@ -771,7 +749,7 @@ TEST_F(FsTest, ReadWriteAsyncLargeBuffer)
 
   // This should return IO pending because it's larger than the internal pipe
   // buffer.
-  const Result<size_t>  result_write = os::write_async(
+  const Result<size_t> result_write = os::write_async(
       pipes.get()[1],
       write_buffer.data(),
       write_buffer.size(),
@@ -803,12 +781,11 @@ TEST_F(FsTest, ReadWriteAsyncLargeBuffer)
   EXPECT_SOME(os::close(pipes.get()[0]));
   EXPECT_SOME(os::close(pipes.get()[1]));
 }
-#endif // __WINDOWS__
+#endif // _WIN32
 
 
-#ifndef __WINDOWS__
-TEST_F(FsTest, Used)
-{
+#ifndef _WIN32
+TEST_F(FsTest, Used) {
   Try<Bytes> used = fs::used(".");
   ASSERT_SOME(used);
 
@@ -825,8 +802,7 @@ TEST_F(FsTest, Used)
 
 // This test verifies that the file descriptors returned by `os::lsof()`
 // are all open file descriptors and contains stdin, stdout and stderr.
-TEST_F(FsTest, Lsof)
-{
+TEST_F(FsTest, Lsof) {
   Try<std::vector<int_fd>> fds = os::lsof();
   ASSERT_SOME(fds);
 
@@ -839,4 +815,4 @@ TEST_F(FsTest, Lsof)
   EXPECT_NE(std::find(fds->begin(), fds->end(), 1), fds->end());
   EXPECT_NE(std::find(fds->begin(), fds->end(), 2), fds->end());
 }
-#endif // __WINDOWS__
+#endif // _WIN32

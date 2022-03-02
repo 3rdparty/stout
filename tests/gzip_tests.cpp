@@ -10,33 +10,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
-#include <string>
-
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <gmock/gmock.h>
+#include <string>
 
-#include <stout/gtest.hpp>
-#include <stout/gzip.hpp>
+#include "stout/gtest.hpp"
+#include "stout/gzip.hpp"
 
 using std::string;
 
 
 #ifdef HAVE_LIBZ
-TEST(GzipTest, CompressDecompressString)
-{
+TEST(GzipTest, CompressDecompressString) {
   // Test bad compression levels, outside of [-1, Z_BEST_COMPRESSION].
   ASSERT_ERROR(gzip::compress("", -2));
   ASSERT_ERROR(gzip::compress("", Z_BEST_COMPRESSION + 1));
 
   string s =
-    "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do "
-    "eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad "
-    "minim veniam, quis nostrud exercitation ullamco laboris nisi ut "
-    "aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit "
-    "in voluptate velit esse cillum dolore eu fugiat nulla pariatur. "
-    "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui "
-    "officia deserunt mollit anim id est laborum.";
+      "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do "
+      "eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad "
+      "minim veniam, quis nostrud exercitation ullamco laboris nisi ut "
+      "aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit"
+      " in voluptate velit esse cillum dolore eu fugiat nulla pariatur. "
+      "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui "
+      "officia deserunt mollit anim id est laborum.";
 
   Try<string> compressed = gzip::compress(s);
   ASSERT_SOME(compressed);
@@ -64,16 +62,15 @@ TEST(GzipTest, CompressDecompressString)
 }
 
 
-TEST(GzipTest, Decompressor)
-{
+TEST(GzipTest, Decompressor) {
   string s =
-    "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do "
-    "eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad "
-    "minim veniam, quis nostrud exercitation ullamco laboris nisi ut "
-    "aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit "
-    "in voluptate velit esse cillum dolore eu fugiat nulla pariatur. "
-    "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui "
-    "officia deserunt mollit anim id est laborum.";
+      "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do "
+      "eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad "
+      "minim veniam, quis nostrud exercitation ullamco laboris nisi ut "
+      "aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit"
+      " in voluptate velit esse cillum dolore eu fugiat nulla pariatur. "
+      "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui "
+      "officia deserunt mollit anim id est laborum.";
 
   Try<string> compressed = gzip::compress(s);
   ASSERT_SOME(compressed);

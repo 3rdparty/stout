@@ -10,22 +10,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
+#include <gtest/gtest.h>
+
 #include <map>
 #include <string>
 
-#include <gtest/gtest.h>
-
-#include <stout/gtest.hpp>
-#include <stout/none.hpp>
-#include <stout/option.hpp>
-#include <stout/result.hpp>
-#include <stout/some.hpp>
-#include <stout/try.hpp>
+#include "stout/gtest.hpp"
+#include "stout/none.hpp"
+#include "stout/option.hpp"
+#include "stout/result.hpp"
+#include "stout/some.hpp"
+#include "stout/try.hpp"
 
 using std::string;
 
-TEST(SomeTest, Some)
-{
+TEST(SomeTest, Some) {
   Option<int> o1 = Some(42);
   EXPECT_SOME(o1);
   EXPECT_EQ(42, o1.get());

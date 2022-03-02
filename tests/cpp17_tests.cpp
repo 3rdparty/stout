@@ -12,28 +12,29 @@
 
 #include <gtest/gtest.h>
 
-#include <stout/cpp17.hpp>
+#include "stout/cpp17.hpp"
 
-int f(int i) { return i + 101; }
+int f(int i) {
+  return i + 101;
+}
 
-TEST(Invoke, Free)
-{
+TEST(Invoke, Free) {
   // Invoke a free function.
   EXPECT_EQ(202, cpp17::invoke(f, 101));
 }
 
 
-TEST(Invoke, Lambda)
-{
+TEST(Invoke, Lambda) {
   // Invoke a lambda.
   EXPECT_EQ(42, cpp17::invoke([]() { return 42; }));
 }
 
 
 TEST(Invoke, Member) {
-  struct S
-  {
-    int f(int i) const { return n + i; }
+  struct S {
+    int f(int i) const {
+      return n + i;
+    }
     int n;
   };
 
@@ -53,12 +54,12 @@ TEST(Invoke, Member) {
 }
 
 
-TEST(Invoke, FunctionObject)
-{
+TEST(Invoke, FunctionObject) {
   // Invoke a function object.
-  struct F
-  {
-    int operator()(int i) const { return i + 202; }
+  struct F {
+    int operator()(int i) const {
+      return i + 202;
+    }
   };
 
   EXPECT_EQ(404, cpp17::invoke(F{}, 202));

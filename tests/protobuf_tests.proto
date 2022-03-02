@@ -29,20 +29,17 @@ enum Enum {
   TWO = 2;
 }
 
-
 message Nested {
   required string str = 1;
   optional string optional_str = 2;
   repeated string repeated_str = 3;
 }
 
-
 // A simple message for testing Proto->JSON conversion.
 message SimpleMessage {
   required string id = 1;
   repeated int32 numbers = 2;
 }
-
 
 // An elaborate message for testing Proto->JSON conversion.
 message Message {
@@ -92,12 +89,10 @@ message Message {
   optional double optional_no_default = 29;
 }
 
-
 // A message for testing Proto->JSON conversion.
 message ArrayMessage {
   repeated SimpleMessage values = 1;
 }
-
 
 // A message for testing optional enum field.
 message EnumMessage {
@@ -105,7 +100,6 @@ message EnumMessage {
   optional Enum e2 = 2;
   repeated Enum repeated_enum = 3;
 }
-
 
 // A message for testing map.
 message MapMessage {
@@ -125,7 +119,7 @@ message MapMessage {
   map<bool, string> bool_to_string = 14;
   map<int32, string> int32_to_string = 15;
   map<int64, string> int64_to_string = 16;
-  map<uint32,string> uint32_to_string = 17;
+  map<uint32, string> uint32_to_string = 17;
   map<uint64, string> uint64_to_string = 18;
   map<sint32, string> sint32_to_string = 19;
   map<sint64, string> sint64_to_string = 20;

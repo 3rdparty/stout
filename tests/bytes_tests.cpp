@@ -10,18 +10,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <gmock/gmock.h>
-
-#include <stout/bytes.hpp>
-#include <stout/gtest.hpp>
-#include <stout/stringify.hpp>
-#include <stout/try.hpp>
+#include "stout/bytes.hpp"
+#include "stout/gtest.hpp"
+#include "stout/stringify.hpp"
+#include "stout/try.hpp"
 
 
-TEST(BytesTest, Parse)
-{
+TEST(BytesTest, Parse) {
   EXPECT_SOME_EQ(Terabytes(1), Bytes::parse("1TB"));
   EXPECT_SOME_EQ(Gigabytes(1), Bytes::parse("1GB"));
   EXPECT_SOME_EQ(Megabytes(1), Bytes::parse("1MB"));
@@ -39,8 +37,7 @@ TEST(BytesTest, Parse)
 }
 
 
-TEST(BytesTest, Arithmetic)
-{
+TEST(BytesTest, Arithmetic) {
   EXPECT_EQ(Terabytes(1), Gigabytes(512) + Gigabytes(512));
   EXPECT_EQ(Terabytes(1), Terabytes(2) - Terabytes(1));
 
@@ -50,8 +47,7 @@ TEST(BytesTest, Arithmetic)
 }
 
 
-TEST(BytesTest, Comparison)
-{
+TEST(BytesTest, Comparison) {
   EXPECT_GT(Terabytes(1), Gigabytes(1));
   EXPECT_GT(Gigabytes(1), Megabytes(1));
   EXPECT_GT(Megabytes(1), Kilobytes(1));
@@ -63,8 +59,7 @@ TEST(BytesTest, Comparison)
 }
 
 
-TEST(BytesTest, Stringify)
-{
+TEST(BytesTest, Stringify) {
   EXPECT_NE(Megabytes(1023), Gigabytes(1));
 
   EXPECT_EQ("0B", stringify(Bytes()));

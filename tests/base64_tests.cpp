@@ -12,18 +12,16 @@
 
 #include <gtest/gtest.h>
 
-#include <stout/base64.hpp>
-#include <stout/gtest.hpp>
+#include "stout/base64.hpp"
+#include "stout/gtest.hpp"
 
 
-TEST(Base64Test, Encode)
-{
+TEST(Base64Test, Encode) {
   EXPECT_EQ("dXNlcjpwYXNzd29yZA==", base64::encode("user:password"));
 }
 
 
-TEST(Base64Test, Decode)
-{
+TEST(Base64Test, Decode) {
   // We're able to parse without padding.
   EXPECT_SOME_EQ("user:password", base64::decode("dXNlcjpwYXNzd29yZA=="));
   EXPECT_SOME_EQ("user:password", base64::decode("dXNlcjpwYXNzd29yZA="));
@@ -50,8 +48,7 @@ TEST(Base64Test, Decode)
 }
 
 
-TEST(Base64Test, EncodeURLSafe)
-{
+TEST(Base64Test, EncodeURLSafe) {
   EXPECT_EQ(
       "dXNlcjpwYXNzd29yZH5-fg",
       base64::encode_url_safe("user:password~~~", false));
@@ -70,8 +67,7 @@ TEST(Base64Test, EncodeURLSafe)
 }
 
 
-TEST(Base64Test, DecodeURLSafe)
-{
+TEST(Base64Test, DecodeURLSafe) {
   EXPECT_SOME_EQ(
       "user:password~~~",
       base64::decode_url_safe("dXNlcjpwYXNzd29yZH5-fg"));

@@ -10,18 +10,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <gmock/gmock.h>
-
-#include <stout/duration.hpp>
-#include <stout/gtest.hpp>
-#include <stout/stringify.hpp>
-#include <stout/try.hpp>
+#include "stout/duration.hpp"
+#include "stout/gtest.hpp"
+#include "stout/stringify.hpp"
+#include "stout/try.hpp"
 
 
-TEST(DurationTest, Comparison)
-{
+TEST(DurationTest, Comparison) {
   EXPECT_EQ(Duration::zero(), Seconds(0));
   EXPECT_EQ(Minutes(180), Hours(3));
   EXPECT_EQ(Seconds(10800), Hours(3));
@@ -45,8 +43,7 @@ TEST(DurationTest, Comparison)
 }
 
 
-TEST(DurationTest, ParseAndTry)
-{
+TEST(DurationTest, ParseAndTry) {
   EXPECT_SOME_EQ(Hours(3), Duration::parse("3hrs"));
   EXPECT_SOME_EQ(Hours(3) + Minutes(30), Duration::parse("3.5hrs"));
 
@@ -62,8 +59,7 @@ TEST(DurationTest, ParseAndTry)
 }
 
 
-TEST(DurationTest, Arithmetic)
-{
+TEST(DurationTest, Arithmetic) {
   Duration d = Seconds(11);
   d += Seconds(9);
   EXPECT_EQ(Seconds(20), d);
@@ -85,19 +81,21 @@ TEST(DurationTest, Arithmetic)
   EXPECT_EQ(Duration::create(2.5).get(), Seconds(10) * 0.25);
   EXPECT_EQ(Duration::create(1.25).get(), Seconds(10) / 8);
 
-  EXPECT_EQ(Duration::create(Days(11).secs() + 9).get(), Days(11) + Seconds(9));
+  EXPECT_EQ(
+      Duration::create(Days(11).secs() + 9).get(),
+      Days(11) + Seconds(9));
 }
 
 
-TEST(DurationTest, OutputFormat)
-{
+TEST(DurationTest, OutputFormat) {
   EXPECT_EQ("1ns", stringify(Nanoseconds(1)));
   EXPECT_EQ("2ns", stringify(Nanoseconds(2)));
 
   // Truncated. Seconds in 15 digits of precision, max of double
   // type's precise digits.
-  EXPECT_EQ("3.141592653secs",
-            stringify(Duration::create(3.14159265358979).get()));
+  EXPECT_EQ(
+      "3.141592653secs",
+      stringify(Duration::create(3.14159265358979).get()));
   EXPECT_EQ("3140ms", stringify(Duration::create(3.14).get()));
   EXPECT_EQ("10hrs", stringify(Hours(10)));
   EXPECT_EQ("-10hrs", stringify(Hours(-10)));
@@ -119,8 +117,7 @@ TEST(DurationTest, OutputFormat)
 }
 
 
-TEST(DurationTest, Timeval)
-{
+TEST(DurationTest, Timeval) {
   EXPECT_EQ(Duration(timeval{10, 0}), Seconds(10));
   EXPECT_EQ(Duration(timeval{0, 7}), Microseconds(7));
   EXPECT_EQ(Duration(timeval{2, 123}), Seconds(2) + Microseconds(123));

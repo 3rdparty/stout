@@ -10,22 +10,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
-#include <gtest/gtest.h>
-
 #include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 #include <algorithm>
 #include <string>
 
-#include <stout/gtest.hpp>
-#include <stout/json.hpp>
-#include <stout/jsonify.hpp>
-#include <stout/protobuf.hpp>
-#include <stout/stringify.hpp>
-#include <stout/strings.hpp>
-#include <stout/uuid.hpp>
-
 #include "protobuf_tests.pb.h"
+#include "stout/gtest.hpp"
+#include "stout/json.hpp"
+#include "stout/jsonify.hpp"
+#include "stout/protobuf.hpp"
+#include "stout/stringify.hpp"
+#include "stout/strings.hpp"
+#include "stout/uuid.hpp"
 
 using std::string;
 
@@ -34,28 +32,27 @@ using google::protobuf::RepeatedPtrField;
 namespace tests {
 
 // Trivial equality operators to enable gtest macros.
-bool operator==(const SimpleMessage& left, const SimpleMessage& right)
-{
-  if (left.id() != right.id() ||
-      left.numbers().size() != right.numbers().size()) {
+bool operator==(const SimpleMessage& left, const SimpleMessage& right) {
+  if (left.id() != right.id()
+      || left.numbers().size() != right.numbers().size()) {
     return false;
   }
 
   return std::equal(
-      left.numbers().begin(), left.numbers().end(), right.numbers().begin());
+      left.numbers().begin(),
+      left.numbers().end(),
+      right.numbers().begin());
 }
 
 
-bool operator!=(const SimpleMessage& left, const SimpleMessage& right)
-{
+bool operator!=(const SimpleMessage& left, const SimpleMessage& right) {
   return !(left == right);
 }
 
-} // namespace tests {
+} // namespace tests
 
 
-TEST(ProtobufTest, JSON)
-{
+TEST(ProtobufTest, JSON) {
   tests::Message message;
   message.set_b(true);
   message.set_str("string");
@@ -105,7 +102,7 @@ TEST(ProtobufTest, JSON)
 
   // The keys are in alphabetical order.
   string expected =
-    R"~(
+      R"~(
     {
       "b": true,
       "bytes": "Ynl0ZXM=",
@@ -145,7 +142,7 @@ TEST(ProtobufTest, JSON)
   // The only difference between this JSON string and the above one is, all
   // the bools and numbers are in the format of strings.
   string accepted =
-    R"~(
+      R"~(
     {
       "b": "true",
       "bytes": "Ynl0ZXM=",
@@ -213,8 +210,7 @@ TEST(ProtobufTest, JSON)
 }
 
 
-TEST(ProtobufTest, JSONArray)
-{
+TEST(ProtobufTest, JSONArray) {
   tests::SimpleMessage message1;
   message1.set_id("message1");
   message1.add_numbers(1);
@@ -228,7 +224,7 @@ TEST(ProtobufTest, JSONArray)
 
   // The keys are in alphabetical order.
   string expected =
-    R"~(
+      R"~(
     [
       {
         "id": "message1",
@@ -258,8 +254,7 @@ TEST(ProtobufTest, JSONArray)
 
 // Tests that integer precision is maintained between
 // JSON <-> Protobuf conversions.
-TEST(ProtobufTest, JsonLargeIntegers)
-{
+TEST(ProtobufTest, JsonLargeIntegers) {
   // These numbers are equal or close to the integer limits.
   tests::Message message;
   message.set_int32(-2147483647);
@@ -286,7 +281,7 @@ TEST(ProtobufTest, JsonLargeIntegers)
 
   // The keys are in alphabetical order.
   string expected =
-    R"~(
+      R"~(
     {
       "b": true,
       "bytes": "Ynl0ZXM=",
@@ -333,8 +328,7 @@ TEST(ProtobufTest, JsonLargeIntegers)
 }
 
 
-TEST(ProtobufTest, SimpleMessageEquals)
-{
+TEST(ProtobufTest, SimpleMessageEquals) {
   tests::SimpleMessage message1;
   message1.set_id("message1");
   message1.add_numbers(1);
@@ -377,8 +371,7 @@ TEST(ProtobufTest, SimpleMessageEquals)
 }
 
 
-TEST(ProtobufTest, ParseJSONArray)
-{
+TEST(ProtobufTest, ParseJSONArray) {
   tests::SimpleMessage message;
   message.set_id("message1");
   message.add_numbers(1);
@@ -395,7 +388,7 @@ TEST(ProtobufTest, ParseJSONArray)
 
   // Parse JSON array into a collection of protobuf messages.
   auto parse =
-    protobuf::parse<RepeatedPtrField<tests::SimpleMessage>>(array);
+      protobuf::parse<RepeatedPtrField<tests::SimpleMessage>>(array);
   ASSERT_SOME(parse);
   auto repeated = parse.get();
 
@@ -405,14 +398,13 @@ TEST(ProtobufTest, ParseJSONArray)
 }
 
 
-TEST(ProtobufTest, ParseJSONNull)
-{
+TEST(ProtobufTest, ParseJSONNull) {
   tests::Nested nested;
   nested.set_str("value");
 
   // Test message with optional field set to 'null'.
   string message =
-    R"~(
+      R"~(
     {
       "str": "value",
       "optional_str": null
@@ -428,7 +420,7 @@ TEST(ProtobufTest, ParseJSONNull)
 
   // Test message with repeated field set to 'null'.
   message =
-    R"~(
+      R"~(
     {
       "str": "value",
       "repeated_str": null
@@ -444,7 +436,7 @@ TEST(ProtobufTest, ParseJSONNull)
 
   // Test message with required field set to 'null'.
   message =
-    R"~(
+      R"~(
     {
       "str": null
     })~";
@@ -456,12 +448,11 @@ TEST(ProtobufTest, ParseJSONNull)
 }
 
 
-TEST(ProtobufTest, ParseJSONNestedError)
-{
+TEST(ProtobufTest, ParseJSONNestedError) {
   // Here we trigger an error parsing the 'nested' message, i.e., set
   // the string type field `nested.str` to a number.
   string message =
-    R"~(
+      R"~(
     {
       "b": true,
       "str": "string",
@@ -481,7 +472,8 @@ TEST(ProtobufTest, ParseJSONNestedError)
   ASSERT_ERROR(parse);
 
   EXPECT_TRUE(strings::contains(
-      parse.error(), "Not expecting a JSON number for field"));
+      parse.error(),
+      "Not expecting a JSON number for field"));
 }
 
 
@@ -490,10 +482,9 @@ TEST(ProtobufTest, ParseJSONNestedError)
 // and its getter will return the default enum value. For the repeated enum
 // field which contains an unrecognized enum value, after the parsing the
 // field will not contain that unrecognized value anymore.
-TEST(ProtobufTest, ParseJSONUnrecognizedEnum)
-{
+TEST(ProtobufTest, ParseJSONUnrecognizedEnum) {
   string message =
-    R"~(
+      R"~(
     {
       "e1": "XXX",
       "e2": "",
@@ -504,7 +495,7 @@ TEST(ProtobufTest, ParseJSONUnrecognizedEnum)
   ASSERT_SOME(json);
 
   Try<tests::EnumMessage> parse =
-    protobuf::parse<tests::EnumMessage>(json.get());
+      protobuf::parse<tests::EnumMessage>(json.get());
 
   ASSERT_SOME(parse);
 
@@ -519,8 +510,7 @@ TEST(ProtobufTest, ParseJSONUnrecognizedEnum)
 }
 
 
-TEST(ProtobufTest, Jsonify)
-{
+TEST(ProtobufTest, Jsonify) {
   tests::Message message;
   message.set_b(true);
   message.set_str("string");
@@ -569,7 +559,7 @@ TEST(ProtobufTest, Jsonify)
 
   // The keys are in alphabetical order.
   string expected =
-    R"~(
+      R"~(
     {
       "b": true,
       "str": "string",
@@ -610,8 +600,7 @@ TEST(ProtobufTest, Jsonify)
 }
 
 
-TEST(ProtobufTest, JsonifyArray)
-{
+TEST(ProtobufTest, JsonifyArray) {
   tests::SimpleMessage message1;
   message1.set_id("message1");
   message1.add_numbers(1);
@@ -625,7 +614,7 @@ TEST(ProtobufTest, JsonifyArray)
 
   // The keys are in alphabetical order.
   string expected =
-    R"~(
+      R"~(
     [
       {
         "id": "message1",
@@ -659,8 +648,7 @@ TEST(ProtobufTest, JsonifyArray)
 
 // Tests that integer precision is maintained between
 // JSON <-> Protobuf conversions.
-TEST(ProtobufTest, JsonifyLargeIntegers)
-{
+TEST(ProtobufTest, JsonifyLargeIntegers) {
   // These numbers are equal or close to the integer limits.
   tests::Message message;
   message.set_int32(-2147483647);
@@ -687,7 +675,7 @@ TEST(ProtobufTest, JsonifyLargeIntegers)
 
   // The keys are in alphabetical order.
   string expected =
-    R"~(
+      R"~(
     {
       "b": true,
       "str": "string",
@@ -722,8 +710,7 @@ TEST(ProtobufTest, JsonifyLargeIntegers)
 }
 
 
-TEST(ProtobufTest, JsonifyMap)
-{
+TEST(ProtobufTest, JsonifyMap) {
   tests::MapMessage message;
   (*message.mutable_string_to_bool())["key1"] = true;
   (*message.mutable_string_to_bool())["key2"] = false;
@@ -760,7 +747,7 @@ TEST(ProtobufTest, JsonifyMap)
   // The keys are in alphabetical order.
   // The value of `string_to_bytes` is base64 encoded.
   string expected =
-    R"~(
+      R"~(
     {
       "bool_to_string": {
         "false": "value2",

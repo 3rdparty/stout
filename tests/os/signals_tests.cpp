@@ -11,15 +11,13 @@
 // limitations under the License
 
 #include <errno.h>
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 #include <string>
 
-#include <gmock/gmock.h>
-
-#include <gtest/gtest.h>
-
-#include <stout/gtest.hpp>
-#include <stout/os.hpp>
+#include "stout/gtest.hpp"
+#include "stout/os.hpp"
 
 using std::string;
 
@@ -27,8 +25,7 @@ using std::string;
 class OsSignalsTest : public ::testing::Test {};
 
 
-TEST_F(OsSignalsTest, Suppress)
-{
+TEST_F(OsSignalsTest, Suppress) {
   int pipes[2];
 
   ASSERT_NE(-1, pipe(pipes));
