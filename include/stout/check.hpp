@@ -10,28 +10,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_CHECK_HPP__
-#define __STOUT_CHECK_HPP__
+#pragma once
+
+#include <glog/logging.h>
 
 #include <ostream>
 #include <sstream>
 #include <string>
 
-#include <glog/logging.h>
+#include "stout/abort.hpp"
+#include "stout/error.hpp"
+#include "stout/none.hpp"
+#include "stout/option.hpp"
+#include "stout/some.hpp"
 
-#include <stout/abort.hpp>
-#include <stout/error.hpp>
-#include <stout/none.hpp>
-#include <stout/option.hpp>
-#include <stout/some.hpp>
-
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
 class Result;
 
+////////////////////////////////////////////////////////////////////////
+
 template <typename T, typename E>
 class Try;
 
+////////////////////////////////////////////////////////////////////////
 
 // A generic macro to facilitate definitions of CHECK_*, akin to CHECK.
 // This appends the error if possible to the end of the log message,
@@ -40,24 +43,24 @@ class Try;
 // check, and the expression. See below for examples (e.g. CHECK_SOME).
 #define CHECK_STATE(name, check, expression)                             \
   for (const Option<Error> _error = check(expression); _error.isSome();) \
-    _CheckFatal(__FILE__,                                                \
-                __LINE__,                                                \
-                #name,                                                   \
-                #expression,                                             \
-                _error.get()).stream()
+  _CheckFatal(__FILE__, __LINE__, #name, #expression, _error.get()).stream()
 
+////////////////////////////////////////////////////////////////////////
 
 #define CHECK_SOME(expression) \
   CHECK_STATE(CHECK_SOME, _check_some, expression)
 
+////////////////////////////////////////////////////////////////////////
 
 #define CHECK_NONE(expression) \
   CHECK_STATE(CHECK_NONE, _check_none, expression)
 
+////////////////////////////////////////////////////////////////////////
 
 #define CHECK_ERROR(expression) \
   CHECK_STATE(CHECK_ERROR, _check_error, expression)
 
+////////////////////////////////////////////////////////////////////////
 
 // A private helper for CHECK_NOTNONE which is similar to the
 // CHECK_NOTNULL provided by glog.
@@ -73,6 +76,7 @@ T&& _check_not_none(
   return std::move(t).get();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
 T& _check_not_none(
@@ -86,6 +90,7 @@ T& _check_not_none(
   return t.get();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
 const T& _check_not_none(
@@ -99,14 +104,15 @@ const T& _check_not_none(
   return t.get();
 }
 
-
-#define CHECK_NOTNONE(expression) \
-  _check_not_none( \
-      __FILE__, \
-      __LINE__, \
+////////////////////////////////////////////////////////////////////////
+#define CHECK_NOTNONE(expression)       \
+  _check_not_none(                      \
+      __FILE__,                         \
+      __LINE__,                         \
       "'" #expression "' Must be SOME", \
       (expression))
 
+////////////////////////////////////////////////////////////////////////
 
 // A private helper for CHECK_NOTERROR which is similar to the
 // CHECK_NOTNULL provided by glog.
@@ -126,6 +132,7 @@ T&& _check_not_error(
   return std::move(t).get();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T, typename E>
 T& _check_not_error(
@@ -143,6 +150,7 @@ T& _check_not_error(
   return t.get();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T, typename E>
 const T& _check_not_error(
@@ -160,20 +168,21 @@ const T& _check_not_error(
   return t.get();
 }
 
+////////////////////////////////////////////////////////////////////////
 
-#define CHECK_NOTERROR(expression) \
-  _check_not_error( \
-      __FILE__, \
-      __LINE__, \
+#define CHECK_NOTERROR(expression)      \
+  _check_not_error(                     \
+      __FILE__,                         \
+      __LINE__,                         \
       "'" #expression "' Must be SOME", \
       (expression))
 
+////////////////////////////////////////////////////////////////////////
 
 // Private structs/functions used for CHECK_*.
 
 template <typename T>
-Option<Error> _check_some(const Option<T>& o)
-{
+Option<Error> _check_some(const Option<T>& o) {
   if (o.isNone()) {
     return Error("is NONE");
   } else {
@@ -182,10 +191,10 @@ Option<Error> _check_some(const Option<T>& o)
   }
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T, typename E>
-Option<Error> _check_some(const Try<T, E>& t)
-{
+Option<Error> _check_some(const Try<T, E>& t) {
   if (t.isError()) {
     return Error(t.error());
   } else {
@@ -194,10 +203,10 @@ Option<Error> _check_some(const Try<T, E>& t)
   }
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-Option<Error> _check_some(const Result<T>& r)
-{
+Option<Error> _check_some(const Result<T>& r) {
   if (r.isError()) {
     return Error(r.error());
   } else if (r.isNone()) {
@@ -208,10 +217,10 @@ Option<Error> _check_some(const Result<T>& r)
   }
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-Option<Error> _check_none(const Option<T>& o)
-{
+Option<Error> _check_none(const Option<T>& o) {
   if (o.isSome()) {
     return Error("is SOME");
   } else {
@@ -220,10 +229,10 @@ Option<Error> _check_none(const Option<T>& o)
   }
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-Option<Error> _check_none(const Result<T>& r)
-{
+Option<Error> _check_none(const Result<T>& r) {
   if (r.isError()) {
     return Error("is ERROR");
   } else if (r.isSome()) {
@@ -234,10 +243,10 @@ Option<Error> _check_none(const Result<T>& r)
   }
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T, typename E>
-Option<Error> _check_error(const Try<T, E>& t)
-{
+Option<Error> _check_error(const Try<T, E>& t) {
   if (t.isSome()) {
     return Error("is SOME");
   } else {
@@ -246,10 +255,10 @@ Option<Error> _check_error(const Try<T, E>& t)
   }
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-Option<Error> _check_error(const Result<T>& r)
-{
+Option<Error> _check_error(const Result<T>& r) {
   if (r.isNone()) {
     return Error("is NONE");
   } else if (r.isSome()) {
@@ -260,27 +269,25 @@ Option<Error> _check_error(const Result<T>& r)
   }
 }
 
+////////////////////////////////////////////////////////////////////////
 
-struct _CheckFatal
-{
-  _CheckFatal(const char* _file,
-              int _line,
-              const char* type,
-              const char* expression,
-              const Error& error)
-      : file(_file),
-        line(_line)
-  {
+struct _CheckFatal {
+  _CheckFatal(
+      const char* _file,
+      int _line,
+      const char* type,
+      const char* expression,
+      const Error& error)
+    : file(_file),
+      line(_line) {
     out << type << "(" << expression << "): " << error.message << " ";
   }
 
-  ~_CheckFatal()
-  {
+  ~_CheckFatal() {
     google::LogMessageFatal(file.c_str(), line).stream() << out.str();
   }
 
-  std::ostream& stream()
-  {
+  std::ostream& stream() {
     return out;
   }
 
@@ -289,26 +296,28 @@ struct _CheckFatal
   std::ostringstream out;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 // Check on whether some container (that supports the contains()
 // member function) contains the given key. This prints a message
 // of the form:
 //
 // Check failed: $ContainerName does not contain $Value
-#define CHECK_CONTAINS(container, key)                                    \
-  if (!(container).contains(key))                                         \
-    google::LogMessageFatal(__FILE__, __LINE__).stream()                  \
-      << "Check failed: "  << #container << " does not contain " << (key) \
+#define CHECK_CONTAINS(container, key)                 \
+  if (!(container).contains(key))                      \
+  google::LogMessageFatal(__FILE__, __LINE__).stream() \
+      << "Check failed: " << #container << " does not contain " << (key)
 
+////////////////////////////////////////////////////////////////////////
 
 // Check on whether some container (that supports the contains()
 // member function) does not contain the given key. This prints
 // a message of the form:
 //
 // Check failed: $ContainerName already contains $Value
-#define CHECK_NOT_CONTAINS(container, key)                                \
-  if ((container).contains(key))                                          \
-    google::LogMessageFatal(__FILE__, __LINE__).stream()                  \
-      << "Check failed: "  << #container << " already contains " << (key) \
+#define CHECK_NOT_CONTAINS(container, key)             \
+  if ((container).contains(key))                       \
+  google::LogMessageFatal(__FILE__, __LINE__).stream() \
+      << "Check failed: " << #container << " already contains " << (key)
 
-#endif // __STOUT_CHECK_HPP__
+////////////////////////////////////////////////////////////////////////

@@ -10,23 +10,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_UTILS_HPP__
-#define __STOUT_UTILS_HPP__
+#pragma once
 
 #include <algorithm>
 
+////////////////////////////////////////////////////////////////////////
+
 namespace utils {
 
-template <typename T>
-T copy(const T& t) { return t; }
+////////////////////////////////////////////////////////////////////////
 
+template <typename T>
+T copy(const T& t) {
+  return t;
+}
+
+////////////////////////////////////////////////////////////////////////
 
 template <typename T, size_t N>
-static constexpr size_t arraySize(T(&)[N])
-{
+static constexpr size_t arraySize(T (&)[N]) {
   return N;
 }
 
-} // namespace utils {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_UTILS_HPP__
+} // namespace utils
+
+////////////////////////////////////////////////////////////////////////

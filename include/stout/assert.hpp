@@ -10,10 +10,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_ASSERT_HPP__
-#define __STOUT_ASSERT_HPP__
+#pragma once
 
-#include <stout/abort.hpp>
+#include "stout/abort.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 // Provide an async signal safe version `assert`. Please use `assert`
 // instead if you don't need async signal safety.
@@ -23,4 +24,4 @@
 #define ASSERT(e) ((void) ((e) ? ((void) 0) : ABORT(#e)))
 #endif
 
-#endif // __STOUT_ASSERT_HPP__
+////////////////////////////////////////////////////////////////////////

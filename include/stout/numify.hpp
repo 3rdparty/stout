@@ -10,13 +10,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_NUMIFY_HPP__
-#define __STOUT_NUMIFY_HPP__
-
-#include <sstream>
-#include <string>
+#pragma once
 
 #include <boost/lexical_cast.hpp>
+#include <sstream>
+#include <string>
 
 #include "error.hpp"
 #include "none.hpp"
@@ -25,9 +23,10 @@
 #include "strings.hpp"
 #include "try.hpp"
 
+////////////////////////////////////////////////////////////////////////
+
 template <typename T>
-Try<T> numify(const std::string& s)
-{
+Try<T> numify(const std::string& s) {
   // Since even with a `0x` prefix `boost::lexical_cast` cannot always
   // cast all hexadecimal numbers on all platforms (parsing of some
   // floating point literals seems to work e.g., on macOS, but fails on
@@ -36,8 +35,10 @@ Try<T> numify(const std::string& s)
   // consistent with non-hexadecimal numbers.
   bool maybeHex = false;
 
-  if (strings::startsWith(s, "0x") || strings::startsWith(s, "0X") ||
-      strings::startsWith(s, "-0x") || strings::startsWith(s, "-0X")) {
+  if (strings::startsWith(s, "0x")
+      || strings::startsWith(s, "0X")
+      || strings::startsWith(s, "-0x")
+      || strings::startsWith(s, "-0X")) {
     maybeHex = true;
 
     // We disallow hexadecimal floating point numbers.
@@ -49,7 +50,8 @@ Try<T> numify(const std::string& s)
   try {
     return boost::lexical_cast<T>(s);
   } catch (const boost::bad_lexical_cast&) {
-    // Try to parse hexadecimal numbers by hand if `boost::lexical_cast` failed.
+    // Try to parse hexadecimal numbers by hand if `boost::lexical_cast`
+    // failed.
     if (maybeHex) {
       T result;
       std::stringstream ss;
@@ -64,12 +66,12 @@ Try<T> numify(const std::string& s)
         //     numify<T>("-1") == std::numeric_limits<T>::max();
         //
         // Disabled unary negation warning for all types.
-#ifdef __WINDOWS__
-#pragma warning(disable:4146)
+#ifdef _WIN32
+#pragma warning(disable : 4146)
 #endif
         result = -result;
-#ifdef __WINDOWS__
-#pragma warning(default:4146)
+#ifdef _WIN32
+#pragma warning(default : 4146)
 #endif
       } else {
         ss << std::hex << s;
@@ -85,17 +87,17 @@ Try<T> numify(const std::string& s)
   }
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-Try<T> numify(const char* s)
-{
+Try<T> numify(const char* s) {
   return numify<T>(std::string(s));
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-Result<T> numify(const Option<std::string>& s)
-{
+Result<T> numify(const Option<std::string>& s) {
   if (s.isSome()) {
     Try<T> t = numify<T>(s.get());
     if (t.isSome()) {
@@ -108,4 +110,4 @@ Result<T> numify(const Option<std::string>& s)
   return None();
 }
 
-#endif // __STOUT_NUMIFY_HPP__
+////////////////////////////////////////////////////////////////////////

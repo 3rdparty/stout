@@ -10,18 +10,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_EXIT_HPP__
-#define __STOUT_EXIT_HPP__
+#pragma once
 
+#include <glog/logging.h>
+#include <glog/raw_logging.h>
 #include <stdlib.h>
 
 #include <ostream>
 
-#include <glog/logging.h>
-#include <glog/raw_logging.h>
+#include "stout/attributes.hpp"
 
-#include <stout/attributes.hpp>
-
+////////////////////////////////////////////////////////////////////////
 
 // Exit takes an exit status and provides a glog stream for output
 // prior to exiting. This is like glog's LOG(FATAL) or CHECK, except
@@ -29,6 +28,8 @@
 //
 // Ex: EXIT(EXIT_FAILURE) << "Cgroups are not present in this system.";
 #define EXIT(status) __Exit(__FILE__, __LINE__, status).stream()
+
+////////////////////////////////////////////////////////////////////////
 
 // Async-signal safe exit which prints a message.
 //
@@ -49,27 +50,24 @@
     ::_exit(status);                                                      \
   } while (0)
 
+////////////////////////////////////////////////////////////////////////
 
-struct __Exit
-{
+struct __Exit {
   __Exit(const char* file, int line, int _status)
     : status(_status),
       message(
           file,
           line,
-          _status == EXIT_SUCCESS ? google::GLOG_INFO : google::GLOG_ERROR)
-  {
+          _status == EXIT_SUCCESS ? google::GLOG_INFO : google::GLOG_ERROR) {
     stream() << "EXIT with status " << _status << ": ";
   }
 
-  NORETURN ~__Exit()
-  {
+  NORETURN ~__Exit() {
     message.Flush();
     exit(status);
   }
 
-  std::ostream& stream()
-  {
+  std::ostream& stream() {
     return message.stream();
   }
 
@@ -77,5 +75,4 @@ struct __Exit
   google::LogMessage message;
 };
 
-
-#endif // __STOUT_EXIT_HPP__
+////////////////////////////////////////////////////////////////////////

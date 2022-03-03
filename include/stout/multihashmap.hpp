@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_MULTIHASHMAP_HPP__
-#define __STOUT_MULTIHASHMAP_HPP__
+#pragma once
 
 #include <algorithm> // For find.
 #include <list>
@@ -20,20 +19,22 @@
 #include <unordered_map>
 #include <utility>
 
-#include <stout/foreach.hpp>
+#include "stout/foreach.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 // Implementation of a hash multimap via 'std::unordered_multimap'
 // but with a better interface. The rationale for creating this is
 // that the std::unordered_multimap interface is painful to use
 // (requires lots of iterator garbage, as well as the use of
 // 'equal_range' which makes for cluttered code).
-template <typename Key,
-          typename Value,
-          typename Hash = std::hash<Key>,
-          typename Equal = std::equal_to<Key>>
-class multihashmap : public std::unordered_multimap<Key, Value, Hash, Equal>
-{
-public:
+template <
+    typename Key,
+    typename Value,
+    typename Hash = std::hash<Key>,
+    typename Equal = std::equal_to<Key>>
+class multihashmap : public std::unordered_multimap<Key, Value, Hash, Equal> {
+ public:
   multihashmap() {}
   multihashmap(const std::multimap<Key, Value>& multimap);
   multihashmap(std::multimap<Key, Value>&& multimap);
@@ -48,52 +49,53 @@ public:
   bool contains(const Key& key, const Value& value) const;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename Key, typename Value, typename Hash, typename Equal>
 multihashmap<Key, Value, Hash, Equal>::multihashmap(
-    const std::multimap<Key, Value>& multimap)
-{
+    const std::multimap<Key, Value>& multimap) {
   std::unordered_multimap<Key, Value, Hash, Equal>::reserve(multimap.size());
 
-  foreachpair (const Key& key, const Value& value, multimap) {
+  foreachpair(const Key& key, const Value& value, multimap) {
     std::unordered_multimap<Key, Value, Hash, Equal>::emplace(key, value);
   }
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename Key, typename Value, typename Hash, typename Equal>
 multihashmap<Key, Value, Hash, Equal>::multihashmap(
-    std::multimap<Key, Value>&& multimap)
-{
+    std::multimap<Key, Value>&& multimap) {
   std::unordered_multimap<Key, Value, Hash, Equal>::insert(
       std::make_move_iterator(multimap.begin()),
       std::make_move_iterator(multimap.end()));
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename Key, typename Value, typename Hash, typename Equal>
 multihashmap<Key, Value, Hash, Equal>::multihashmap(
     std::initializer_list<std::pair<const Key, Value>> list)
   : std::unordered_multimap<Key, Value, Hash, Equal>(list) {}
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename Key, typename Value, typename Hash, typename Equal>
 void multihashmap<Key, Value, Hash, Equal>::put(
     const Key& key,
-    const Value& value)
-{
+    const Value& value) {
   std::unordered_multimap<Key, Value, Hash, Equal>::insert({key, value});
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename Key, typename Value, typename Hash, typename Equal>
 std::list<Value> multihashmap<Key, Value, Hash, Equal>::get(
-    const Key& key) const
-{
+    const Key& key) const {
   std::list<Value> values; // Values to return.
 
   auto range =
-    std::unordered_multimap<Key, Value, Hash, Equal>::equal_range(key);
+      std::unordered_multimap<Key, Value, Hash, Equal>::equal_range(key);
 
   for (auto i = range.first; i != range.second; ++i) {
     values.push_back(i->second);
@@ -102,32 +104,32 @@ std::list<Value> multihashmap<Key, Value, Hash, Equal>::get(
   return values;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename Key, typename Value, typename Hash, typename Equal>
-std::set<Key> multihashmap<Key, Value, Hash, Equal>::keys() const
-{
+std::set<Key> multihashmap<Key, Value, Hash, Equal>::keys() const {
   std::set<Key> keys;
-  foreachkey (const Key& key, *this) {
+  foreachkey(const Key& key, *this) {
     keys.insert(key);
   }
   return keys;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename Key, typename Value, typename Hash, typename Equal>
-bool multihashmap<Key, Value, Hash, Equal>::remove(const Key& key)
-{
+bool multihashmap<Key, Value, Hash, Equal>::remove(const Key& key) {
   return std::unordered_multimap<Key, Value, Hash, Equal>::erase(key) > 0;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename Key, typename Value, typename Hash, typename Equal>
 bool multihashmap<Key, Value, Hash, Equal>::remove(
     const Key& key,
-    const Value& value)
-{
+    const Value& value) {
   auto range =
-    std::unordered_multimap<Key, Value, Hash, Equal>::equal_range(key);
+      std::unordered_multimap<Key, Value, Hash, Equal>::equal_range(key);
 
   for (auto i = range.first; i != range.second; ++i) {
     if (i->second == value) {
@@ -139,21 +141,21 @@ bool multihashmap<Key, Value, Hash, Equal>::remove(
   return false;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename Key, typename Value, typename Hash, typename Equal>
-bool multihashmap<Key, Value, Hash, Equal>::contains(const Key& key) const
-{
+bool multihashmap<Key, Value, Hash, Equal>::contains(const Key& key) const {
   return multihashmap<Key, Value, Hash, Equal>::count(key) > 0;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename Key, typename Value, typename Hash, typename Equal>
 bool multihashmap<Key, Value, Hash, Equal>::contains(
     const Key& key,
-    const Value& value) const
-{
+    const Value& value) const {
   const std::list<Value> values = get(key);
   return std::find(values.begin(), values.end(), value) != values.end();
 }
 
-#endif // __STOUT_MULTIHASHMAP_HPP__
+////////////////////////////////////////////////////////////////////////

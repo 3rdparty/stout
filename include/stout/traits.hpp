@@ -10,27 +10,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_TRAITS_HPP__
-#define __STOUT_TRAITS_HPP__
+#pragma once
+
+////////////////////////////////////////////////////////////////////////
 
 template <typename T, template <typename...> class C>
 struct is_specialization_of : std::false_type {};
 
+////////////////////////////////////////////////////////////////////////
+
 template <template <typename...> class C, typename... Args>
 struct is_specialization_of<C<Args...>, C> : std::true_type {};
 
+////////////////////////////////////////////////////////////////////////
 
 // Lambda (or functor) traits.
 template <typename T>
 struct LambdaTraits : public LambdaTraits<decltype(&T::operator())> {};
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename Class, typename Result, typename... Args>
-struct LambdaTraits<Result(Class::*)(Args...) const>
-{
+struct LambdaTraits<Result (Class::*)(Args...) const> {
   typedef Result result_type;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 // Helper for checking if a type `U` is the same as or convertible to
 // _at least one of_ the types `Ts`.
@@ -39,19 +44,18 @@ struct LambdaTraits<Result(Class::*)(Args...) const>
 //
 //   std::enable_if<AtLeastOneIsSameOrConvertible<U, Ts>::value>
 template <typename...>
-struct AtLeastOneIsSameOrConvertible
-{
+struct AtLeastOneIsSameOrConvertible {
   static constexpr bool value = false;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename U, typename T, typename... Ts>
-struct AtLeastOneIsSameOrConvertible<U, T, Ts...>
-{
+struct AtLeastOneIsSameOrConvertible<U, T, Ts...> {
   static constexpr bool value =
-    std::is_same<U, T>::value ||
-    std::is_convertible<U, T>::value ||
-    AtLeastOneIsSameOrConvertible<U, Ts...>::value;
+      std::is_same<U, T>::value
+      || std::is_convertible<U, T>::value
+      || AtLeastOneIsSameOrConvertible<U, Ts...>::value;
 };
 
-#endif // __STOUT_TRAITS_HPP__
+////////////////////////////////////////////////////////////////////////

@@ -10,68 +10,74 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_GZIP_HPP__
-#define __STOUT_GZIP_HPP__
+#pragma once
 
 #include <zlib.h>
 
 #include <string>
 
-#include <stout/abort.hpp>
-#include <stout/error.hpp>
-#include <stout/os/strerror.hpp>
-#include <stout/stringify.hpp>
-#include <stout/try.hpp>
+#include "stout/abort.hpp"
+#include "stout/error.hpp"
+#include "stout/os/strerror.hpp"
+#include "stout/stringify.hpp"
+#include "stout/try.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 // Compression utilities.
 // TODO(bmahler): Provide streaming compression as well.
 namespace gzip {
 
+////////////////////////////////////////////////////////////////////////
+
 namespace internal {
+
+////////////////////////////////////////////////////////////////////////
 
 // We use a 16KB buffer with zlib compression / decompression.
 #define GZIP_BUFFER_SIZE 16384
 
+////////////////////////////////////////////////////////////////////////
 
-class GzipError : public Error
-{
-public:
+class GzipError : public Error {
+ public:
   GzipError(const std::string& message, const z_stream_s& stream, int _code)
-    : Error(message + ": " + GzipError::strerror(stream, _code)), code(_code) {}
+    : Error(message + ": " + GzipError::strerror(stream, _code)),
+      code(_code) {}
 
   GzipError(const std::string& message, int _code)
-    : Error(message + ": " + GzipError::strerror(_code)), code(_code) {}
+    : Error(message + ": " + GzipError::strerror(_code)),
+      code(_code) {}
 
   GzipError(const z_stream_s& stream, int _code)
-    : Error(GzipError::strerror(stream, _code)), code(_code) {}
+    : Error(GzipError::strerror(stream, _code)),
+      code(_code) {}
 
   GzipError(int _code)
-    : Error(GzipError::strerror(_code)), code(_code) {}
+    : Error(GzipError::strerror(_code)),
+      code(_code) {}
 
   const int code;
 
-private:
-  static std::string strerror(int code)
-  {
+ private:
+  static std::string strerror(int code) {
     // We do not attempt to interpret the error codes since
     // their meaning depends on which zlib call was made.
     switch (code) {
-      case Z_OK:             return "Z_OK";           // Not an error.
-      case Z_STREAM_END:     return "Z_STREAM_END";   // Not an error.
-      case Z_NEED_DICT:      return "Z_NEED_DICT";    // Not an error.
-      case Z_ERRNO:          return "Z_ERRNO: " + os::strerror(errno);
-      case Z_STREAM_ERROR:   return "Z_STREAM_ERROR";
-      case Z_DATA_ERROR:     return "Z_DATA_ERROR";
-      case Z_MEM_ERROR:      return "Z_MEM_ERROR";
-      case Z_BUF_ERROR:      return "Z_BUF_ERROR";
-      case Z_VERSION_ERROR:  return "Z_VERSION_ERROR";
-      default:               return "Unknown error " + stringify(code);
+      case Z_OK: return "Z_OK"; // Not an error.
+      case Z_STREAM_END: return "Z_STREAM_END"; // Not an error.
+      case Z_NEED_DICT: return "Z_NEED_DICT"; // Not an error.
+      case Z_ERRNO: return "Z_ERRNO: " + os::strerror(errno);
+      case Z_STREAM_ERROR: return "Z_STREAM_ERROR";
+      case Z_DATA_ERROR: return "Z_DATA_ERROR";
+      case Z_MEM_ERROR: return "Z_MEM_ERROR";
+      case Z_BUF_ERROR: return "Z_BUF_ERROR";
+      case Z_VERSION_ERROR: return "Z_VERSION_ERROR";
+      default: return "Unknown error " + stringify(code);
     }
   }
 
-  static std::string strerror(const z_stream_s& stream, int code)
-  {
+  static std::string strerror(const z_stream_s& stream, int code) {
     if (stream.msg == Z_NULL) {
       return GzipError::strerror(code);
     } else {
@@ -80,17 +86,18 @@ private:
   }
 };
 
-} // namespace internal {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace internal
+
+////////////////////////////////////////////////////////////////////////
 
 // Provides the ability to incrementally decompress
 // a stream of compressed input data.
-class Decompressor
-{
-public:
+class Decompressor {
+ public:
   Decompressor()
-    : _finished(false)
-  {
+    : _finished(false) {
     stream.zalloc = Z_NULL;
     stream.zfree = Z_NULL;
     stream.opaque = Z_NULL;
@@ -102,7 +109,8 @@ public:
         MAX_WBITS + 16); // Zlib magic for gzip compression / decompression.
 
     if (code != Z_OK) {
-      Error error = internal::GzipError("Failed to inflateInit2", stream, code);
+      Error error =
+          internal::GzipError("Failed to inflateInit2", stream, code);
       ABORT(error.message);
     }
   }
@@ -110,8 +118,7 @@ public:
   Decompressor(const Decompressor&) = delete;
   Decompressor& operator=(const Decompressor&) = delete;
 
-  ~Decompressor()
-  {
+  ~Decompressor() {
     if (inflateEnd(&stream) != Z_OK) {
       ABORT("Failed to inflateEnd");
     }
@@ -119,10 +126,9 @@ public:
 
   // Returns the next decompressed chunk of data,
   // or an Error if decompression fails.
-  Try<std::string> decompress(const std::string& compressed)
-  {
+  Try<std::string> decompress(const std::string& compressed) {
     stream.next_in =
-      const_cast<Bytef*>(reinterpret_cast<const Bytef*>(compressed.data()));
+        const_cast<Bytef*>(reinterpret_cast<const Bytef*>(compressed.data()));
     stream.avail_in = static_cast<uInt>(compressed.length());
 
     // Build up the decompressed result.
@@ -158,16 +164,16 @@ public:
 
   // Returns whether the decompression stream is finished.
   // If set to false, more input is expected.
-  bool finished() const
-  {
+  bool finished() const {
     return _finished;
   }
 
-private:
+ private:
   z_stream_s stream;
   bool _finished;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns a gzip compressed version of the provided string.
 // The compression level should be within the range [-1, 9].
@@ -178,17 +184,16 @@ private:
 //   #define Z_DEFAULT_COMPRESSION  (-1)
 inline Try<std::string> compress(
     const std::string& decompressed,
-    int level = Z_DEFAULT_COMPRESSION)
-{
+    int level = Z_DEFAULT_COMPRESSION) {
   // Verify the level is within range.
-  if (!(level == Z_DEFAULT_COMPRESSION ||
-      (level >= Z_NO_COMPRESSION && level <= Z_BEST_COMPRESSION))) {
+  if (!(level == Z_DEFAULT_COMPRESSION
+        || (level >= Z_NO_COMPRESSION && level <= Z_BEST_COMPRESSION))) {
     return Error("Invalid compression level: " + stringify(level));
   }
 
   z_stream_s stream;
   stream.next_in =
-    const_cast<Bytef*>(reinterpret_cast<const Bytef*>(decompressed.data()));
+      const_cast<Bytef*>(reinterpret_cast<const Bytef*>(decompressed.data()));
   stream.avail_in = static_cast<uInt>(decompressed.length());
   stream.zalloc = Z_NULL;
   stream.zfree = Z_NULL;
@@ -196,10 +201,10 @@ inline Try<std::string> compress(
 
   int code = deflateInit2(
       &stream,
-      level,          // Compression level.
-      Z_DEFLATED,     // Compression method.
+      level, // Compression level.
+      Z_DEFLATED, // Compression method.
       MAX_WBITS + 16, // Zlib magic for gzip compression / decompression.
-      8,              // Default memLevel value.
+      8, // Default memLevel value.
       Z_DEFAULT_STRATEGY);
 
   if (code != Z_OK) {
@@ -238,10 +243,10 @@ inline Try<std::string> compress(
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns a gzip decompressed version of the provided string.
-inline Try<std::string> decompress(const std::string& compressed)
-{
+inline Try<std::string> decompress(const std::string& compressed) {
   Decompressor decompressor;
   Try<std::string> decompressed = decompressor.decompress(compressed);
 
@@ -253,6 +258,8 @@ inline Try<std::string> decompress(const std::string& compressed)
   return decompressed;
 }
 
-} // namespace gzip {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_GZIP_HPP__
+} // namespace gzip
+
+////////////////////////////////////////////////////////////////////////

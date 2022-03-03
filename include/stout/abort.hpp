@@ -40,6 +40,7 @@
 
 #define ABORT(...) _Abort(_ABORT_PREFIX, __VA_ARGS__)
 
+////////////////////////////////////////////////////////////////////////
 
 inline NORETURN void _Abort(const char* prefix, const char* message) {
 #ifndef _WIN32
@@ -85,7 +86,10 @@ inline NORETURN void _Abort(const char* prefix, const char* message) {
   abort();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline NORETURN void _Abort(const char* prefix, const std::string& message) {
   _Abort(prefix, message.c_str());
 }
+
+////////////////////////////////////////////////////////////////////////

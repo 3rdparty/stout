@@ -10,10 +10,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_FLAGS_HPP__
-#define __STOUT_FLAGS_HPP__
+#pragma once
 
-#include <stout/flags/flags.hpp>
+#include "stout/flags/flags.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 // An abstraction for application/library "flags". An example is
 // probably best:
@@ -78,4 +79,4 @@
 // TODO(benh): Provide a boolean which specifies whether or not to
 // abort on duplicates or load errors.
 
-#endif // __STOUT_FLAGS_HPP__
+////////////////////////////////////////////////////////////////////////

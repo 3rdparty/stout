@@ -10,10 +10,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_CPP14_HPP__
-#define __STOUT_CPP14_HPP__
+#pragma once
 
 #include <cstddef>
+
+////////////////////////////////////////////////////////////////////////
 
 // This file contains implementation of C++14 standard library features.
 // Once we adopt C++14, this file should be removed and usages of its
@@ -25,32 +26,42 @@
 
 namespace cpp14 {
 
+////////////////////////////////////////////////////////////////////////
+
 // This is a simplified implementation of C++14 `std::index_sequence`
 // and `std::make_index_sequence` from <utility>.
 template <typename T, T... Is>
-struct integer_sequence
-{
-  static constexpr std::size_t size() noexcept { return sizeof...(Is); }
+struct integer_sequence {
+  static constexpr std::size_t size() noexcept {
+    return sizeof...(Is);
+  }
 };
 
+////////////////////////////////////////////////////////////////////////
 
 namespace internal {
+
+////////////////////////////////////////////////////////////////////////
 
 template <typename T, std::size_t N, std::size_t... Is>
 struct IntegerSequenceGen : IntegerSequenceGen<T, N - 1, N - 1, Is...> {};
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T, std::size_t... Is>
-struct IntegerSequenceGen<T, 0, Is...>
-{
+struct IntegerSequenceGen<T, 0, Is...> {
   using type = integer_sequence<T, Is...>;
 };
 
-} // namespace internal {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace internal
+
+////////////////////////////////////////////////////////////////////////
 
 template <typename T, std::size_t N>
-using make_integer_sequence = typename internal::IntegerSequenceGen<T, N>::type;
+using make_integer_sequence =
+    typename internal::IntegerSequenceGen<T, N>::type;
 
 
 template <std::size_t... Is>
@@ -60,6 +71,8 @@ using index_sequence = integer_sequence<std::size_t, Is...>;
 template <std::size_t N>
 using make_index_sequence = make_integer_sequence<std::size_t, N>;
 
-} // namespace cpp14 {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_CPP14_HPP__
+} // namespace cpp14
+
+////////////////////////////////////////////////////////////////////////

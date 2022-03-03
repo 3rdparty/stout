@@ -10,20 +10,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_NET_HPP__
-#define __STOUT_NET_HPP__
+#pragma once
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
 #include <netdb.h>
-#endif // __WINDOWS__
+#endif // _WIN32
 
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
 #include <arpa/inet.h>
-#endif // __WINDOWS__
+#endif // _WIN32
 
 #ifdef __APPLE__
 #include <net/if.h>
@@ -37,9 +36,9 @@
 
 // Note: Header grouping and ordering is considered before
 // inclusion/exclusion by platform.
-#ifndef __WINDOWS__
+#ifndef _WIN32
 #include <sys/param.h>
-#endif // __WINDOWS__
+#endif // _WIN32
 
 #include <curl/curl.h>
 
@@ -47,34 +46,35 @@
 #include <set>
 #include <string>
 
-#include <stout/bytes.hpp>
-#include <stout/duration.hpp>
-#include <stout/error.hpp>
-#include <stout/ip.hpp>
-#include <stout/option.hpp>
-#include <stout/stringify.hpp>
-#include <stout/try.hpp>
+#include "stout/bytes.hpp"
+#include "stout/duration.hpp"
+#include "stout/error.hpp"
+#include "stout/ip.hpp"
+#include "stout/option.hpp"
+#include "stout/os/close.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/os/open.hpp"
+#include "stout/stringify.hpp"
+#include "stout/try.hpp"
 
-#include <stout/os/int_fd.hpp>
-#include <stout/os/close.hpp>
-#include <stout/os/open.hpp>
-
-#ifdef __WINDOWS__
-#include <stout/windows/net.hpp>
+#ifdef _WIN32
+#include "stout/windows/net.hpp"
 #else
-#include <stout/posix/net.hpp>
-#endif // __WINDOWS__
+#include "stout/posix/net.hpp"
+#endif // _WIN32
 
+////////////////////////////////////////////////////////////////////////
 
 // Network utilities.
 namespace net {
+
+////////////////////////////////////////////////////////////////////////
 
 // Initializes libraries that net:: functions depend on, in a
 // thread-safe way. This does not have to be called explicitly by
 // the user of any functions in question. They will call this
 // themselves by need.
-inline void initialize()
-{
+inline void initialize() {
   // We use a static struct variable to initialize in a thread-safe
   // way, at least with respect to calls within net::*, since there
   // is no way to guarantee that another library is not concurrently
@@ -82,10 +82,8 @@ inline void initialize()
   // the value 'curl' should get constructed (i.e., the CURL
   // constructor invoked) in a thread safe way (as of GCC 4.3 and
   // required for C++11).
-  struct CURL
-  {
-    CURL()
-    {
+  struct CURL {
+    CURL() {
       // This is the only one function in libcurl that is not deemed
       // thread-safe. (And it must be called at least once before any
       // other libcurl function is used.)
@@ -96,13 +94,13 @@ inline void initialize()
   static CURL curl;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Downloads the header of the specified HTTP URL with a HEAD request
 // and queries its "content-length" field. (Note that according to the
 // HTTP specification there is no guarantee that this field contains
 // any useful value.)
-inline Try<Bytes> contentLength(const std::string& url)
-{
+inline Try<Bytes> contentLength(const std::string& url) {
   initialize();
 
   CURL* curl = curl_easy_init();
@@ -134,6 +132,7 @@ inline Try<Bytes> contentLength(const std::string& url)
   return Bytes(uint64_t(result));
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns the HTTP response code resulting from attempting to
 // download the specified HTTP or FTP URL into a file at the specified
@@ -142,8 +141,7 @@ inline Try<Bytes> contentLength(const std::string& url)
 inline Try<int> download(
     const std::string& url,
     const std::string& path,
-    const Option<Duration>& stall_timeout = None())
-{
+    const Option<Duration>& stall_timeout = None()) {
   initialize();
 
   Try<int_fd> fd = os::open(
@@ -170,7 +168,7 @@ inline Try<int> download(
   // We don't bother introducing a `os::fdopen()` since this is the
   // only place we use `fdopen()` in the entire codebase as of writing
   // this comment.
-#ifdef __WINDOWS__
+#ifdef _WIN32
   // This explicitly allocates a CRT integer file descriptor, which
   // when closed, also closes the underlying handle, so we do not call
   // `CloseHandle()` (or `os::close()`).
@@ -191,7 +189,7 @@ inline Try<int> download(
     os::close(fd.get());
     return ErrnoError("Failed to open file handle of '" + path + "'");
   }
-#endif // __WINDOWS__
+#endif // _WIN32
 
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
 
@@ -202,7 +200,9 @@ inline Try<int> download(
     // https://curl.haxx.se/libcurl/c/CURLOPT_LOW_SPEED_TIME.html
     curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 1L);
     curl_easy_setopt(
-        curl, CURLOPT_LOW_SPEED_TIME, static_cast<long>(stall_timeout->secs()));
+        curl,
+        CURLOPT_LOW_SPEED_TIME,
+        static_cast<long>(stall_timeout->secs()));
   }
 
   CURLcode curlErrorCode = curl_easy_perform(curl);
@@ -225,6 +225,8 @@ inline Try<int> download(
   return Try<int>::some(code);
 }
 
-} // namespace net {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_NET_HPP__
+} // namespace net
+
+////////////////////////////////////////////////////////////////////////

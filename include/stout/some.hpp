@@ -10,11 +10,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_SOME_HPP__
-#define __STOUT_SOME_HPP__
+#pragma once
 
 #include <type_traits>
 #include <utility>
+
+////////////////////////////////////////////////////////////////////////
 
 // A useful type that can be used to represent an Option or Result.
 //
@@ -30,18 +31,18 @@
 // NOTE: We use an intermediate type, _Some, so that one doesn't need
 // to explicitly define the template type when doing 'Some(value)'.
 template <typename T>
-struct _Some
-{
-  _Some(T _t) : t(std::move(_t)) {}
+struct _Some {
+  _Some(T _t)
+    : t(std::move(_t)) {}
 
   T t;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-_Some<typename std::decay<T>::type> Some(T&& t)
-{
+_Some<typename std::decay<T>::type> Some(T&& t) {
   return _Some<typename std::decay<T>::type>(std::forward<T>(t));
 }
 
-#endif // __STOUT_SOME_HPP__
+////////////////////////////////////////////////////////////////////////

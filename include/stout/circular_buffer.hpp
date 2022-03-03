@@ -10,8 +10,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_CIRCULAR_BUFFER_HPP__
-#define __STOUT_CIRCULAR_BUFFER_HPP__
+#pragma once
+
+////////////////////////////////////////////////////////////////////////
 
 // Using `boost::circular_buffer::debug_iterator` can lead to segfaults
 // because they are not thread-safe (see MESOS-9177), so we must ensure
@@ -23,4 +24,4 @@
 
 using boost::circular_buffer;
 
-#endif // __STOUT_CIRCULAR_BUFFER_HPP__
+////////////////////////////////////////////////////////////////////////

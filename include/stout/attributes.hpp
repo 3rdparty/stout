@@ -10,9 +10,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_ATTRIBUTES_HPP__
-#define __STOUT_ATTRIBUTES_HPP__
+#pragma once
 
+////////////////////////////////////////////////////////////////////////
 
 #ifdef _WIN32
 #define NORETURN __declspec(noreturn)
@@ -20,5 +20,4 @@
 #define NORETURN __attribute__((noreturn))
 #endif // _WIN32
 
-
-#endif // __STOUT_ATTRIBUTES_HPP__
+////////////////////////////////////////////////////////////////////////

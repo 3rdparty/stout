@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_STRINGS_HPP__
-#define __STOUT_STRINGS_HPP__
+#pragma once
 
 #include <algorithm>
 #include <cstring>
@@ -25,24 +24,29 @@
 #include "option.hpp"
 #include "stringify.hpp"
 
+////////////////////////////////////////////////////////////////////////
+
 namespace strings {
+
+////////////////////////////////////////////////////////////////////////
 
 const std::string WHITESPACE = " \t\n\r";
 
+////////////////////////////////////////////////////////////////////////
+
 // Flags indicating how 'remove' or 'trim' should operate.
-enum Mode
-{
+enum Mode {
   PREFIX,
   SUFFIX,
   ANY
 };
 
+////////////////////////////////////////////////////////////////////////
 
 inline std::string remove(
     const std::string& from,
     const std::string& substring,
-    Mode mode = ANY)
-{
+    Mode mode = ANY) {
   std::string result = from;
 
   if (mode == PREFIX) {
@@ -63,12 +67,12 @@ inline std::string remove(
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline std::string trim(
     const std::string& from,
     Mode mode = ANY,
-    const std::string& chars = WHITESPACE)
-{
+    const std::string& chars = WHITESPACE) {
   size_t start = 0;
   Option<size_t> end = None();
 
@@ -98,23 +102,23 @@ inline std::string trim(
   return from.substr(start, length);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Helper providing some syntactic sugar for when 'mode' is ANY but
 // the 'chars' are specified.
 inline std::string trim(
     const std::string& from,
-    const std::string& chars)
-{
+    const std::string& chars) {
   return trim(from, ANY, chars);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Replaces all the occurrences of the 'from' string with the 'to' string.
 inline std::string replace(
     const std::string& s,
     const std::string& from,
-    const std::string& to)
-{
+    const std::string& to) {
   std::string result = s;
   size_t index = 0;
 
@@ -129,6 +133,7 @@ inline std::string replace(
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Tokenizes the string using the delimiters. Empty tokens will not be
 // included in the result.
@@ -139,8 +144,7 @@ inline std::string replace(
 inline std::vector<std::string> tokenize(
     const std::string& s,
     const std::string& delims,
-    const Option<size_t>& maxTokens = None())
-{
+    const Option<size_t>& maxTokens = None()) {
   if (maxTokens.isSome() && maxTokens.get() == 0) {
     return {};
   }
@@ -159,8 +163,8 @@ inline std::vector<std::string> tokenize(
 
     // Finish tokenizing if this is the last token,
     // or we've found enough tokens.
-    if (delim == std::string::npos ||
-        (maxTokens.isSome() && tokens.size() == maxTokens.get() - 1)) {
+    if (delim == std::string::npos
+        || (maxTokens.isSome() && tokens.size() == maxTokens.get() - 1)) {
       tokens.push_back(s.substr(nonDelim));
       break;
     }
@@ -172,6 +176,7 @@ inline std::vector<std::string> tokenize(
   return tokens;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Splits the string using the provided delimiters. The string is
 // split each time at the first character that matches any of the
@@ -184,8 +189,7 @@ inline std::vector<std::string> tokenize(
 inline std::vector<std::string> split(
     const std::string& s,
     const std::string& delims,
-    const Option<size_t>& maxTokens = None())
-{
+    const Option<size_t>& maxTokens = None()) {
   if (maxTokens.isSome() && maxTokens.get() == 0) {
     return {};
   }
@@ -198,8 +202,8 @@ inline std::vector<std::string> split(
 
     // Finish splitting if this is the last token,
     // or we've found enough tokens.
-    if (next == std::string::npos ||
-        (maxTokens.isSome() && tokens.size() == maxTokens.get() - 1)) {
+    if (next == std::string::npos
+        || (maxTokens.isSome() && tokens.size() == maxTokens.get() - 1)) {
       tokens.push_back(s.substr(offset));
       break;
     }
@@ -211,6 +215,7 @@ inline std::vector<std::string> split(
   return tokens;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns a map of strings to strings based on calling tokenize
 // twice. All non-pairs are discarded. For example:
@@ -223,8 +228,7 @@ inline std::vector<std::string> split(
 inline std::map<std::string, std::vector<std::string>> pairs(
     const std::string& s,
     const std::string& delims1,
-    const std::string& delims2)
-{
+    const std::string& delims2) {
   std::map<std::string, std::vector<std::string>> result;
 
   const std::vector<std::string> tokens = tokenize(s, delims1);
@@ -238,81 +242,86 @@ inline std::map<std::string, std::vector<std::string>> pairs(
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 namespace internal {
 
+////////////////////////////////////////////////////////////////////////
+
 inline std::stringstream& append(
     std::stringstream& stream,
-    const std::string& value)
-{
+    const std::string& value) {
   stream << value;
   return stream;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline std::stringstream& append(
     std::stringstream& stream,
-    std::string&& value)
-{
+    std::string&& value) {
   stream << value;
   return stream;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline std::stringstream& append(
     std::stringstream& stream,
-    const char*&& value)
-{
+    const char*&& value) {
   stream << value;
   return stream;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
 std::stringstream& append(
     std::stringstream& stream,
-    T&& value)
-{
+    T&& value) {
   stream << ::stringify(std::forward<T>(value));
   return stream;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
 std::stringstream& join(
     std::stringstream& stream,
     const std::string& separator,
-    T&& tail)
-{
+    T&& tail) {
   return append(stream, std::forward<T>(tail));
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename THead, typename... TTail>
 std::stringstream& join(
     std::stringstream& stream,
     const std::string& separator,
     THead&& head,
-    TTail&&... tail)
-{
+    TTail&&... tail) {
   append(stream, std::forward<THead>(head)) << separator;
   internal::join(stream, separator, std::forward<TTail>(tail)...);
   return stream;
 }
 
-} // namespace internal {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace internal
+
+////////////////////////////////////////////////////////////////////////
 
 template <typename... T>
 std::stringstream& join(
     std::stringstream& stream,
     const std::string& separator,
-    T&&... args)
-{
+    T&&... args) {
   internal::join(stream, separator, std::forward<T>(args)...);
   return stream;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Use 2 heads here to disambiguate variadic argument join from the
 // templatized Iterable join below. This means this implementation of
@@ -323,8 +332,7 @@ std::string join(
     const std::string& separator,
     THead1&& head1,
     THead2&& head2,
-    TTail&&... tail)
-{
+    TTail&&... tail) {
   std::stringstream stream;
   internal::join(
       stream,
@@ -335,17 +343,18 @@ std::string join(
   return stream.str();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Ensure std::string doesn't fall into the iterable case
 inline std::string join(const std::string& seperator, const std::string& s) {
   return s;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Use duck-typing to join any iterable.
 template <typename Iterable>
-inline std::string join(const std::string& separator, const Iterable& i)
-{
+inline std::string join(const std::string& separator, const Iterable& i) {
   std::string result;
   typename Iterable::const_iterator iterator = i.begin();
   while (iterator != i.end()) {
@@ -357,12 +366,12 @@ inline std::string join(const std::string& separator, const Iterable& i)
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline bool checkBracketsMatching(
     const std::string& s,
     const char openBracket,
-    const char closeBracket)
-{
+    const char closeBracket) {
   int count = 0;
   for (size_t i = 0; i < s.length(); i++) {
     if (s[i] == openBracket) {
@@ -377,70 +386,70 @@ inline bool checkBracketsMatching(
   return count == 0;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline bool startsWith(const std::string& s, const std::string& prefix)
-{
-  return s.size() >= prefix.size() &&
-         std::equal(prefix.begin(), prefix.end(), s.begin());
+inline bool startsWith(const std::string& s, const std::string& prefix) {
+  return s.size() >= prefix.size()
+      && std::equal(prefix.begin(), prefix.end(), s.begin());
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline bool startsWith(const std::string& s, const char* prefix)
-{
+inline bool startsWith(const std::string& s, const char* prefix) {
   size_t len = ::strnlen(prefix, s.size() + 1);
-  return s.size() >= len &&
-         std::equal(s.begin(), s.begin() + len, prefix);
+  return s.size() >= len && std::equal(s.begin(), s.begin() + len, prefix);
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline bool startsWith(const std::string& s, char c)
-{
+inline bool startsWith(const std::string& s, char c) {
   return !s.empty() && s.front() == c;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline bool endsWith(const std::string& s, const std::string& suffix)
-{
-  return s.size() >= suffix.size() &&
-         std::equal(suffix.rbegin(), suffix.rend(), s.rbegin());
+inline bool endsWith(const std::string& s, const std::string& suffix) {
+  return s.size() >= suffix.size()
+      && std::equal(suffix.rbegin(), suffix.rend(), s.rbegin());
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline bool endsWidth(const std::string& s, const char* suffix)
-{
+inline bool endsWidth(const std::string& s, const char* suffix) {
   size_t len = ::strnlen(suffix, s.size() + 1);
-  return s.size() >= len &&
-         std::equal(s.end() - len, s.end(), suffix);
+  return s.size() >= len && std::equal(s.end() - len, s.end(), suffix);
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline bool endsWith(const std::string& s, char c)
-{
+inline bool endsWith(const std::string& s, char c) {
   return !s.empty() && s.back() == c;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline bool contains(const std::string& s, const std::string& substr)
-{
+inline bool contains(const std::string& s, const std::string& substr) {
   return s.find(substr) != std::string::npos;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline std::string lower(const std::string& s)
-{
+inline std::string lower(const std::string& s) {
   std::string result = s;
   std::transform(result.begin(), result.end(), result.begin(), ::tolower);
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline std::string upper(const std::string& s)
-{
+inline std::string upper(const std::string& s) {
   std::string result = s;
   std::transform(result.begin(), result.end(), result.begin(), ::toupper);
   return result;
 }
 
-} // namespace strings {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_STRINGS_HPP__
+} // namespace strings
+
+////////////////////////////////////////////////////////////////////////

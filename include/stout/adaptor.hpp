@@ -9,10 +9,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // limitations under the License.
 
-#ifndef __STOUT_ADAPTOR_HPP__
-#define __STOUT_ADAPTOR_HPP__
+#pragma once
 
 #include <boost/range/adaptor/reversed.hpp>
+
+////////////////////////////////////////////////////////////////////////
 
 // This is modeled after boost's Range Adaptor. It wraps an existing
 // iterator to provide a new iterator with different behavior. See
@@ -22,6 +23,6 @@ namespace adaptor {
 
 using boost::adaptors::reverse;
 
-} // namespace adaptor {
+} // namespace adaptor
 
-#endif // __STOUT_ADAPTOR_HPP__
+////////////////////////////////////////////////////////////////////////

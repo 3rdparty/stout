@@ -10,83 +10,86 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_SYNCHRONIZED_HPP__
-#define __STOUT_SYNCHRONIZED_HPP__
+#pragma once
+
+#include <glog/logging.h>
 
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
 #include <type_traits>
 
-#include <glog/logging.h>
+#include "stout/preprocessor.hpp"
 
-#include <stout/preprocessor.hpp>
+////////////////////////////////////////////////////////////////////////
 
 // An RAII class for the 'synchronized(m)' macro.
 template <typename T>
-class Synchronized
-{
-public:
+class Synchronized {
+ public:
   explicit Synchronized(T* t, void (*acquire)(T*), void (*release)(T*))
-    : t_(CHECK_NOTNULL(t)), release_(release)
-  {
+    : t_(CHECK_NOTNULL(t)),
+      release_(release) {
     acquire(t_);
   }
 
-  ~Synchronized() { release_(t_); }
+  ~Synchronized() {
+    release_(t_);
+  }
 
   // NOTE: 'false' being returned here has no significance.
   //       Refer to the NOTE for 'synchronized' at the bottom for why.
-  explicit operator bool() const { return false; }
+  explicit operator bool() const {
+    return false;
+  }
 
-private:
+ private:
   T* t_;
 
   void (*release_)(T*);
 };
 
+////////////////////////////////////////////////////////////////////////
 
 // The generic version handles mutexes which have 'lock' and 'unlock'
 // member functions such as 'std::mutex' and 'std::recursive_mutex'.
 template <typename T>
-Synchronized<T> synchronize(T* t)
-{
+Synchronized<T> synchronize(T* t) {
   return Synchronized<T>(
-    t,
-    [](T* t) { t->lock(); },
-    [](T* t) { t->unlock(); }
-  );
+      t,
+      [](T* t) { t->lock(); },
+      [](T* t) { t->unlock(); });
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // An overload of the 'synchronize' function for 'std::atomic_flag'.
-inline Synchronized<std::atomic_flag> synchronize(std::atomic_flag* lock)
-{
+inline Synchronized<std::atomic_flag> synchronize(std::atomic_flag* lock) {
   return Synchronized<std::atomic_flag>(
-    lock,
-    [](std::atomic_flag* lock) {
-      while (lock->test_and_set(std::memory_order_acquire)) {}
-    },
-    [](std::atomic_flag* lock) {
-      lock->clear(std::memory_order_release);
-    }
-  );
+      lock,
+      [](std::atomic_flag* lock) {
+        while (lock->test_and_set(std::memory_order_acquire)) {}
+      },
+      [](std::atomic_flag* lock) {
+        lock->clear(std::memory_order_release);
+      });
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-T* synchronized_get_pointer(T** t)
-{
+T* synchronized_get_pointer(T** t) {
   return *CHECK_NOTNULL(t);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-T* synchronized_get_pointer(T* t)
-{
+T* synchronized_get_pointer(T* t) {
   return t;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Macros to help generate "unique" identifiers for the
 // synchronization variable name and label. The line number gets
@@ -136,12 +139,14 @@ T* synchronized_get_pointer(T* t)
 //   introduced by the decl-specifier-seq or the declarator of the
 //   condition) is in scope from its point of declaration until the
 //   end of the substatements controlled by the condition.
-#define synchronized(m)                                                     \
-  if (Synchronized<typename std::remove_pointer<decltype(m)>::type>         \
-        SYNCHRONIZED_VAR = ::synchronize(::synchronized_get_pointer(&m))) { \
-    goto SYNCHRONIZED_LABEL;                                                \
-  } else SYNCHRONIZED_LABEL:
+#define synchronized(m)                                                       \
+  if (Synchronized<typename std::remove_pointer<decltype(m)>::type>           \
+          SYNCHRONIZED_VAR = ::synchronize(::synchronized_get_pointer(&m))) { \
+    goto SYNCHRONIZED_LABEL;                                                  \
+  } else                                                                      \
+  SYNCHRONIZED_LABEL:
 
+////////////////////////////////////////////////////////////////////////
 
 /**
  * Waits on the condition variable associated with 'lock' which has
@@ -186,8 +191,7 @@ void synchronized_wait(CV* cv, Lock* lock);
  * @return Nothing.
  */
 template <>
-inline void synchronized_wait(std::condition_variable* cv, std::mutex* mutex)
-{
+inline void synchronized_wait(std::condition_variable* cv, std::mutex* mutex) {
   CHECK_NOTNULL(cv);
   CHECK_NOTNULL(mutex);
 
@@ -207,6 +211,7 @@ inline void synchronized_wait(std::condition_variable* cv, std::mutex* mutex)
   lock.release();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 /**
  * There is a known bug around 'std::condition_variable_any' in
@@ -221,4 +226,4 @@ inline void synchronized_wait(std::condition_variable* cv, std::mutex* mutex)
 template <typename Lock>
 void synchronized_wait(std::condition_variable_any* cv, Lock* lock) = delete;
 
-#endif // __STOUT_SYNCHRONIZED_HPP__
+////////////////////////////////////////////////////////////////////////

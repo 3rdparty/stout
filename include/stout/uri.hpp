@@ -10,33 +10,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_URI_HPP__
-#define __STOUT_URI_HPP__
+#pragma once
 
 #include <string>
 
-#include <stout/strings.hpp>
+#include "stout/strings.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 namespace uri {
 
+////////////////////////////////////////////////////////////////////////
+
 const std::string FILE_PREFIX = "file://";
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns a valid URI containing a filename.
 //
 // On Windows, the / character is replaced with \ since that's the path
 // separator. Note that / will often work, but will absolutely not work if the
 // path is a long path.
-inline std::string from_path(const std::string& filepath)
-{
-#ifdef __WINDOWS__
+inline std::string from_path(const std::string& filepath) {
+#ifdef _WIN32
   return FILE_PREFIX + strings::replace(filepath, "\\", "/");
 #else
   return FILE_PREFIX + filepath;
-#endif // __WINDOWS__
+#endif // _WIN32
 }
 
-} // namespace uri {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_URI_HPP__
+} // namespace uri
+
+////////////////////////////////////////////////////////////////////////

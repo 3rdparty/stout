@@ -10,10 +10,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_REPRESENTATION_HPP__
-#define __STOUT_REPRESENTATION_HPP__
+#pragma once
 
 #include <functional>
+
+////////////////////////////////////////////////////////////////////////
 
 // The class template `Representation` is a generic base class to support types
 // that have multiple human-readable representations of itself.
@@ -22,14 +23,14 @@
 // representation may be a `std::chrono::time_point` or even a `time_t`, there
 // are multiple formats in which we can print them out.
 //
-// NOTE: These classes are light-weight objects that simply holds a reference to
-// a type `T`, and therefore cannot be used with a temporary.
+// NOTE: These classes are light-weight objects that simply holds a reference
+// to a type `T`, and therefore cannot be used with a temporary.
 //
 // NOTE: The pattern is to inherit from `Representation`, and pull in
-// `Representation`'s constructors with using declarations. The explicit `using`
-// declarations are necessary since inheritance does not inherit the base class'
-// constructors. Also note that a type alias is not sufficient, since we need to
-// give rise to distinct types.
+// `Representation`'s constructors with using declarations. The explicit
+// `using` declarations are necessary since inheritance does not inherit
+// the base class' constructors. Also note that a type alias is not sufficient,
+// since we need to give rise to distinct types.
 //
 // Example:
 //
@@ -69,17 +70,17 @@
 // ```
 
 template <typename T>
-struct Representation : std::reference_wrapper<const T>
-{
+struct Representation : std::reference_wrapper<const T> {
   // We pull in `std::reference_wrapper`'s constructors since inheritance does
   // not inherit the base class' constructors.
   using std::reference_wrapper<const T>::reference_wrapper;
 
-  explicit Representation(const T& t) : std::reference_wrapper<const T>(t) {}
+  explicit Representation(const T& t)
+    : std::reference_wrapper<const T>(t) {}
 
   // Disallow rebinding.
   Representation& operator=(const Representation&) = delete;
   Representation& operator=(Representation&&) = delete;
 };
 
-#endif // __STOUT_REPRESENTATION_HPP__
+////////////////////////////////////////////////////////////////////////

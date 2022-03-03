@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_PROC_HPP__
-#define __STOUT_PROC_HPP__
+#pragma once
 
 // This file contains linux-only utilities for /proc.
 #ifndef __linux__
@@ -20,7 +19,6 @@
 
 #include <errno.h>
 #include <signal.h>
-
 #include <sys/types.h> // For pid_t.
 
 #include <fstream>
@@ -31,26 +29,28 @@
 #include <string>
 #include <vector>
 
-#include <stout/error.hpp>
-#include <stout/foreach.hpp>
-#include <stout/none.hpp>
-#include <stout/numify.hpp>
-#include <stout/option.hpp>
-#include <stout/path.hpp>
-#include <stout/strings.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/foreach.hpp"
+#include "stout/none.hpp"
+#include "stout/numify.hpp"
+#include "stout/option.hpp"
+#include "stout/os/exists.hpp"
+#include "stout/os/ls.hpp"
+#include "stout/os/read.hpp"
+#include "stout/path.hpp"
+#include "stout/strings.hpp"
+#include "stout/try.hpp"
 
-#include <stout/os/exists.hpp>
-#include <stout/os/ls.hpp>
-#include <stout/os/read.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace proc {
+
+////////////////////////////////////////////////////////////////////////
 
 // Snapshot of a process (modeled after /proc/[pid]/stat).
 // For more information, see:
 // http://www.kernel.org/doc/Documentation/filesystems/proc.txt
-struct ProcessStatus
-{
+struct ProcessStatus {
   ProcessStatus(
       pid_t _pid,
       const std::string& _comm,
@@ -87,41 +87,41 @@ struct ProcessStatus
       unsigned long _wchan,
       unsigned long _nswap,
       unsigned long _cnswap)
-  : pid(_pid),
-    comm(_comm),
-    state(_state),
-    ppid(_ppid),
-    pgrp(_pgrp),
-    session(_session),
-    tty_nr(_tty_nr),
-    tpgid(_tpgid),
-    flags(_flags),
-    minflt(_minflt),
-    cminflt(_cminflt),
-    majflt(_majflt),
-    cmajflt(_cmajflt),
-    utime(_utime),
-    stime(_stime),
-    cutime(_cutime),
-    cstime(_cstime),
-    priority(_priority),
-    nice(_nice),
-    num_threads(_num_threads),
-    itrealvalue(_itrealvalue),
-    starttime(_starttime),
-    vsize(_vsize),
-    rss(_rss),
-    rsslim(_rsslim),
-    startcode(_startcode),
-    endcode(_endcode),
-    startstack(_startstack),
-    kstkeip(_kstkeip),
-    signal(_signal),
-    blocked(_blocked),
-    sigcatch(_sigcatch),
-    wchan(_wchan),
-    nswap(_nswap),
-    cnswap(_cnswap) {}
+    : pid(_pid),
+      comm(_comm),
+      state(_state),
+      ppid(_ppid),
+      pgrp(_pgrp),
+      session(_session),
+      tty_nr(_tty_nr),
+      tpgid(_tpgid),
+      flags(_flags),
+      minflt(_minflt),
+      cminflt(_cminflt),
+      majflt(_majflt),
+      cmajflt(_cmajflt),
+      utime(_utime),
+      stime(_stime),
+      cutime(_cutime),
+      cstime(_cstime),
+      priority(_priority),
+      nice(_nice),
+      num_threads(_num_threads),
+      itrealvalue(_itrealvalue),
+      starttime(_starttime),
+      vsize(_vsize),
+      rss(_rss),
+      rsslim(_rsslim),
+      startcode(_startcode),
+      endcode(_endcode),
+      startstack(_startstack),
+      kstkeip(_kstkeip),
+      signal(_signal),
+      blocked(_blocked),
+      sigcatch(_sigcatch),
+      wchan(_wchan),
+      nswap(_nswap),
+      cnswap(_cnswap) {}
 
   const pid_t pid;
   const std::string comm;
@@ -160,11 +160,11 @@ struct ProcessStatus
   const unsigned long cnswap;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns the process statistics from /proc/[pid]/stat.
 // The return value is None if the process does not exist.
-inline Result<ProcessStatus> status(pid_t pid)
-{
+inline Result<ProcessStatus> status(pid_t pid) {
   std::string path = "/proc/" + stringify(pid) + "/stat";
 
   Try<std::string> read = os::read(path);
@@ -227,11 +227,11 @@ inline Result<ProcessStatus> status(pid_t pid)
 
   // Parse all fields from stat.
   data >> _ >> comm >> state >> ppid >> pgrp >> session >> tty_nr
-       >> tpgid >> flags >> minflt >> cminflt >> majflt >> cmajflt
-       >> utime >> stime >> cutime >> cstime >> priority >> nice
-       >> num_threads >> itrealvalue >> starttime >> vsize >> rss
-       >> rsslim >> startcode >> endcode >> startstack >> kstkeip
-       >> signal >> blocked >> sigcatch >> wchan >> nswap >> cnswap;
+      >> tpgid >> flags >> minflt >> cminflt >> majflt >> cmajflt
+      >> utime >> stime >> cutime >> cstime >> priority >> nice
+      >> num_threads >> itrealvalue >> starttime >> vsize >> rss
+      >> rsslim >> startcode >> endcode >> startstack >> kstkeip
+      >> signal >> blocked >> sigcatch >> wchan >> nswap >> cnswap;
 
   // Check for any read/parse errors.
   if (data.fail() && !data.eof()) {
@@ -244,20 +244,50 @@ inline Result<ProcessStatus> status(pid_t pid)
   comm = strings::remove(comm, "(", strings::PREFIX);
   comm = strings::remove(comm, ")", strings::SUFFIX);
 
-  return ProcessStatus(pid, comm, state, ppid, pgrp, session, tty_nr,
-                       tpgid, flags, minflt, cminflt, majflt, cmajflt,
-                       utime, stime, cutime, cstime, priority, nice,
-                       num_threads, itrealvalue, starttime, vsize, rss,
-                       rsslim, startcode, endcode, startstack, kstkeip,
-                       signal, blocked, sigcatch, wchan, nswap, cnswap);
+  return ProcessStatus(
+      pid,
+      comm,
+      state,
+      ppid,
+      pgrp,
+      session,
+      tty_nr,
+      tpgid,
+      flags,
+      minflt,
+      cminflt,
+      majflt,
+      cmajflt,
+      utime,
+      stime,
+      cutime,
+      cstime,
+      priority,
+      nice,
+      num_threads,
+      itrealvalue,
+      starttime,
+      vsize,
+      rss,
+      rsslim,
+      startcode,
+      endcode,
+      startstack,
+      kstkeip,
+      signal,
+      blocked,
+      sigcatch,
+      wchan,
+      nswap,
+      cnswap);
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Result<std::string> cmdline(const Option<pid_t>& pid = None())
-{
+inline Result<std::string> cmdline(const Option<pid_t>& pid = None()) {
   const std::string path = pid.isSome()
-    ? "/proc/" + stringify(pid.get()) + "/cmdline"
-    : "/proc/cmdline";
+      ? "/proc/" + stringify(pid.get()) + "/cmdline"
+      : "/proc/cmdline";
 
   std::ifstream file(path.c_str());
 
@@ -289,10 +319,10 @@ inline Result<std::string> cmdline(const Option<pid_t>& pid = None())
   return buffer.str();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Reads from /proc and returns a list of all running processes.
-inline Try<std::set<pid_t>> pids()
-{
+inline Try<std::set<pid_t>> pids() {
   std::set<pid_t> pids;
 
   Try<std::list<std::string>> entries = os::ls("/proc");
@@ -314,10 +344,10 @@ inline Try<std::set<pid_t>> pids()
   return Error("Failed to determine pids from /proc");
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Reads from /proc/<pid>/task/* and returns a list of threads ids for pid.
-inline Try<std::set<pid_t>> threads(pid_t pid)
-{
+inline Try<std::set<pid_t>> threads(pid_t pid) {
   const std::string path = path::join("/proc", stringify(pid), "task");
 
   std::set<pid_t> threads;
@@ -341,20 +371,21 @@ inline Try<std::set<pid_t>> threads(pid_t pid)
   return Error("Failed to determine thread ids from /proc");
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Snapshot of a system (modeled after /proc/stat).
-struct SystemStatus
-{
-  SystemStatus(unsigned long long _btime) : btime(_btime) {}
+struct SystemStatus {
+  SystemStatus(unsigned long long _btime)
+    : btime(_btime) {}
 
   const unsigned long long btime; // Boot time.
   // TODO(benh): Add more.
 };
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns the system statistics from /proc/stat.
-inline Try<SystemStatus> status()
-{
+inline Try<SystemStatus> status() {
   unsigned long long btime = 0;
 
   std::ifstream file("/proc/stat");
@@ -367,7 +398,7 @@ inline Try<SystemStatus> status()
   while (std::getline(file, line)) {
     if (line.find("btime ") == 0) {
       Try<unsigned long long> number =
-        numify<unsigned long long>(line.substr(6));
+          numify<unsigned long long>(line.substr(6));
 
       if (number.isError()) {
         return Error("Failed to parse /proc/stat: " + number.error());
@@ -385,13 +416,15 @@ inline Try<SystemStatus> status()
   return SystemStatus(btime);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Representation of a processor (really an execution unit since this
 // captures "hardware threads" as well) modeled after /proc/cpuinfo.
-struct CPU
-{
+struct CPU {
   CPU(unsigned int _id, unsigned int _core, unsigned int _socket)
-    : id(_id), core(_core), socket(_socket) {}
+    : id(_id),
+      core(_core),
+      socket(_socket) {}
 
   // These are non-const because we need the default assignment operator.
   unsigned int id; // "processor"
@@ -399,16 +432,17 @@ struct CPU
   unsigned int socket; // "physical id"
 };
 
+////////////////////////////////////////////////////////////////////////
 
-inline bool operator==(const CPU& lhs, const CPU& rhs)
-{
-  return (lhs.id == rhs.id) && (lhs.core == rhs.core) &&
-    (lhs.socket == rhs.socket);
+inline bool operator==(const CPU& lhs, const CPU& rhs) {
+  return (lhs.id == rhs.id)
+      && (lhs.core == rhs.core)
+      && (lhs.socket == rhs.socket);
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline bool operator<(const CPU& lhs, const CPU& rhs)
-{
+inline bool operator<(const CPU& lhs, const CPU& rhs) {
   // Sort by (socket, core, id).
   if (lhs.socket != rhs.socket) {
     return lhs.socket < rhs.socket;
@@ -423,18 +457,18 @@ inline bool operator<(const CPU& lhs, const CPU& rhs)
   return lhs.id < rhs.id;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline std::ostream& operator<<(std::ostream& stream, const CPU& cpu)
-{
+inline std::ostream& operator<<(std::ostream& stream, const CPU& cpu) {
   return stream << "CPU (id:" << cpu.id << ", "
                 << "core:" << cpu.core << ", "
                 << "socket:" << cpu.socket << ")";
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Reads from /proc/cpuinfo and returns a list of CPUs.
-inline Try<std::list<CPU>> cpus()
-{
+inline Try<std::list<CPU>> cpus() {
   std::list<CPU> results;
 
   std::ifstream file("/proc/cpuinfo");
@@ -450,15 +484,15 @@ inline Try<std::list<CPU>> cpus()
 
   std::string line;
   while (std::getline(file, line)) {
-    if (line.find("processor") == 0 ||
-        line.find("physical id") == 0 ||
-        line.find("core id") == 0) {
+    if (line.find("processor") == 0
+        || line.find("physical id") == 0
+        || line.find("core id") == 0) {
       // Get out and parse the value.
       std::vector<std::string> tokens = strings::tokenize(line, ": ");
 
       if (tokens.size() < 2) {
-        return Error("Unexpected format in /proc/cpuinfo: " +
-                     stringify(tokens));
+        return Error(
+            "Unexpected format in /proc/cpuinfo: " + stringify(tokens));
       }
 
       Try<unsigned int> value = numify<unsigned int>(tokens.back());
@@ -508,6 +542,8 @@ inline Try<std::list<CPU>> cpus()
   return results;
 }
 
-} // namespace proc {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_PROC_HPP__
+} // namespace proc
+
+////////////////////////////////////////////////////////////////////////

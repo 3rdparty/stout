@@ -10,8 +10,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_LAMBDA_HPP__
-#define __STOUT_LAMBDA_HPP__
+#pragma once
+
+#include <glog/logging.h>
 
 #include <algorithm>
 #include <functional>
@@ -20,14 +21,16 @@
 #include <utility>
 #include <vector>
 
-#include <glog/logging.h>
+#include "stout/cpp14.hpp"
+#include "stout/cpp17.hpp"
+#include "stout/hashmap.hpp"
+#include "stout/result_of.hpp"
 
-#include <stout/cpp14.hpp>
-#include <stout/cpp17.hpp>
-#include <stout/hashmap.hpp>
-#include <stout/result_of.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace lambda {
+
+////////////////////////////////////////////////////////////////////////
 
 using std::bind;
 using std::cref;
@@ -36,15 +39,16 @@ using std::ref;
 
 using namespace std::placeholders;
 
+////////////////////////////////////////////////////////////////////////
 
 template <
-  template <typename...> class Iterable,
-  typename F,
-  typename U,
-  typename V = typename result_of<F(U)>::type,
-  typename... Us>
-Iterable<V> map(F&& f, const Iterable<U, Us...>& input)
-{
+    template <typename...>
+    class Iterable,
+    typename F,
+    typename U,
+    typename V = typename result_of<F(U)>::type,
+    typename... Us>
+Iterable<V> map(F&& f, const Iterable<U, Us...>& input) {
   Iterable<V> output;
   std::transform(
       input.begin(),
@@ -54,16 +58,18 @@ Iterable<V> map(F&& f, const Iterable<U, Us...>& input)
   return output;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <
-  template <typename...> class OutputIterable,
-  template <typename...> class InputIterable,
-  typename F,
-  typename U,
-  typename V = typename result_of<F(U)>::type,
-  typename... Us>
-OutputIterable<V> map(F&& f, const InputIterable<U, Us...>& input)
-{
+    template <typename...>
+    class OutputIterable,
+    template <typename...>
+    class InputIterable,
+    typename F,
+    typename U,
+    typename V = typename result_of<F(U)>::type,
+    typename... Us>
+OutputIterable<V> map(F&& f, const InputIterable<U, Us...>& input) {
   OutputIterable<V> output;
   std::transform(
       input.begin(),
@@ -73,17 +79,18 @@ OutputIterable<V> map(F&& f, const InputIterable<U, Us...>& input)
   return output;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <
-  template <typename...> class Iterable,
-  typename F,
-  typename U,
-  typename V = typename result_of<F(U)>::type,
-  typename = typename std::enable_if<
-    !std::is_same<U, V>::value>::type,
-  typename... Us>
-Iterable<V> map(F&& f, Iterable<U, Us...>&& input)
-{
+    template <typename...>
+    class Iterable,
+    typename F,
+    typename U,
+    typename V = typename result_of<F(U)>::type,
+    typename = typename std::enable_if<
+        !std::is_same<U, V>::value>::type,
+    typename... Us>
+Iterable<V> map(F&& f, Iterable<U, Us...>&& input) {
   Iterable<V> output;
   std::transform(
       std::make_move_iterator(input.begin()),
@@ -93,16 +100,17 @@ Iterable<V> map(F&& f, Iterable<U, Us...>&& input)
   return output;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <
-  template <typename...> class Iterable,
-  typename F,
-  typename U,
-  typename = typename std::enable_if<
-    std::is_same<U, typename result_of<F(U)>::type>::value>::type,
-  typename... Us>
-Iterable<U, Us...>&& map(F&& f, Iterable<U, Us...>&& iterable)
-{
+    template <typename...>
+    class Iterable,
+    typename F,
+    typename U,
+    typename = typename std::enable_if<
+        std::is_same<U, typename result_of<F(U)>::type>::value>::type,
+    typename... Us>
+Iterable<U, Us...>&& map(F&& f, Iterable<U, Us...>&& iterable) {
   std::transform(
       std::make_move_iterator(iterable.begin()),
       std::make_move_iterator(iterable.end()),
@@ -111,16 +119,18 @@ Iterable<U, Us...>&& map(F&& f, Iterable<U, Us...>&& iterable)
   return std::move(iterable);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <
-  template <typename...> class OutputIterable,
-  template <typename...> class InputIterable,
-  typename F,
-  typename U,
-  typename V = typename result_of<F(U)>::type,
-  typename... Us>
-OutputIterable<V> map(F&& f, InputIterable<U, Us...>&& input)
-{
+    template <typename...>
+    class OutputIterable,
+    template <typename...>
+    class InputIterable,
+    typename F,
+    typename U,
+    typename V = typename result_of<F(U)>::type,
+    typename... Us>
+OutputIterable<V> map(F&& f, InputIterable<U, Us...>&& input) {
   OutputIterable<V> output;
   std::transform(
       std::make_move_iterator(input.begin()),
@@ -130,14 +140,15 @@ OutputIterable<V> map(F&& f, InputIterable<U, Us...>&& input)
   return output;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <
-  template <typename...> class OutputIterable,
-  typename F,
-  typename U,
-  typename V = typename result_of<F(U)>::type>
-OutputIterable<V> map(F&& f, std::initializer_list<U> input)
-{
+    template <typename...>
+    class OutputIterable,
+    typename F,
+    typename U,
+    typename V = typename result_of<F(U)>::type>
+OutputIterable<V> map(F&& f, std::initializer_list<U> input) {
   OutputIterable<V> output;
   std::transform(
       input.begin(),
@@ -147,13 +158,13 @@ OutputIterable<V> map(F&& f, std::initializer_list<U> input)
   return output;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <
-  typename F,
-  typename U,
-  typename V = typename result_of<F(U)>::type>
-std::vector<V> map(F&& f, std::initializer_list<U> input)
-{
+    typename F,
+    typename U,
+    typename V = typename result_of<F(U)>::type>
+std::vector<V> map(F&& f, std::initializer_list<U> input) {
   std::vector<V> output;
   std::transform(
       input.begin(),
@@ -163,23 +174,26 @@ std::vector<V> map(F&& f, std::initializer_list<U> input)
   return output;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // TODO(arojas): Make this generic enough such that an arbitrary
 // number of inputs can be used.
 // It would be nice to be able to choose between `std::pair` and
 // `std::tuple` or other heterogeneous compilers.
 template <
-  template <typename...> class OutputIterable,
-  template <typename...> class InputIterable1,
-  template <typename...> class InputIterable2,
-  typename U1,
-  typename U2,
-  typename... U1s,
-  typename... U2s>
+    template <typename...>
+    class OutputIterable,
+    template <typename...>
+    class InputIterable1,
+    template <typename...>
+    class InputIterable2,
+    typename U1,
+    typename U2,
+    typename... U1s,
+    typename... U2s>
 OutputIterable<std::pair<U1, U2>> zipto(
     const InputIterable1<U1, U1s...>& input1,
-    const InputIterable2<U2, U2s...>& input2)
-{
+    const InputIterable2<U2, U2s...>& input2) {
   OutputIterable<std::pair<U1, U2>> output;
 
   auto iterator1 = input1.begin();
@@ -197,6 +211,7 @@ OutputIterable<std::pair<U1, U2>> zipto(
   return output;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // TODO(arojas): Make this generic enough such that the output
 // container type can be parametrized, i.e. `hashmap`, `std::unordered_map`,
@@ -204,21 +219,22 @@ OutputIterable<std::pair<U1, U2>> zipto(
 // NOTE: by default we zip into a `hashmap`. See the `zip()` overload
 // for zipping into another iterable as `std::pair`.
 template <
-  template <typename...> class InputIterable1,
-  template <typename...> class InputIterable2,
-  typename U1,
-  typename U2,
-  typename... U1s,
-  typename... U2s>
+    template <typename...>
+    class InputIterable1,
+    template <typename...>
+    class InputIterable2,
+    typename U1,
+    typename U2,
+    typename... U1s,
+    typename... U2s>
 hashmap<U1, U2> zip(
     const InputIterable1<U1, U1s...>& input1,
-    const InputIterable2<U2, U2s...>& input2)
-{
+    const InputIterable2<U2, U2s...>& input2) {
   // TODO(benh): Use the overload of `zip()`, something like:
-  //   std::vector<std::pair<U1, U2>> vector = zip<std::vector>(input1, input2);
-  //   return hashmap<U1, U2>(
-  //     std::make_move_iterator(vector.begin()),
-  //     std::make_move_iterator(vector.end()));
+  //  std::vector<std::pair<U1, U2>> vector = zip<std::vector>(input1, input2);
+  //    return hashmap<U1, U2>(
+  //      std::make_move_iterator(vector.begin()),
+  //      std::make_move_iterator(vector.end()));
 
   hashmap<U1, U2> output;
 
@@ -235,11 +251,18 @@ hashmap<U1, U2> zip(
   return output;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-#define RETURN(...) -> decltype(__VA_ARGS__) { return __VA_ARGS__; }
+#define RETURN(...)         \
+  ->decltype(__VA_ARGS__) { \
+    return __VA_ARGS__;     \
+  }
 
+////////////////////////////////////////////////////////////////////////
 
 namespace internal {
+
+////////////////////////////////////////////////////////////////////////
 
 // The `int` specializations here for `is_placeholder<T>::value`.
 // `is_placeholder<T>::value` returns a `0` for non-placeholders,
@@ -247,62 +270,69 @@ namespace internal {
 // value. e.g., `is_placeholder<decltype(_1)>::value == 1`
 
 template <int I>
-struct Expand
-{
+struct Expand {
   // Bound argument is a placeholder.
   template <typename T, typename Args>
   auto operator()(T&&, Args&& args) const
-    RETURN(std::get<I - 1>(std::forward<Args>(args)))
+      RETURN(std::get<I - 1>(std::forward<Args>(args)))
 };
 
+////////////////////////////////////////////////////////////////////////
 
 template <>
-struct Expand<0>
-{
+struct Expand<0> {
   // Bound argument is not a placeholder.
   template <typename T, typename Args>
   auto operator()(T&& t, Args&&) const
-    RETURN(std::forward<T>(t))
+      RETURN(std::forward<T>(t))
 };
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename F, typename... BoundArgs>
-class Partial
-{
+class Partial {
   F f;
   std::tuple<BoundArgs...> bound_args;
 
   template <typename T, typename Args>
   static auto expand(T&& t, Args&& args)
-    RETURN(Expand<std::is_placeholder<typename std::decay<T>::type>::value>{}(
-        std::forward<T>(t), std::forward<Args>(args)))
+      RETURN(
+          Expand<std::is_placeholder<typename std::decay<T>::type>::value>{}(
+              std::forward<T>(t),
+              std::forward<Args>(args)))
 
-  // Invoke the given function `f` with bound arguments expanded. If a bound
-  // argument is a placeholder, we use the index `I` of the placeholder to
-  // pass the `I`th argument out of `args` along. Otherwise, we pass the bound
-  // argument through preserving its value category. That is, passing the bound
-  // argument as an lvalue-ref or rvalue-ref depending correspondingly on
-  // whether the `Partial` itself is an lvalue or rvalue.
-  template <typename F_, typename BoundArgs_, typename Args, std::size_t... Is>
-  static auto invoke_expand(
-      F_&& f,
-      BoundArgs_&& bound_args,
-      cpp14::index_sequence<Is...>,
-      Args&& args)
-    RETURN(cpp17::invoke(
-        std::forward<F_>(f),
-        expand(
-            std::get<Is>(std::forward<BoundArgs_>(bound_args)),
-            std::forward<Args>(args))...))
+      // Invoke the given function `f` with bound arguments expanded. If a
+      // bound argument is a placeholder, we use the index `I` of the
+      // placeholder to pass the `I`th argument out of `args` along. Otherwise,
+      // we pass the bound argument through preserving its value category. That
+      // is, passing the bound argument as an lvalue-ref or rvalue-ref
+      // depending correspondingly on whether the `Partial` itself is an lvalue
+      // or rvalue.
+      template <
+          typename F_,
+          typename BoundArgs_,
+          typename Args,
+          std::size_t... Is>
+      static auto invoke_expand(
+          F_&& f,
+          BoundArgs_&& bound_args,
+          cpp14::index_sequence<Is...>,
+          Args&& args)
+          RETURN(cpp17::invoke(
+              std::forward<F_>(f),
+              expand(
+                  std::get<Is>(std::forward<BoundArgs_>(bound_args)),
+                  std::forward<Args>(args))...))
 
-public:
-  template <typename... BoundArgs_>
-  explicit Partial(const F& f, BoundArgs_&&... args)
-    : f(f), bound_args(std::forward<BoundArgs_>(args)...) {}
+              public : template <typename... BoundArgs_>
+                       explicit Partial(const F& f, BoundArgs_&&... args)
+    : f(f),
+      bound_args(std::forward<BoundArgs_>(args)...) {}
 
   template <typename... BoundArgs_>
   explicit Partial(F&& f, BoundArgs_&&... args)
-    : f(std::move(f)), bound_args(std::forward<BoundArgs_>(args)...) {}
+    : f(std::move(f)),
+      bound_args(std::forward<BoundArgs_>(args)...) {}
 
   Partial(const Partial&) = default;
   Partial(Partial&&) = default;
@@ -311,40 +341,44 @@ public:
   Partial& operator=(Partial&&) = default;
 
   template <typename... Args>
-  auto operator()(Args&&... args) &
-    RETURN(invoke_expand(
-      f,
-      bound_args,
-      cpp14::make_index_sequence<sizeof...(BoundArgs)>(),
-      std::forward_as_tuple(std::forward<Args>(args)...)))
+          auto operator()(
+              Args&&... args)
+          & RETURN(
+              invoke_expand(
+                  f,
+                  bound_args,
+                  cpp14::make_index_sequence<sizeof...(BoundArgs)>(),
+                  std::forward_as_tuple(std::forward<Args>(args)...)))
 
-  template <typename... Args>
-  auto operator()(Args&&... args) const &
-    RETURN(invoke_expand(
-      f,
-      bound_args,
-      cpp14::make_index_sequence<sizeof...(BoundArgs)>(),
-      std::forward_as_tuple(std::forward<Args>(args)...)))
+              template <typename... Args>
+              auto operator()(Args&&... args) const& RETURN(
+                  invoke_expand(
+                      f,
+                      bound_args,
+                      cpp14::make_index_sequence<sizeof...(BoundArgs)>(),
+                      std::forward_as_tuple(std::forward<Args>(args)...)))
 
-  template <typename... Args>
-  auto operator()(Args&&... args) &&
-    RETURN(invoke_expand(
-      std::move(f),
-      std::move(bound_args),
-      cpp14::make_index_sequence<sizeof...(BoundArgs)>(),
-      std::forward_as_tuple(std::forward<Args>(args)...)))
+                  template <typename... Args>
+                  auto operator()(Args&&... args)
+      && RETURN(invoke_expand(
+          std::move(f),
+          std::move(bound_args),
+          cpp14::make_index_sequence<sizeof...(BoundArgs)>(),
+          std::forward_as_tuple(std::forward<Args>(args)...)))
 
-  template <typename... Args>
-  auto operator()(Args&&... args) const &&
-    RETURN(invoke_expand(
-      std::move(f),
-      std::move(bound_args),
-      cpp14::make_index_sequence<sizeof...(BoundArgs)>(),
-      std::forward_as_tuple(std::forward<Args>(args)...)))
+          template <typename... Args>
+          auto operator()(Args&&... args) const&& RETURN(invoke_expand(
+              std::move(f),
+              std::move(bound_args),
+              cpp14::make_index_sequence<sizeof...(BoundArgs)>(),
+              std::forward_as_tuple(std::forward<Args>(args)...)))
 };
 
-} // namespace internal {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace internal
+
+////////////////////////////////////////////////////////////////////////
 
 // Performs partial function application, similar to `std::bind`. However,
 // it supports moving the bound arguments through, unlike `std::bind`.
@@ -361,46 +395,49 @@ template <typename F, typename... Args>
 internal::Partial<
     typename std::decay<F>::type,
     typename std::decay<Args>::type...>
-partial(F&& f, Args&&... args)
-{
+partial(F&& f, Args&&... args) {
   using R = internal::Partial<
       typename std::decay<F>::type,
       typename std::decay<Args>::type...>;
   return R(std::forward<F>(f), std::forward<Args>(args)...);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 #undef RETURN
 
+////////////////////////////////////////////////////////////////////////
 
 namespace internal {
+
+////////////////////////////////////////////////////////////////////////
 
 // Helper for invoking functional objects.
 // It needs specialization for `void` return type to ignore potentialy
 // non-`void` return value from `cpp17::invoke(f, args...)`.
 template <typename R>
-struct Invoke
-{
+struct Invoke {
   template <typename F, typename... Args>
-  R operator()(F&& f, Args&&... args)
-  {
+  R operator()(F&& f, Args&&... args) {
     return cpp17::invoke(std::forward<F>(f), std::forward<Args>(args)...);
   }
 };
 
+////////////////////////////////////////////////////////////////////////
 
 template <>
-struct Invoke<void>
-{
+struct Invoke<void> {
   template <typename F, typename... Args>
-  void operator()(F&& f, Args&&... args)
-  {
+  void operator()(F&& f, Args&&... args) {
     cpp17::invoke(std::forward<F>(f), std::forward<Args>(args)...);
   }
 };
 
-} // namespace internal {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace internal
+
+////////////////////////////////////////////////////////////////////////
 
 // This is similar to `std::function`, but it can only be called once.
 // The "called once" semantics is enforced by having rvalue-ref qualifier
@@ -413,20 +450,21 @@ struct Invoke<void>
 template <typename F>
 class CallableOnce;
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename R, typename... Args>
-class CallableOnce<R(Args...)>
-{
-public:
+class CallableOnce<R(Args...)> {
+ public:
   template <
       typename F,
       typename std::enable_if<
-          !std::is_same<F, CallableOnce>::value &&
-            (std::is_same<R, void>::value ||
-             std::is_convertible<
-                 decltype(
-                     cpp17::invoke(std::declval<F>(), std::declval<Args>()...)),
-                 R>::value),
+          !std::is_same<F, CallableOnce>::value
+              && (std::is_same<R, void>::value
+                  || std::is_convertible<
+                      decltype(cpp17::invoke(
+                          std::declval<F>(),
+                          std::declval<Args>()...)),
+                      R>::value),
           int>::type = 0>
   CallableOnce(F&& f)
     : f(new CallableFn<typename std::decay<F>::type>(std::forward<F>(f))) {}
@@ -437,29 +475,27 @@ public:
   CallableOnce& operator=(CallableOnce&&) = default;
   CallableOnce& operator=(const CallableOnce&) = delete;
 
-  R operator()(Args... args) &&
-  {
+  R operator()(Args... args) && {
     CHECK(f != nullptr);
     return std::move(*f)(std::forward<Args>(args)...);
   }
 
-private:
-  struct Callable
-  {
+ private:
+  struct Callable {
     virtual ~Callable() = default;
     virtual R operator()(Args&&...) && = 0;
   };
 
   template <typename F>
-  struct CallableFn : Callable
-  {
+  struct CallableFn : Callable {
     F f;
 
-    CallableFn(const F& f) : f(f) {}
-    CallableFn(F&& f) : f(std::move(f)) {}
+    CallableFn(const F& f)
+      : f(f) {}
+    CallableFn(F&& f)
+      : f(std::move(f)) {}
 
-    R operator()(Args&&... args) && override
-    {
+    R operator()(Args&&... args) && override {
       return internal::Invoke<R>{}(std::move(f), std::forward<Args>(args)...);
     }
   };
@@ -467,15 +503,22 @@ private:
   std::unique_ptr<Callable> f;
 };
 
-} // namespace lambda {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace lambda
+
+////////////////////////////////////////////////////////////////////////
 
 namespace std {
+
+////////////////////////////////////////////////////////////////////////
 
 template <typename F, typename... Args>
 struct is_bind_expression<lambda::internal::Partial<F, Args...>>
   : true_type {};
 
-} // namespace std {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_LAMBDA_HPP__
+} // namespace std
+
+////////////////////////////////////////////////////////////////////////

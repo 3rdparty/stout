@@ -10,12 +10,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_RESULT_OF_HPP__
-#define __STOUT_RESULT_OF_HPP__
+#pragma once
 
 #include <type_traits>
 
-#ifndef __WINDOWS__
+////////////////////////////////////////////////////////////////////////
+
+#ifndef _WIN32
 using std::result_of;
 #else
 // TODO(mpark): Switch back to simply using `std::result_of` this once we
@@ -23,16 +24,23 @@ using std::result_of;
 
 #include <utility>
 
+////////////////////////////////////////////////////////////////////////
+
 namespace internal {
+
+////////////////////////////////////////////////////////////////////////
 
 // TODO(mpark): Consider pulling this out to something like <stout/meta.hpp>,
 // This pattern already exists in `<process/future.hpp>`.
 struct LessPrefer {};
 struct Prefer : LessPrefer {};
 
+////////////////////////////////////////////////////////////////////////
 
 // A tag type that indicates substitution failure.
 struct Fail;
+
+////////////////////////////////////////////////////////////////////////
 
 // Perform the necessary expression SFINAE in a context supported in VS 2015
 // Update 1. Note that it leverages `std::invoke` which is carefully written to
@@ -43,28 +51,33 @@ struct Fail;
 // defined in `<functional>`, but is included in `<utility>` in VS.
 template <typename F, typename... Args>
 auto result_of_test(Prefer)
-  -> decltype(std::invoke(std::declval<F>(), std::declval<Args>()...));
+    -> decltype(std::invoke(std::declval<F>(), std::declval<Args>()...));
 
+////////////////////////////////////////////////////////////////////////
 
 // Report `Fail` if expression SFINAE fails in the above overload.
 template <typename, typename...>
 Fail result_of_test(LessPrefer);
 
+////////////////////////////////////////////////////////////////////////
 
 // The generic case where `std::invoke(f, args...)` is well-formed.
 template <typename T>
 struct result_of_impl { using type = T; };
 
+////////////////////////////////////////////////////////////////////////
 
 // The specialization for SFINAE failure case where
 // `std::invoke(f, args...)` is ill-formed.
 template <>
 struct result_of_impl<Fail> {};
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename F>
-struct result_of;  // undefined.
+struct result_of; // undefined.
 
+////////////////////////////////////////////////////////////////////////
 
 // `decltype(result_of_test<F, Args...>(Prefer()))` is either `Fail` in the case
 // of substitution failure, or the return type of `std::invoke(f, args...)`.
@@ -73,10 +86,14 @@ template <typename F, typename... Args>
 struct result_of<F(Args...)>
   : result_of_impl<decltype(result_of_test<F, Args...>(Prefer()))> {};
 
-} // namespace internal {
+////////////////////////////////////////////////////////////////////////
+
+} // namespace internal
+
+////////////////////////////////////////////////////////////////////////
 
 using internal::result_of;
 
-#endif // __WINDOWS__
+#endif // _WIN32
 
-#endif // __STOUT_RESULT_OF_HPP__
+////////////////////////////////////////////////////////////////////////

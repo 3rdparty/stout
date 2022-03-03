@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_JSONIFY__
-#define __STOUT_JSONIFY__
+#pragma once
 
 #define RAPIDJSON_HAS_STDSTRING 1
 
@@ -43,9 +42,11 @@
 #include <type_traits>
 #include <utility>
 
-#include <stout/check.hpp>
-#include <stout/result_of.hpp>
-#include <stout/strings.hpp>
+#include "stout/check.hpp"
+#include "stout/result_of.hpp"
+#include "stout/strings.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 // `jsonify` takes an instance of a C++ object and returns a light-weight proxy
 // object that can either be implicitly converted to a `std::string`, or
@@ -66,13 +67,27 @@
 // for more information.
 
 // Forward declaration of `JSON::Proxy`.
-namespace JSON { class Proxy; }
+namespace JSON {
+
+////////////////////////////////////////////////////////////////////////
+
+class Proxy;
+
+////////////////////////////////////////////////////////////////////////
+
+} // namespace JSON
+
+////////////////////////////////////////////////////////////////////////
 
 // Forward declaration of `jsonify`.
 template <typename T>
 JSON::Proxy jsonify(const T&);
 
+////////////////////////////////////////////////////////////////////////
+
 namespace JSON {
+
+////////////////////////////////////////////////////////////////////////
 
 // The result of `jsonify`. This is a light-weight proxy object that can either
 // be implicitly converted to a `std::string`, or directly inserted into an
@@ -82,11 +97,9 @@ namespace JSON {
 // reference. This gives rise to similar semantics as `std::forward_as_tuple`.
 // If the arguments are temporaries, `JSON::Proxy` does not extend their
 // lifetime; they have to be used before the end of the full expression.
-class Proxy
-{
-public:
-  operator std::string() &&
-  {
+class Proxy {
+ public:
+  operator std::string() && {
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 
@@ -95,7 +108,7 @@ public:
     return {buffer.GetString(), buffer.GetSize()};
   }
 
-private:
+ private:
   Proxy(std::function<void(rapidjson::Writer<rapidjson::StringBuffer>*)> write)
     : write(std::move(write)) {}
 
@@ -113,64 +126,70 @@ private:
   Proxy(Proxy&&) = default;
 
   template <typename T>
-  friend Proxy (::jsonify)(const T&);
+  friend Proxy(::jsonify)(const T&);
 
   friend std::ostream& operator<<(std::ostream& stream, Proxy&& that);
 
-public:
+ public:
   // This is public in order to enable the `ObjectWriter` and `ArrayWriter`
   // to continue writing to the same writer.
   std::function<void(rapidjson::Writer<rapidjson::StringBuffer>*)> write;
 };
 
+////////////////////////////////////////////////////////////////////////
 
-inline std::ostream& operator<<(std::ostream& stream, Proxy&& that)
-{
+inline std::ostream& operator<<(std::ostream& stream, Proxy&& that) {
   return stream << std::string(std::move(that));
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // The boolean writer. If `set` is not called at all, a false value is
 // written. If `set` is called more than once, only the last value is
 // written.
-class BooleanWriter
-{
-public:
+class BooleanWriter {
+ public:
   BooleanWriter(rapidjson::Writer<rapidjson::StringBuffer>* writer)
-    : writer_(writer), value_(false) {}
+    : writer_(writer),
+      value_(false) {}
 
   BooleanWriter(const BooleanWriter&) = delete;
   BooleanWriter(BooleanWriter&&) = delete;
 
-  ~BooleanWriter() { CHECK(writer_->Bool(value_)); }
+  ~BooleanWriter() {
+    CHECK(writer_->Bool(value_));
+  }
 
   BooleanWriter& operator=(const BooleanWriter&) = delete;
   BooleanWriter& operator=(BooleanWriter&&) = delete;
 
-  void set(bool value) { value_ = value; }
+  void set(bool value) {
+    value_ = value;
+  }
 
-private:
+ private:
   rapidjson::Writer<rapidjson::StringBuffer>* writer_;
   bool value_;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 // The number writer. If `set` is not called at all, `0` is written.
 // If `set` is called more than once, only the last value is written.
-class NumberWriter
-{
-public:
+class NumberWriter {
+ public:
   NumberWriter(rapidjson::Writer<rapidjson::StringBuffer>* writer)
-    : writer_(writer), type_(INT), int_(0) {}
+    : writer_(writer),
+      type_(INT),
+      int_(0) {}
 
   NumberWriter(const NumberWriter&) = delete;
   NumberWriter(NumberWriter&&) = delete;
 
-  ~NumberWriter()
-  {
+  ~NumberWriter() {
     switch (type_) {
-      case INT:    CHECK(writer_->Int64(int_));     break;
-      case UINT:   CHECK(writer_->Uint64(uint_));   break;
+      case INT: CHECK(writer_->Int64(int_)); break;
+      case UINT: CHECK(writer_->Uint64(uint_)); break;
       case DOUBLE: CHECK(writer_->Double(double_)); break;
     }
   }
@@ -193,90 +212,96 @@ public:
   // we can run into issues again on another platform if `size_t` maps to
   // `unsigned long long int`, since we would get a redefinition error.
 
-  void set(short int value) { set(static_cast<long long int>(value)); }
+  void set(short int value) {
+    set(static_cast<long long int>(value));
+  }
 
-  void set(int value) { set(static_cast<long long int>(value)); }
+  void set(int value) {
+    set(static_cast<long long int>(value));
+  }
 
-  void set(long int value) { set(static_cast<long long int>(value)); }
+  void set(long int value) {
+    set(static_cast<long long int>(value));
+  }
 
-  void set(long long int value)
-  {
+  void set(long long int value) {
     type_ = INT;
     int_ = value;
   }
 
-  void set(unsigned short int value)
-  {
+  void set(unsigned short int value) {
     set(static_cast<unsigned long long int>(value));
   }
 
-  void set(unsigned int value)
-  {
+  void set(unsigned int value) {
     set(static_cast<unsigned long long int>(value));
   }
 
-  void set(unsigned long int value)
-  {
+  void set(unsigned long int value) {
     set(static_cast<unsigned long long int>(value));
   }
 
-  void set(unsigned long long int value)
-  {
+  void set(unsigned long long int value) {
     type_ = UINT;
     uint_ = value;
   }
 
-  void set(float value) { set(static_cast<double>(value)); }
+  void set(float value) {
+    set(static_cast<double>(value));
+  }
 
-  void set(double value)
-  {
+  void set(double value) {
     type_ = DOUBLE;
     double_ = value;
   }
 
-private:
+ private:
   rapidjson::Writer<rapidjson::StringBuffer>* writer_;
 
-  enum { INT, UINT, DOUBLE } type_;
+  enum { INT,
+         UINT,
+         DOUBLE } type_;
 
-  union
-  {
+  union {
     long long int int_;
     unsigned long long int uint_;
     double double_;
   };
 };
 
+////////////////////////////////////////////////////////////////////////
 
 // The string writer. `set` is used to write a string and must only
 // be called once. If `set` is not called at all, an empty JSON
 // string is written.
-class StringWriter
-{
-public:
+class StringWriter {
+ public:
   StringWriter(rapidjson::Writer<rapidjson::StringBuffer>* writer)
-    : writer_(writer), empty_(true) {}
+    : writer_(writer),
+      empty_(true) {}
 
   StringWriter(const StringWriter&) = delete;
   StringWriter(StringWriter&&) = delete;
 
-  ~StringWriter() { if (empty_) { CHECK(writer_->String("")); } }
+  ~StringWriter() {
+    if (empty_) {
+      CHECK(writer_->String(""));
+    }
+  }
 
   StringWriter& operator=(const StringWriter&) = delete;
   StringWriter& operator=(StringWriter&&) = delete;
 
   template <std::size_t N>
-  void set(const char (&value)[N])
-  {
+  void set(const char (&value)[N]) {
     empty_ = false;
 
     // This check will fail if we enable write validation in rapidjson;
     // we'll need to figure out a way to surface the error.
-    CHECK(writer_->String(value, N-1));
+    CHECK(writer_->String(value, N - 1));
   }
 
-  void set(const std::string& value)
-  {
+  void set(const std::string& value) {
     empty_ = false;
 
     // This check will fail if we enable write validation in rapidjson;
@@ -284,28 +309,26 @@ public:
     CHECK(writer_->String(value));
   }
 
-private:
+ private:
   rapidjson::Writer<rapidjson::StringBuffer>* writer_;
   bool empty_;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 // The array writer. `element(value)` is used to write a new element.
 // If `element` is not called at all, an empty JSON array is written.
-class ArrayWriter
-{
-public:
+class ArrayWriter {
+ public:
   ArrayWriter(rapidjson::Writer<rapidjson::StringBuffer>* writer)
-    : writer_(writer)
-  {
+    : writer_(writer) {
     CHECK(writer_->StartArray());
   }
 
   ArrayWriter(const ArrayWriter&) = delete;
   ArrayWriter(ArrayWriter&&) = delete;
 
-  ~ArrayWriter()
-  {
+  ~ArrayWriter() {
     CHECK(writer_->EndArray());
   }
 
@@ -313,29 +336,29 @@ public:
   ArrayWriter& operator=(ArrayWriter&&) = delete;
 
   template <typename T>
-  void element(const T& value) { jsonify(value).write(writer_); }
+  void element(const T& value) {
+    jsonify(value).write(writer_);
+  }
 
-private:
+ private:
   rapidjson::Writer<rapidjson::StringBuffer>* writer_;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 // The object writer. `field(key, value)` is used to write a new field.
 // If `field` is not called at all, an empty JSON object is written.
-class ObjectWriter
-{
-public:
+class ObjectWriter {
+ public:
   ObjectWriter(rapidjson::Writer<rapidjson::StringBuffer>* writer)
-    : writer_(writer)
-  {
+    : writer_(writer) {
     CHECK(writer_->StartObject());
   }
 
   ObjectWriter(const ObjectWriter&) = delete;
   ObjectWriter(ObjectWriter&&) = delete;
 
-  ~ObjectWriter()
-  {
+  ~ObjectWriter() {
     CHECK(writer_->EndObject());
   }
 
@@ -343,8 +366,7 @@ public:
   ObjectWriter& operator=(ObjectWriter&&) = delete;
 
   template <typename T>
-  void field(const std::string& key, const T& value)
-  {
+  void field(const std::string& key, const T& value) {
     // This check will fail we enable write validation in rapidjson;
     // we'll need to figure out a way to surface the error.
     //
@@ -355,100 +377,131 @@ public:
     jsonify(value).write(writer_);
   }
 
-private:
+ private:
   rapidjson::Writer<rapidjson::StringBuffer>* writer_;
 };
 
+////////////////////////////////////////////////////////////////////////
 
-class NullWriter
-{
-public:
+class NullWriter {
+ public:
   NullWriter(rapidjson::Writer<rapidjson::StringBuffer>* writer)
     : writer_(writer) {}
 
   NullWriter(const NullWriter&) = delete;
   NullWriter(NullWriter&&) = delete;
 
-  ~NullWriter() { CHECK(writer_->Null()); }
+  ~NullWriter() {
+    CHECK(writer_->Null());
+  }
 
   NullWriter& operator=(const NullWriter&) = delete;
   NullWriter& operator=(NullWriter&&) = delete;
 
-private:
+ private:
   rapidjson::Writer<rapidjson::StringBuffer>* writer_;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 // `json` function for boolean.
-inline void json(BooleanWriter* writer, bool value) { writer->set(value); }
+inline void json(BooleanWriter* writer, bool value) {
+  writer->set(value);
+}
 
+////////////////////////////////////////////////////////////////////////
 
 // `json` functions for numbers.
-inline void json(NumberWriter* writer, short int value) { writer->set(value); }
-inline void json(NumberWriter* writer, int value) { writer->set(value); }
-inline void json(NumberWriter* writer, long int value) { writer->set(value); }
-
-
-inline void json(NumberWriter* writer, long long int value)
-{
+inline void json(NumberWriter* writer, short int value) {
   writer->set(value);
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline void json(NumberWriter* writer, unsigned short int value)
-{
+inline void json(NumberWriter* writer, int value) {
   writer->set(value);
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline void json(NumberWriter* writer, unsigned int value)
-{
+inline void json(NumberWriter* writer, long int value) {
   writer->set(value);
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline void json(NumberWriter* writer, unsigned long int value)
-{
+inline void json(NumberWriter* writer, long long int value) {
   writer->set(value);
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline void json(NumberWriter* writer, unsigned long long int value)
-{
+inline void json(NumberWriter* writer, unsigned short int value) {
   writer->set(value);
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline void json(NumberWriter* writer, float value) { writer->set(value); }
-inline void json(NumberWriter* writer, double value) { writer->set(value); }
+inline void json(NumberWriter* writer, unsigned int value) {
+  writer->set(value);
+}
 
+////////////////////////////////////////////////////////////////////////
+
+inline void json(NumberWriter* writer, unsigned long int value) {
+  writer->set(value);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+inline void json(NumberWriter* writer, unsigned long long int value) {
+  writer->set(value);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+inline void json(NumberWriter* writer, float value) {
+  writer->set(value);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+inline void json(NumberWriter* writer, double value) {
+  writer->set(value);
+}
+
+////////////////////////////////////////////////////////////////////////
 
 // `json` functions for strings.
 
 template <std::size_t N>
-void json(StringWriter* writer, const char (&value)[N])
-{
+void json(StringWriter* writer, const char (&value)[N]) {
   writer->set(value);
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline void json(StringWriter* writer, const std::string& value)
-{
+inline void json(StringWriter* writer, const std::string& value) {
   writer->set(value);
 }
+
+////////////////////////////////////////////////////////////////////////
 
 namespace internal {
+
+////////////////////////////////////////////////////////////////////////
 
 // TODO(mpark): Pull this out to something like <stout/meta.hpp>.
 // This pattern already exists in `<process/future.hpp>`.
 struct LessPrefer {};
 struct Prefer : LessPrefer {};
 
+////////////////////////////////////////////////////////////////////////
+
 // The member `value` is `true` if `T` is a sequence, and `false` otherwise.
 template <typename T>
-struct IsSequence
-{
-private:
+struct IsSequence {
+ private:
   // This overload only participates in overload resolution if the following
   // expressions are valid.
   //   (1) begin(t) != end(t)
@@ -457,8 +510,8 @@ private:
   //
   // The expressions are only used for SFINAE purposes, and comma operators are
   // used to ignore the results of the expressions. That is, the return type of
-  // this function is `decltype(expr0, expr1, expr2, std::true_type{})` which is
-  // `std::true_type`.
+  // this function is `decltype(expr0, expr1, expr2, std::true_type{})` which
+  // is `std::true_type`.
   template <typename U>
   static auto test(Prefer) -> decltype(
       // Cast to `void` to suppress `-Wunused-comparison` warnings.
@@ -471,29 +524,33 @@ private:
   template <typename U>
   static std::false_type test(LessPrefer);
 
-public:
+ public:
   static constexpr bool value = decltype(test<T>(Prefer()))::value;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 // The member `value` is `true` if `T` has a member typedef `mapped_type`, and
 // `false` otherwise. We take the existence of `mapped_type` as the indication
 // of an associative container (e.g., std::map).
 template <typename T>
-struct HasMappedType
-{
-private:
+struct HasMappedType {
+ private:
   template <typename U, typename = typename U::mapped_type>
   static std::true_type test(Prefer);
 
   template <typename U>
   static std::false_type test(LessPrefer);
 
-public:
+ public:
   static constexpr bool value = decltype(test<T>(Prefer()))::value;
 };
 
-}  // namespace internal {
+////////////////////////////////////////////////////////////////////////
+
+} // namespace internal
+
+////////////////////////////////////////////////////////////////////////
 
 // `json` function for iterables (e.g., std::vector).
 // This function is only enabled if `Iterable` is iterable, is not a
@@ -503,19 +560,22 @@ public:
 template <
     typename Iterable,
     typename std::enable_if<
-        internal::IsSequence<Iterable>::value &&
-        !(std::is_array<Iterable>::value &&
-          std::rank<Iterable>::value == 1 &&
-          std::is_same<
-              char, typename std::remove_extent<Iterable>::type>::value) &&
-        !internal::HasMappedType<Iterable>::value, int>::type = 0>
-void json(ArrayWriter* writer, const Iterable& iterable)
-{
+        internal::IsSequence<Iterable>::value
+            && !(
+                std::is_array<Iterable>::value
+                && std::rank<Iterable>::value == 1
+                && std::is_same<
+                    char,
+                    typename std::remove_extent<Iterable>::type>::value)
+            && !internal::HasMappedType<Iterable>::value,
+        int>::type = 0>
+void json(ArrayWriter* writer, const Iterable& iterable) {
   foreach (const auto& value, iterable) {
     writer->element(value);
   }
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // `json` function for dictionaries (e.g., std::map).
 // This function is only enabled if `Dictionary` is iterable, and has a member
@@ -524,16 +584,17 @@ void json(ArrayWriter* writer, const Iterable& iterable)
 template <
     typename Dictionary,
     typename std::enable_if<
-        internal::IsSequence<Dictionary>::value &&
-        internal::HasMappedType<Dictionary>::value, int>::type = 0>
-void json(ObjectWriter* writer, const Dictionary& dictionary)
-{
-  foreachpair (const auto& key, const auto& value, dictionary) {
+        internal::IsSequence<Dictionary>::value
+            && internal::HasMappedType<Dictionary>::value,
+        int>::type = 0>
+void json(ObjectWriter* writer, const Dictionary& dictionary) {
+  foreachpair(const auto& key, const auto& value, dictionary) {
     // TODO(mpark): Consider passing `stringify(key)`.
     writer->field(key, value);
   }
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // An object that can be converted to a pointer to any of the JSON writers.
 // This is used to resolve the following scenario:
@@ -553,14 +614,12 @@ void json(ObjectWriter* writer, const Dictionary& dictionary)
 // Since `WriterProxy` is convertible to any of the writers equivalently, we
 // force overload resolution of `json(WriterProxy(writer), value)` to depend
 // only on the second parameter.
-class WriterProxy
-{
-public:
+class WriterProxy {
+ public:
   WriterProxy(rapidjson::Writer<rapidjson::StringBuffer>* writer)
     : writer_(writer) {}
 
-  ~WriterProxy()
-  {
+  ~WriterProxy() {
     switch (type_) {
       case BOOLEAN_WRITER: {
         proxy_.boolean_writer.~BooleanWriter();
@@ -589,51 +648,44 @@ public:
     }
   }
 
-  operator BooleanWriter*() &&
-  {
+  operator BooleanWriter*() && {
     new (&proxy_.boolean_writer) BooleanWriter(writer_);
     type_ = BOOLEAN_WRITER;
     return &proxy_.boolean_writer;
   }
 
-  operator NumberWriter*() &&
-  {
+  operator NumberWriter*() && {
     new (&proxy_.number_writer) NumberWriter(writer_);
     type_ = NUMBER_WRITER;
     return &proxy_.number_writer;
   }
 
-  operator StringWriter*() &&
-  {
+  operator StringWriter*() && {
     new (&proxy_.string_writer) StringWriter(writer_);
     type_ = STRING_WRITER;
     return &proxy_.string_writer;
   }
 
-  operator ArrayWriter*() &&
-  {
+  operator ArrayWriter*() && {
     new (&proxy_.array_writer) ArrayWriter(writer_);
     type_ = ARRAY_WRITER;
     return &proxy_.array_writer;
   }
 
-  operator ObjectWriter*() &&
-  {
+  operator ObjectWriter*() && {
     new (&proxy_.object_writer) ObjectWriter(writer_);
     type_ = OBJECT_WRITER;
     return &proxy_.object_writer;
   }
 
-  operator NullWriter*() &&
-  {
+  operator NullWriter*() && {
     new (&proxy_.null_writer) NullWriter(writer_);
     type_ = NULL_WRITER;
     return &proxy_.null_writer;
   }
 
-private:
-  enum Type
-  {
+ private:
+  enum Type {
     BOOLEAN_WRITER,
     NUMBER_WRITER,
     STRING_WRITER,
@@ -642,8 +694,7 @@ private:
     NULL_WRITER
   };
 
-  union Writer
-  {
+  union Writer {
     Writer() {}
     ~Writer() {}
     BooleanWriter boolean_writer;
@@ -659,25 +710,29 @@ private:
   Writer proxy_;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 namespace internal {
 
-// NOTE: The following overloads of `internal::jsonify` return a `std::function`
-// rather than a `JSON::Proxy` since `JSON::Proxy`'s copy/move constructors are
-// declared `private`. We could also declare `internal::jsonify` as friend of
-// `JSON::Proxy` but chose to minimize friendship and construct a
-// `std::function` instead.
+////////////////////////////////////////////////////////////////////////
+
+// NOTE: The following overloads of `internal::jsonify` return a
+// `std::function` rather than a `JSON::Proxy` since `JSON::Proxy`'s copy/move
+// constructors are declared `private`. We could also declare
+// `internal::jsonify` as friend of `JSON::Proxy` but chose to minimize
+// friendship and construct a `std::function` instead.
 
 // Given an `F` which is a "write" function, we simply use it directly.
 template <typename F, typename = typename result_of<F(WriterProxy)>::type>
 std::function<void(rapidjson::Writer<rapidjson::StringBuffer>*)> jsonify(
     const F& write,
-    Prefer)
-{
+    Prefer) {
   return [&write](rapidjson::Writer<rapidjson::StringBuffer>* writer) {
-      write(WriterProxy(writer));
+    write(WriterProxy(writer));
   };
 }
+
+////////////////////////////////////////////////////////////////////////
 
 // Given a `T` which is not a "write" function itself, the default "write"
 // function is to perform an unqualified function call to `json`, which enables
@@ -687,20 +742,25 @@ std::function<void(rapidjson::Writer<rapidjson::StringBuffer>*)> jsonify(
 template <typename T>
 std::function<void(rapidjson::Writer<rapidjson::StringBuffer>*)> jsonify(
     const T& value,
-    LessPrefer)
-{
+    LessPrefer) {
   return [&value](rapidjson::Writer<rapidjson::StringBuffer>* writer) {
     json(WriterProxy(writer), value);
   };
 }
 
-} // namespace internal {
-} // namespace JSON {
+////////////////////////////////////////////////////////////////////////
+
+} // namespace internal
+
+////////////////////////////////////////////////////////////////////////
+
+} // namespace JSON
+
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-JSON::Proxy jsonify(const T& t)
-{
+JSON::Proxy jsonify(const T& t) {
   return JSON::internal::jsonify(t, JSON::internal::Prefer());
 }
 
-#endif // __STOUT_JSONIFY__
+////////////////////////////////////////////////////////////////////////

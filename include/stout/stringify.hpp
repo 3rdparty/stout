@@ -32,6 +32,8 @@
 #include "hashmap.hpp"
 #include "set.hpp"
 
+////////////////////////////////////////////////////////////////////////
+
 template <typename T>
 std::string stringify(const T& t) {
   std::ostringstream out;
@@ -42,6 +44,7 @@ std::string stringify(const T& t) {
   return out.str();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // We provide an explicit overload for strings so we do not incur the overhead
 // of a stringstream in generic code (e.g., when stringifying containers of
@@ -50,6 +53,7 @@ inline std::string stringify(const std::string& str) {
   return str;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 #ifdef _WIN32
 inline std::string stringify(const std::wstring& str) {
@@ -74,11 +78,13 @@ inline std::wstring wide_stringify(const std::string& str) {
 }
 #endif // _WIN32
 
+////////////////////////////////////////////////////////////////////////
 
 inline std::string stringify(bool b) {
   return b ? "true" : "false";
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
 std::string stringify(const std::set<T>& set) {
@@ -95,6 +101,7 @@ std::string stringify(const std::set<T>& set) {
   return out.str();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
 std::string stringify(const std::list<T>& list) {
@@ -111,6 +118,7 @@ std::string stringify(const std::list<T>& list) {
   return out.str();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
 std::string stringify(const std::vector<T>& vector) {
@@ -127,6 +135,7 @@ std::string stringify(const std::vector<T>& vector) {
   return out.str();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename K, typename V>
 std::string stringify(const std::map<K, V>& map) {
@@ -145,6 +154,7 @@ std::string stringify(const std::map<K, V>& map) {
   return out.str();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
 std::string stringify(const hashset<T>& set) {
@@ -161,6 +171,7 @@ std::string stringify(const hashset<T>& set) {
   return out.str();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename K, typename V>
 std::string stringify(const hashmap<K, V>& map) {
@@ -179,6 +190,7 @@ std::string stringify(const hashmap<K, V>& map) {
   return out.str();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // TODO(chhsiao): This overload returns a non-const rvalue for consistency.
 // Consider the following overloads instead for better performance:
@@ -187,3 +199,5 @@ std::string stringify(const hashmap<K, V>& map) {
 inline std::string stringify(const Error& error) {
   return error.message;
 }
+
+////////////////////////////////////////////////////////////////////////

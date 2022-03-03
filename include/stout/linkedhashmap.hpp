@@ -10,15 +10,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_LINKEDHASHMAP_HPP__
-#define __STOUT_LINKEDHASHMAP_HPP__
+#pragma once
 
 #include <list>
 #include <utility>
 
-#include <stout/foreach.hpp>
-#include <stout/hashmap.hpp>
-#include <stout/option.hpp>
+#include "stout/foreach.hpp"
+#include "stout/hashmap.hpp"
+#include "stout/option.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 // Implementation of a hashmap that maintains the insertion order of
 // the keys. Updating a key does not change insertion order.
@@ -26,9 +27,8 @@
 // TODO(vinod/bmahler): Consider extending from stout::hashmap and/or
 // having a compatible API with stout::hashmap.
 template <typename Key, typename Value>
-class LinkedHashMap
-{
-public:
+class LinkedHashMap {
+ public:
   typedef std::pair<Key, Value> entry;
   typedef std::list<entry> list;
   typedef hashmap<Key, typename list::iterator> map;
@@ -36,16 +36,14 @@ public:
   LinkedHashMap() = default;
 
   LinkedHashMap(const LinkedHashMap<Key, Value>& other)
-    : entries_(other.entries_)
-  {
+    : entries_(other.entries_) {
     // Build up the index.
     for (auto it = entries_.begin(); it != entries_.end(); ++it) {
       keys_[it->first] = it;
     }
   }
 
-  LinkedHashMap& operator=(const LinkedHashMap<Key, Value>& other)
-  {
+  LinkedHashMap& operator=(const LinkedHashMap<Key, Value>& other) {
     clear();
 
     entries_ = other.entries_;
@@ -62,13 +60,12 @@ public:
   LinkedHashMap(LinkedHashMap<Key, Value>&&) = delete;
   LinkedHashMap& operator=(LinkedHashMap&&) = delete;
 
-  Value& operator[] (const Key& key)
-  {
+  Value& operator[](const Key& key) {
     if (!keys_.contains(key)) {
       // Insert a new entry into the list and get a "pointer" to its
       // location. The initial value is default-constructed.
       typename list::iterator iter =
-        entries_.insert(entries_.end(), std::make_pair(key, Value()));
+          entries_.insert(entries_.end(), std::make_pair(key, Value()));
 
       keys_[key] = iter;
     }
@@ -76,31 +73,26 @@ public:
     return keys_[key]->second;
   }
 
-  Option<Value> get(const Key& key) const
-  {
+  Option<Value> get(const Key& key) const {
     if (keys_.contains(key)) {
       return keys_.at(key)->second;
     }
     return None();
   }
 
-  Value& at(const Key& key)
-  {
+  Value& at(const Key& key) {
     return keys_.at(key)->second;
   }
 
-  const Value& at(const Key& key) const
-  {
+  const Value& at(const Key& key) const {
     return keys_.at(key)->second;
   }
 
-  bool contains(const Key& key) const
-  {
+  bool contains(const Key& key) const {
     return keys_.contains(key);
   }
 
-  size_t erase(const Key& key)
-  {
+  size_t erase(const Key& key) {
     if (keys_.contains(key)) {
       typename list::iterator iter = keys_[key];
       keys_.erase(key);
@@ -111,8 +103,7 @@ public:
   }
 
   // Returns the keys in the map in insertion order.
-  std::vector<Key> keys() const
-  {
+  std::vector<Key> keys() const {
     std::vector<Key> result;
     result.reserve(entries_.size());
 
@@ -124,8 +115,7 @@ public:
   }
 
   // Returns the values in the map in insertion order.
-  std::vector<Value> values() const
-  {
+  std::vector<Value> values() const {
     std::vector<Value> result;
     result.reserve(entries_.size());
 
@@ -136,18 +126,15 @@ public:
     return result;
   }
 
-  size_t size() const
-  {
+  size_t size() const {
     return keys_.size();
   }
 
-  bool empty() const
-  {
+  bool empty() const {
     return keys_.empty();
   }
 
-  void clear()
-  {
+  void clear() {
     entries_.clear();
     keys_.clear();
   }
@@ -155,16 +142,23 @@ public:
   // Support for iteration; this allows using `foreachpair` and
   // related constructs. Note that these iterate over the map in
   // insertion order.
-  typename list::iterator begin() { return entries_.begin(); }
-  typename list::iterator end() { return entries_.end(); }
+  typename list::iterator begin() {
+    return entries_.begin();
+  }
+  typename list::iterator end() {
+    return entries_.end();
+  }
 
-  typename list::const_iterator begin() const { return entries_.cbegin(); }
-  typename list::const_iterator end() const { return entries_.cend(); }
+  typename list::const_iterator begin() const {
+    return entries_.cbegin();
+  }
+  typename list::const_iterator end() const {
+    return entries_.cend();
+  }
 
-private:
+ private:
   list entries_; // Key-value pairs ordered by insertion order.
   map keys_; // Map from key to "pointer" to key's location in list.
 };
 
-
-#endif // __STOUT_LINKEDHASHMAP_HPP__
+////////////////////////////////////////////////////////////////////////

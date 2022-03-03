@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_UNIMPLEMENTED_HPP__
-#define __STOUT_UNIMPLEMENTED_HPP__
+#pragma once
 
 // If the project is configured to use static assertions for
 // unimplemented functions.
@@ -24,19 +23,22 @@
 
 #include <iostream>
 
-#include <stout/attributes.hpp>
+#include "stout/attributes.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 #define UNIMPLEMENTED Unimplemented(__func__, __FILE__, __LINE__)
+
+////////////////////////////////////////////////////////////////////////
 
 NORETURN inline void Unimplemented(
     const char* function,
     const char* file,
-    const int line)
-{
+    const int line) {
   std::cerr << "Reached unimplemented function '" << function << "' at "
             << file << ':' << line << std::endl;
   abort();
 }
 #endif
 
-#endif // __STOUT_UNIMPLEMENTED_HPP__
+////////////////////////////////////////////////////////////////////////

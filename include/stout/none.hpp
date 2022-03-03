@@ -10,8 +10,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_NONE_HPP__
-#define __STOUT_NONE_HPP__
+#pragma once
+
+////////////////////////////////////////////////////////////////////////
 
 // A useful type that can be used to represent an Option or Result.
 //
@@ -26,4 +27,4 @@
 
 struct None {};
 
-#endif // __STOUT_NONE_HPP__
+////////////////////////////////////////////////////////////////////////

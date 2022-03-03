@@ -28,6 +28,8 @@
 #include "numify.hpp"
 #include "try.hpp"
 
+////////////////////////////////////////////////////////////////////////
+
 class Duration {
  public:
   static Try<Duration> parse(const std::string& s);
@@ -180,6 +182,7 @@ class Duration {
       const Duration& duration);
 };
 
+////////////////////////////////////////////////////////////////////////
 
 class Nanoseconds : public Duration {
  public:
@@ -198,6 +201,7 @@ class Nanoseconds : public Duration {
   }
 };
 
+////////////////////////////////////////////////////////////////////////
 
 class Microseconds : public Duration {
  public:
@@ -216,6 +220,7 @@ class Microseconds : public Duration {
   }
 };
 
+////////////////////////////////////////////////////////////////////////
 
 class Milliseconds : public Duration {
  public:
@@ -234,6 +239,7 @@ class Milliseconds : public Duration {
   }
 };
 
+////////////////////////////////////////////////////////////////////////
 
 class Seconds : public Duration {
  public:
@@ -252,6 +258,7 @@ class Seconds : public Duration {
   }
 };
 
+////////////////////////////////////////////////////////////////////////
 
 class Minutes : public Duration {
  public:
@@ -270,6 +277,7 @@ class Minutes : public Duration {
   }
 };
 
+////////////////////////////////////////////////////////////////////////
 
 class Hours : public Duration {
  public:
@@ -288,6 +296,7 @@ class Hours : public Duration {
   }
 };
 
+////////////////////////////////////////////////////////////////////////
 
 class Days : public Duration {
  public:
@@ -306,6 +315,7 @@ class Days : public Duration {
   }
 };
 
+////////////////////////////////////////////////////////////////////////
 
 class Weeks : public Duration {
  public:
@@ -324,6 +334,7 @@ class Weeks : public Duration {
   }
 };
 
+////////////////////////////////////////////////////////////////////////
 
 inline std::ostream& operator<<(
     std::ostream& stream,
@@ -412,6 +423,7 @@ inline std::ostream& operator<<(
   return stream;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline Try<Duration> Duration::parse(const std::string& s) {
   // TODO(benh): Support negative durations (i.e., starts with '-').
@@ -467,6 +479,7 @@ inline Try<Duration> Duration::parse(const std::string& s) {
   return Error("Invalid duration '" + s + "'");
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline Try<Duration> Duration::create(double seconds) {
   if (seconds * SECONDS > max().nanos || seconds * SECONDS < min().nanos) {
@@ -478,12 +491,16 @@ inline Try<Duration> Duration::create(double seconds) {
   return Nanoseconds(static_cast<int64_t>(seconds * SECONDS));
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline constexpr Duration Duration::max() {
   return Nanoseconds(std::numeric_limits<int64_t>::max());
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline constexpr Duration Duration::min() {
   return Nanoseconds(std::numeric_limits<int64_t>::min());
 }
+
+////////////////////////////////////////////////////////////////////////

@@ -10,16 +10,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_VARIANT_HPP__
-#define __STOUT_VARIANT_HPP__
-
-#include <utility>
+#pragma once
 
 #include <boost/variant.hpp>
+#include <utility>
 
-#include <stout/overload.hpp>
-#include <stout/traits.hpp>
-#include <stout/try.hpp>
+#include "stout/overload.hpp"
+#include "stout/traits.hpp"
+#include "stout/try.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 // A wrapper of `boost::variant` so that we can add our own
 // functionality (e.g., `visit` via lambdas) as well as replace the
@@ -46,28 +46,28 @@
 template <typename T, typename... Ts>
 class Variant // See above for why we don't inherit from `boost::variant`.
 {
-public:
+ public:
   // We provide a basic constuctor that forwards to `boost::variant`.
   // Note that we needed to use SFINAE in order to keep the compiler
   // from trying to use this constructor instead of the default copy
   // constructor, move constructor, etc, as well as to keep the
   // programmer from being able to construct an instance from
   // `boost::variant` directly.
-  template <typename U,
-            typename Decayed = typename std::decay<U>::type,
-            typename = typename std::enable_if<
-              !std::is_same<Decayed, Variant>::value>::type,
-            typename = typename std::enable_if<
-              !std::is_same<Decayed, boost::variant<T, Ts...>>::value>::type>
-  Variant(U&& u) : variant(std::forward<U>(u)) {}
+  template <
+      typename U,
+      typename Decayed = typename std::decay<U>::type,
+      typename = typename std::enable_if<
+          !std::is_same<Decayed, Variant>::value>::type,
+      typename = typename std::enable_if<
+          !std::is_same<Decayed, boost::variant<T, Ts...>>::value>::type>
+  Variant(U&& u)
+    : variant(std::forward<U>(u)) {}
 
   template <typename... Fs>
   auto visit(Fs&&... fs) const
-    -> decltype(
-        boost::apply_visitor(
-            overload(std::forward<Fs>(fs)...),
-            std::declval<boost::variant<T, Ts...>&>()))
-  {
+      -> decltype(boost::apply_visitor(
+          overload(std::forward<Fs>(fs)...),
+          std::declval<boost::variant<T, Ts...>&>())) {
     return boost::apply_visitor(
         overload(std::forward<Fs>(fs)...),
         variant);
@@ -75,11 +75,9 @@ public:
 
   template <typename... Fs>
   auto visit(Fs&&... fs)
-    -> decltype(
-        boost::apply_visitor(
-            overload(std::forward<Fs>(fs)...),
-            std::declval<boost::variant<T, Ts...>&>()))
-  {
+      -> decltype(boost::apply_visitor(
+          overload(std::forward<Fs>(fs)...),
+          std::declval<boost::variant<T, Ts...>&>())) {
     return boost::apply_visitor(
         overload(std::forward<Fs>(fs)...),
         variant);
@@ -90,28 +88,28 @@ public:
   // inheriting from `boost::variant` we still found that we needed to
   // implement this operator in order to properly cast both operands
   // to `boost::variant`.
-  bool operator==(const Variant& that) const
-  {
+  bool operator==(const Variant& that) const {
     return variant == that.variant;
   }
 
-  bool operator!=(const Variant& that) const
-  {
+  bool operator!=(const Variant& that) const {
     return !(*this == that);
   }
 
-private:
+ private:
   template <typename U, typename... Us>
   friend std::ostream& operator<<(std::ostream&, const Variant<U, Us...>&);
 
   boost::variant<T, Ts...> variant;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T, typename... Ts>
-std::ostream& operator<<(std::ostream& stream, const Variant<T, Ts...>& variant)
-{
+std::ostream& operator<<(
+    std::ostream& stream,
+    const Variant<T, Ts...>& variant) {
   return stream << variant.variant;
 }
 
-#endif // __STOUT_VARIANT_HPP__
+////////////////////////////////////////////////////////////////////////
