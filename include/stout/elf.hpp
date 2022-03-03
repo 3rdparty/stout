@@ -14,48 +14,52 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_ELF_HPP__
-#define __STOUT_ELF_HPP__
+#pragma once
 
+#include <elfio/elfio.hpp>
 #include <map>
 #include <string>
 #include <vector>
 
-#include <elfio/elfio.hpp>
+#include "stout/error.hpp"
+#include "stout/foreach.hpp"
+#include "stout/nothing.hpp"
+#include "stout/option.hpp"
+#include "stout/result.hpp"
+#include "stout/stringify.hpp"
+#include "stout/strings.hpp"
+#include "stout/try.hpp"
+#include "stout/version.hpp"
 
-#include <stout/error.hpp>
-#include <stout/foreach.hpp>
-#include <stout/nothing.hpp>
-#include <stout/option.hpp>
-#include <stout/result.hpp>
-#include <stout/stringify.hpp>
-#include <stout/strings.hpp>
-#include <stout/try.hpp>
-#include <stout/version.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace elf {
 
-enum Class
-{
+////////////////////////////////////////////////////////////////////////
+
+enum Class {
   CLASSNONE = ELFCLASSNONE,
   CLASS32 = ELFCLASS32,
   CLASS64 = ELFCLASS64,
 };
 
-enum class SectionType
-{
+////////////////////////////////////////////////////////////////////////
+
+enum class SectionType {
   DYNAMIC = SHT_DYNAMIC,
   NOTE = SHT_NOTE,
   PROGBITS = SHT_PROGBITS,
 };
 
-enum class DynamicTag
-{
+////////////////////////////////////////////////////////////////////////
+
+enum class DynamicTag {
   STRTAB = DT_STRTAB,
   SONAME = DT_SONAME,
   NEEDED = DT_NEEDED,
 };
 
+////////////////////////////////////////////////////////////////////////
 
 // This class is used to represent the contents of a standard ELF
 // binary. The current implementation is incomplete.
@@ -67,12 +71,10 @@ enum class DynamicTag
 // becomes a problem, we will have to use something like `libelf`
 // instead (but note that libelf is not header-only and will
 // therefore introduce a runtime library dependency).
-class File
-{
-public:
+class File {
+ public:
   // TODO(klueska): Return a unique_ptr here.
-  static Try<File*> load(const std::string& path)
-  {
+  static Try<File*> load(const std::string& path) {
     File* file = new File();
 
     if (!file->elf.load(path)) {
@@ -90,8 +92,7 @@ public:
   }
 
   // Returns the ELF class of an ELF file (CLASS32, or CLASS64).
-  Try<Class> get_class() const
-  {
+  Try<Class> get_class() const {
     Class c = Class(elf.get_class());
     if (c == CLASSNONE) {
       return Error("Unknown error");
@@ -102,16 +103,16 @@ public:
 
   // Extract the strings associated with the provided
   // `DynamicTag` from all DYNAMIC sections in the ELF binary.
-  Try<std::vector<std::string>> get_dynamic_strings(DynamicTag tag) const
-  {
+  Try<std::vector<std::string>> get_dynamic_strings(DynamicTag tag) const {
     if (sections_by_type.count(SectionType::DYNAMIC) == 0) {
       return Error("No DYNAMIC sections found");
     }
 
     std::vector<std::string> strings;
 
-    foreach (ELFIO::section* section,
-             sections_by_type.at(SectionType::DYNAMIC)) {
+    foreach (
+        ELFIO::section* section,
+        sections_by_type.at(SectionType::DYNAMIC)) {
       auto accessor = ELFIO::dynamic_section_accessor(elf, section);
 
       for (ELFIO::Elf_Xword i = 0; i < accessor.get_entries_num(); ++i) {
@@ -142,8 +143,7 @@ public:
   //
   // https://refspecs.linuxfoundation.org/LSB_1.2.0/gLSB/noteabitag.html
   // http://flint.cs.yale.edu/cs422/doc/ELF_Format.pdf
-  Result<Version> get_abi_version() const
-  {
+  Result<Version> get_abi_version() const {
     ELFIO::section* section = elf.sections[".note.ABI-tag"];
 
     if (section == nullptr) {
@@ -171,13 +171,15 @@ public:
 
     // The note in a `.note.ABI-tag` section must have `type == 1`.
     if (type != 1) {
-      return Error("Corrupt tag type '" + stringify(type) + "' from"
+      return Error("Corrupt tag type '" + stringify(type) +
+                   "' from"
                    " entry in '.note.ABI-tag' section");
     }
 
     // Linux mandates `name == GNU`.
     if (name != "GNU") {
-      return Error("Corrupt label '" + name + "' from"
+      return Error("Corrupt label '" + name +
+                   "' from"
                    " entry in '.note.ABI-tag' section");
     }
 
@@ -187,11 +189,12 @@ public:
     // contains {0, 2, 3, 99}, this signifies a Linux ELF file
     // with an ABI version of 2.3.99.
     std::vector<uint32_t> version(
-        (uint32_t*)descriptor,
-        (uint32_t*)((char*)descriptor + descriptor_size));
+        (uint32_t*) descriptor,
+        (uint32_t*) ((char*) descriptor + descriptor_size));
 
     if (version.size() != 4 || version[0] != 0) {
-      return Error("Corrupt version '" + stringify(version) + "'"
+      return Error("Corrupt version '" + stringify(version) +
+                   "'"
                    " from entry in '.note.ABI-tag' section");
     }
 
@@ -203,8 +206,7 @@ public:
   // section contains the path to the program loader.
   //
   // https://refspecs.linuxfoundation.org/LSB_1.2.0/gLSB/specialsections.html
-  Result<std::string> get_interpreter() const
-  {
+  Result<std::string> get_interpreter() const {
     ELFIO::section* section = elf.sections[".interp"];
 
     if (section == nullptr) {
@@ -218,13 +220,15 @@ public:
     return std::string(section->get_data(), section->get_size());
   }
 
-private:
+ private:
   explicit File() {}
 
   ELFIO::elfio elf;
   std::map<SectionType, std::vector<ELFIO::section*>> sections_by_type;
 };
 
-} // namespace elf {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_ELF_HPP__
+} // namespace elf
+
+////////////////////////////////////////////////////////////////////////

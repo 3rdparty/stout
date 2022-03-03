@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_RECORDIO_HPP__
-#define __STOUT_RECORDIO_HPP__
+#pragma once
 
 #include <stdlib.h>
 
@@ -19,12 +18,14 @@
 #include <functional>
 #include <string>
 
-#include <stout/check.hpp>
-#include <stout/foreach.hpp>
-#include <stout/numify.hpp>
-#include <stout/option.hpp>
-#include <stout/stringify.hpp>
-#include <stout/try.hpp>
+#include "stout/check.hpp"
+#include "stout/foreach.hpp"
+#include "stout/numify.hpp"
+#include "stout/option.hpp"
+#include "stout/stringify.hpp"
+#include "stout/try.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 /**
  * Provides facilities for "Record-IO" encoding of data.
@@ -49,41 +50,42 @@
  */
 namespace recordio {
 
+////////////////////////////////////////////////////////////////////////
+
 /**
  * Given an encoding function for individual records, this
  * provides encoding from typed records into "Record-IO" data.
  */
 template <typename T>
-class Encoder
-{
-public:
+class Encoder {
+ public:
   Encoder(std::function<std::string(const T&)> _serialize)
     : serialize(_serialize) {}
 
   /**
    * Returns the "Record-IO" encoded record.
    */
-  std::string encode(const T& record) const
-  {
+  std::string encode(const T& record) const {
     std::string s = serialize(record);
     return stringify(s.size()) + "\n" + s;
   }
 
-private:
+ private:
   std::function<std::string(const T&)> serialize;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 /**
  * Given a decoding function for individual records, this
  * provides decoding from "Record-IO" data into typed records.
  */
 template <typename T>
-class Decoder
-{
-public:
+class Decoder {
+ public:
   Decoder(std::function<Try<T>(const std::string&)> _deserialize)
-    : state(HEADER), deserialize(_deserialize) {}
+    : state(HEADER),
+      deserialize(_deserialize) {}
 
   /**
    * Decodes another chunk of data from the "Record-IO" stream
@@ -97,8 +99,7 @@ public:
    * TODO(bmahler): Allow the caller to signal EOF, this allows
    * detection of invalid partial data at the end of the input.
    */
-  Try<std::deque<Try<T>>> decode(const std::string& data)
-  {
+  Try<std::deque<Try<T>>> decode(const std::string& data) {
     if (state == FAILED) {
       return Error("Decoder is in a FAILED state");
     }
@@ -120,8 +121,8 @@ public:
         // pick up the next length header!
         if (numify.isError()) {
           state = FAILED;
-          return Error("Failed to decode length '" + buffer + "': " +
-                       numify.error());
+          return Error(
+              "Failed to decode length '" + buffer + "': " + numify.error());
         }
 
         length = numify.get();
@@ -150,9 +151,8 @@ public:
     return records;
   }
 
-private:
-  enum
-  {
+ private:
+  enum {
     HEADER,
     RECORD,
     FAILED
@@ -166,6 +166,8 @@ private:
   std::function<Try<T>(const std::string&)> deserialize;
 };
 
-} // namespace recordio {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_RECORDIO_HPP__
+} // namespace recordio
+
+////////////////////////////////////////////////////////////////////////

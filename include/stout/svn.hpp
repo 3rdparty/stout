@@ -10,13 +10,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_SVN_HPP__
-#define __STOUT_SVN_HPP__
+#pragma once
 
 #include <apr_pools.h>
-
 #include <stdlib.h>
-
 #include <svn_delta.h>
 #include <svn_error.h>
 #include <svn_pools.h>
@@ -24,17 +21,22 @@
 
 #include <string>
 
-#include <stout/try.hpp>
+#include "stout/try.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 namespace svn {
 
-struct Diff
-{
-  Diff(const std::string& data) : data(data) {}
+////////////////////////////////////////////////////////////////////////
+
+struct Diff {
+  Diff(const std::string& data)
+    : data(data) {}
 
   std::string data;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 // Note, this function is exposed publicly in the event that someone
 // wants to coordinate the intialization of APR done automatically by
@@ -42,8 +44,7 @@ struct Diff
 // svn::* functions in your code and you're also using APR you can
 // initialize the APR before you start doing things with threads that
 // might call svn::* functions.
-inline void initialize()
-{
+inline void initialize() {
   // We use a static variable to initialize the Apache Portable
   // Runtime (APR) library in a thread-safe way (at least with respect
   // to calls within svn::* since there is no way to guarantee that
@@ -52,15 +53,12 @@ inline void initialize()
   // should get constructed (i.e., the APR constructor invoked) and
   // destructed in a thread safe way (as of GCC 4.3 and required for
   // C++11).
-  struct APR
-  {
-    APR()
-    {
+  struct APR {
+    APR() {
       apr_initialize();
     }
 
-    ~APR()
-    {
+    ~APR() {
       apr_terminate();
     }
   };
@@ -68,9 +66,9 @@ inline void initialize()
   static APR apr;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<Diff> diff(const std::string& from, const std::string& to)
-{
+inline Try<Diff> diff(const std::string& from, const std::string& to) {
   // Initialize the Apache Portable Runtime subsystem, as necessary
   // for using the svn library.
   initialize();
@@ -153,9 +151,9 @@ inline Try<Diff> diff(const std::string& from, const std::string& to)
   return d;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<std::string> patch(const std::string& s, const Diff& diff)
-{
+inline Try<std::string> patch(const std::string& s, const Diff& diff) {
   // Initialize the Apache Portable Runtime subsystem, as necessary
   // for using the svn library.
   initialize();
@@ -213,6 +211,8 @@ inline Try<std::string> patch(const std::string& s, const Diff& diff)
   return result;
 }
 
-} // namespace svn {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_SVN_HPP__
+} // namespace svn
+
+////////////////////////////////////////////////////////////////////////

@@ -10,15 +10,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_ERROR_BASE_HPP__
-#define __STOUT_ERROR_BASE_HPP__
+#pragma once
 
 #include <errno.h>
 
 #include <ostream>
 #include <string>
 
-#include <stout/os/strerror.hpp>
+#include "stout/os/strerror.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 // A useful type that can be used to represent a Try that has
 // failed. You can also use 'ErrnoError' to append the error message
@@ -33,40 +34,43 @@
 //
 //   foo(Error("some error here"));
 
-class Error
-{
-public:
-  explicit Error(const std::string& _message) : message(_message) {}
+class Error {
+ public:
+  explicit Error(const std::string& _message)
+    : message(_message) {}
 
-  bool operator==(const Error& that) const
-  {
+  bool operator==(const Error& that) const {
     return message == that.message;
   }
 
   const std::string message;
 };
 
+////////////////////////////////////////////////////////////////////////
 
-class ErrnoError : public Error
-{
-public:
-  ErrnoError() : ErrnoError(errno) {}
+class ErrnoError : public Error {
+ public:
+  ErrnoError()
+    : ErrnoError(errno) {}
 
-  explicit ErrnoError(int _code) : Error(os::strerror(_code)), code(_code) {}
+  explicit ErrnoError(int _code)
+    : Error(os::strerror(_code)),
+      code(_code) {}
 
   explicit ErrnoError(const std::string& message)
     : ErrnoError(errno, message) {}
 
   ErrnoError(int _code, const std::string& message)
-    : Error(message + ": " + os::strerror(_code)), code(_code) {}
+    : Error(message + ": " + os::strerror(_code)),
+      code(_code) {}
 
   const int code;
 };
 
+////////////////////////////////////////////////////////////////////////
 
-inline std::ostream& operator<<(std::ostream& stream, const Error& error)
-{
+inline std::ostream& operator<<(std::ostream& stream, const Error& error) {
   return stream << error.message;
 }
 
-#endif // __STOUT_ERROR_BASE_HPP__
+////////////////////////////////////////////////////////////////////////

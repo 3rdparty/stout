@@ -29,6 +29,8 @@
 #include "stout/windows.hpp"
 #endif
 
+////////////////////////////////////////////////////////////////////////
+
 template <typename T>
 ::testing::AssertionResult AssertSome(
     const char* expr,
@@ -41,6 +43,7 @@ template <typename T>
   return ::testing::AssertionSuccess();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T, typename E>
 ::testing::AssertionResult AssertSome(
@@ -54,6 +57,7 @@ template <typename T, typename E>
   return ::testing::AssertionSuccess();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
 ::testing::AssertionResult AssertSome(
@@ -70,6 +74,7 @@ template <typename T>
   return ::testing::AssertionSuccess();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T1, typename T2>
 ::testing::AssertionResult AssertSomeEq(
@@ -95,6 +100,7 @@ template <typename T1, typename T2>
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T1, typename T2>
 ::testing::AssertionResult AssertSomeNe(
@@ -120,62 +126,77 @@ template <typename T1, typename T2>
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 #define ASSERT_SOME(actual) \
   ASSERT_PRED_FORMAT1(AssertSome, actual)
 
+////////////////////////////////////////////////////////////////////////
 
 #define EXPECT_SOME(actual) \
   EXPECT_PRED_FORMAT1(AssertSome, actual)
 
+////////////////////////////////////////////////////////////////////////
 
 #define ASSERT_SOME_EQ(expected, actual) \
   ASSERT_PRED_FORMAT2(AssertSomeEq, expected, actual)
 
+////////////////////////////////////////////////////////////////////////
 
 #define EXPECT_SOME_EQ(expected, actual) \
   EXPECT_PRED_FORMAT2(AssertSomeEq, expected, actual)
 
+////////////////////////////////////////////////////////////////////////
 
 #define ASSERT_SOME_NE(notExpected, actual) \
   ASSERT_PRED_FORMAT2(AssertSomeNe, notExpected, actual)
 
+////////////////////////////////////////////////////////////////////////
 
 #define EXPECT_SOME_NE(notExpected, actual) \
   EXPECT_PRED_FORMAT2(AssertSomeNe, notExpected, actual)
 
+////////////////////////////////////////////////////////////////////////
 
 #define ASSERT_SOME_TRUE(actual) \
   ASSERT_PRED_FORMAT2(AssertSomeEq, true, actual)
 
+////////////////////////////////////////////////////////////////////////
 
 #define EXPECT_SOME_TRUE(actual) \
   EXPECT_PRED_FORMAT2(AssertSomeEq, true, actual)
 
+////////////////////////////////////////////////////////////////////////
 
 #define ASSERT_SOME_FALSE(actual) \
   ASSERT_PRED_FORMAT2(AssertSomeEq, false, actual)
 
+////////////////////////////////////////////////////////////////////////
 
 #define EXPECT_SOME_FALSE(actual) \
   EXPECT_PRED_FORMAT2(AssertSomeEq, false, actual)
 
+////////////////////////////////////////////////////////////////////////
 
 #define ASSERT_ERROR(actual) \
   ASSERT_TRUE(actual.isError())
 
+////////////////////////////////////////////////////////////////////////
 
 #define EXPECT_ERROR(actual) \
   EXPECT_TRUE(actual.isError())
 
+////////////////////////////////////////////////////////////////////////
 
 #define ASSERT_NONE(actual) \
   ASSERT_TRUE(actual.isNone())
 
+////////////////////////////////////////////////////////////////////////
 
 #define EXPECT_NONE(actual) \
   EXPECT_TRUE(actual.isNone())
 
+////////////////////////////////////////////////////////////////////////
 
 // Creates a gtest `TEST` that is disabled on Windows.
 // TODO(hausdorff): Remove after temporarily-disabled tests are fixed on
@@ -188,6 +209,7 @@ template <typename T1, typename T2>
   TEST(test_case_name, DISABLED_##test_name)
 #endif // _WIN32
 
+////////////////////////////////////////////////////////////////////////
 
 // Creates a gtest `TEST_F` that is disabled on Windows.
 // TODO(hausdorff): Remove after temporarily-disabled tests are fixed on
@@ -200,6 +222,7 @@ template <typename T1, typename T2>
   TEST_F(test_case_name, DISABLED_##test_name)
 #endif // _WIN32
 
+////////////////////////////////////////////////////////////////////////
 
 // Creates a gtest `TEST_P` that is disabled on Windows.
 // TODO(greggomann): Remove after temporarily-disabled tests are fixed on
@@ -212,6 +235,7 @@ template <typename T1, typename T2>
   TEST_P(test_case_name, DISABLED_##test_name)
 #endif // _WIN32
 
+////////////////////////////////////////////////////////////////////////
 
 // Creates a gtest `TYPED_TEST` that is disabled on Windows.
 // TODO(andschwa): Remove after temporarily-disabled tests are fixed on
@@ -224,6 +248,7 @@ template <typename T1, typename T2>
   TYPED_TEST(test_case_name, DISABLED_##test_name)
 #endif // _WIN32
 
+////////////////////////////////////////////////////////////////////////
 
 // NOTE: On Windows, the closest equivalent to `sleep` is `timeout`.
 // Unfortunately, `timeout` requires an interactive terminal, otherwise
@@ -242,6 +267,7 @@ template <typename T1, typename T2>
   ((x) > 0 ? "ping 127.0.0.1 -n " #x " > NUL" : "cmd /C exit 0")
 #endif // _WIN32
 
+////////////////////////////////////////////////////////////////////////
 
 inline ::testing::AssertionResult AssertExited(
     const char* actualExpr,
@@ -267,14 +293,17 @@ inline ::testing::AssertionResult AssertExited(
       << " unknown value: " << ::testing::PrintToString(actual);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 #define ASSERT_EXITED(expected, actual) \
   ASSERT_PRED_FORMAT2(AssertExited, expected, actual)
 
+////////////////////////////////////////////////////////////////////////
 
 #define EXPECT_EXITED(expected, actual) \
   EXPECT_PRED_FORMAT2(AssertExited, expected, actual)
 
+////////////////////////////////////////////////////////////////////////
 
 inline ::testing::AssertionResult AssertExitStatusEq(
     const char* expectedExpr,
@@ -299,14 +328,17 @@ inline ::testing::AssertionResult AssertExitStatusEq(
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 #define ASSERT_WEXITSTATUS_EQ(expected, actual) \
   ASSERT_PRED_FORMAT2(AssertExitStatusEq, expected, actual)
 
+////////////////////////////////////////////////////////////////////////
 
 #define EXPECT_WEXITSTATUS_EQ(expected, actual) \
   EXPECT_PRED_FORMAT2(AssertExitStatusEq, expected, actual)
 
+////////////////////////////////////////////////////////////////////////
 
 inline ::testing::AssertionResult AssertExitStatusNe(
     const char* expectedExpr,
@@ -331,14 +363,17 @@ inline ::testing::AssertionResult AssertExitStatusNe(
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 #define ASSERT_WEXITSTATUS_NE(expected, actual) \
   ASSERT_PRED_FORMAT2(AssertExitStatusNe, expected, actual)
 
+////////////////////////////////////////////////////////////////////////
 
 #define EXPECT_WEXITSTATUS_NE(expected, actual) \
   EXPECT_PRED_FORMAT2(AssertExitStatusNe, expected, actual)
 
+////////////////////////////////////////////////////////////////////////
 
 // Signals aren't used in Windows, so #ifdef these out.
 #ifndef _WIN32
@@ -364,14 +399,17 @@ inline ::testing::AssertionResult AssertSignaled(
       << " unknown value: " << ::testing::PrintToString(actual);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 #define ASSERT_SIGNALED(expected, actual) \
   ASSERT_PRED_FORMAT2(AssertSignaled, expected, actual)
 
+////////////////////////////////////////////////////////////////////////
 
 #define EXPECT_SIGNALED(expected, actual) \
   EXPECT_PRED_FORMAT2(AssertSignaled, expected, actual)
 
+////////////////////////////////////////////////////////////////////////
 
 inline ::testing::AssertionResult AssertTermSigEq(
     const char* expectedExpr,
@@ -395,14 +433,17 @@ inline ::testing::AssertionResult AssertTermSigEq(
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 #define ASSERT_WTERMSIG_EQ(expected, actual) \
   ASSERT_PRED_FORMAT2(AssertTermSigEq, expected, actual)
 
+////////////////////////////////////////////////////////////////////////
 
 #define EXPECT_WTERMSIG_EQ(expected, actual) \
   EXPECT_PRED_FORMAT2(AssertTermSigEq, expected, actual)
 
+////////////////////////////////////////////////////////////////////////
 
 inline ::testing::AssertionResult AssertTermSigNe(
     const char* expectedExpr,
@@ -426,11 +467,15 @@ inline ::testing::AssertionResult AssertTermSigNe(
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 #define ASSERT_WTERMSIG_NE(expected, actual) \
   ASSERT_PRED_FORMAT2(AssertTermSigNe, expected, actual)
 
+////////////////////////////////////////////////////////////////////////
 
 #define EXPECT_WTERMSIG_NE(expected, actual) \
   EXPECT_PRED_FORMAT2(AssertTermSigNe, expected, actual)
 #endif // _WIN32
+
+////////////////////////////////////////////////////////////////////////

@@ -28,6 +28,7 @@
 #include "stout/stringify.hpp"
 #include "stout/try.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 // The 'strings::format' functions produces strings based on the
 // printf family of functions. Except, unlike the printf family of
@@ -42,16 +43,26 @@
 // necessary (but again, '%s' is expected as the format specifier).
 
 namespace strings {
+
+////////////////////////////////////////////////////////////////////////
+
 namespace internal {
+
+////////////////////////////////////////////////////////////////////////
 
 Try<std::string> format(const std::string& fmt, va_list args);
 Try<std::string> format(const std::string fmt, ...);
 
+////////////////////////////////////////////////////////////////////////
+
 template <typename T, bool b>
 struct stringify;
 
+////////////////////////////////////////////////////////////////////////
+
 } // namespace internal
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename... T>
 Try<std::string> format(const std::string& s, const T&... t) {
@@ -60,8 +71,11 @@ Try<std::string> format(const std::string& s, const T&... t) {
       internal::stringify<T, !std::is_pod<T>::value>(t).get()...);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 namespace internal {
+
+////////////////////////////////////////////////////////////////////////
 
 inline Try<std::string> format(const std::string& fmt, va_list args) {
   char* temp;
@@ -74,6 +88,7 @@ inline Try<std::string> format(const std::string& fmt, va_list args) {
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // NOTE: 'fmt' cannot be 'const std::string&' because passing an
 // argument of reference type as the second argument of 'va_start'
@@ -87,6 +102,7 @@ inline Try<std::string> format(const std::string fmt, ...) {
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
 struct stringify<T, false> {
@@ -98,6 +114,7 @@ struct stringify<T, false> {
   const T& t;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
 struct stringify<T, true> {
@@ -113,6 +130,7 @@ struct stringify<T, true> {
   const std::string s;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 template <>
 struct stringify<std::string, true> {
@@ -124,5 +142,12 @@ struct stringify<std::string, true> {
   const std::string& s;
 };
 
+////////////////////////////////////////////////////////////////////////
+
 } // namespace internal
+
+////////////////////////////////////////////////////////////////////////
+
 } // namespace strings
+
+////////////////////////////////////////////////////////////////////////

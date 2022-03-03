@@ -20,8 +20,11 @@
 #include "stout/stringify.hpp"
 #include "stout/strings.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 namespace path {
+
+////////////////////////////////////////////////////////////////////////
 
 // Converts a fully formed URI to a filename for the platform.
 //
@@ -48,6 +51,7 @@ inline std::string from_uri(const std::string& uri) {
 #endif // _WIN32
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Normalizes a given pathname and removes redundant separators and up-level
 // references.
@@ -104,6 +108,7 @@ inline Try<std::string> normalize(
   return strings::join(separator, components);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Base case.
 inline std::string join(
@@ -118,6 +123,7 @@ inline std::string join(
       + separator + strings::remove(path2, separator, strings::PREFIX);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename... Paths>
 inline std::string join(
@@ -127,6 +133,7 @@ inline std::string join(
   return join(path1, join(path2, std::forward<Paths>(paths)...));
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline std::string join(const std::vector<std::string>& paths) {
   if (paths.empty()) {
@@ -140,6 +147,7 @@ inline std::string join(const std::vector<std::string>& paths) {
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 /**
  * Returns whether the given path is an absolute path.
@@ -152,7 +160,7 @@ inline bool absolute(const std::string& path) {
   // NOTE: We do not use `PathIsRelative` Windows utility function
   // here because it does not support long paths.
   //
-  // See https://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx
+  // See https://tinyurl.com/yu2rwm64
   // for details on paths. In short, an absolute path for files on Windows
   // looks like one of the following:
   //   * "[A-Za-z]:\"
@@ -174,7 +182,8 @@ inline bool absolute(const std::string& path) {
   }
 
   const char letter = path[0];
-  if (!((letter >= 'A' && letter <= 'Z') || (letter >= 'a' && letter <= 'z'))) {
+  if (!((letter >= 'A' && letter <= 'Z')
+        || (letter >= 'a' && letter <= 'z'))) {
     return false;
   }
 
@@ -183,8 +192,11 @@ inline bool absolute(const std::string& path) {
 #endif // _WIN32
 }
 
+////////////////////////////////////////////////////////////////////////
+
 } // namespace path
 
+////////////////////////////////////////////////////////////////////////
 
 /**
  * Represents a POSIX or Windows file system path and offers common path
@@ -372,39 +384,47 @@ class Path {
   char separator;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 inline bool operator==(const Path& left, const Path& right) {
   return left.string() == right.string();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline bool operator!=(const Path& left, const Path& right) {
   return !(left == right);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline bool operator<(const Path& left, const Path& right) {
   return left.string() < right.string();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline bool operator>(const Path& left, const Path& right) {
   return right < left;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline bool operator<=(const Path& left, const Path& right) {
   return !(left > right);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline bool operator>=(const Path& left, const Path& right) {
   return !(left < right);
 }
 
-
+////////////////////////////////////////////////////////////////////////
 inline std::ostream& operator<<(
     std::ostream& stream,
     const Path& path) {
   return stream << path.string();
 }
+
+////////////////////////////////////////////////////////////////////////

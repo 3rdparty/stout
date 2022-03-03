@@ -10,41 +10,46 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_BASE64_HPP__
-#define __STOUT_BASE64_HPP__
+#pragma once
 
 #include <cctype>
 #include <functional>
 #include <string>
 
-#include <stout/foreach.hpp>
-#include <stout/stringify.hpp>
-#include <stout/try.hpp>
+#include "stout/foreach.hpp"
+#include "stout/stringify.hpp"
+#include "stout/try.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 namespace base64 {
 
+////////////////////////////////////////////////////////////////////////
+
 namespace internal {
+
+////////////////////////////////////////////////////////////////////////
 
 // This slightly modified base64 implementation from
 // cplusplus.com answer by modoran can be found at:
 // http://www.cplusplus.com/forum/beginner/51572/
 
 constexpr char STANDARD_CHARS[] =
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-  "abcdefghijklmnopqrstuvwxyz"
-  "0123456789+/";
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "abcdefghijklmnopqrstuvwxyz"
+    "0123456789+/";
 
 constexpr char URL_SAFE_CHARS[] =
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-  "abcdefghijklmnopqrstuvwxyz"
-  "0123456789-_";
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "abcdefghijklmnopqrstuvwxyz"
+    "0123456789-_";
 
+////////////////////////////////////////////////////////////////////////
 
 inline std::string encode(
     const std::string& s,
     const std::string& chars,
-    bool padding)
-{
+    bool padding) {
   std::string result;
   int i = 0;
   int j = 0;
@@ -88,9 +93,11 @@ inline std::string encode(
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<std::string> decode(const std::string& s, const std::string& chars)
-{
+inline Try<std::string> decode(
+    const std::string& s,
+    const std::string& chars) {
   auto isBase64 = [&chars](unsigned char c) -> bool {
     return (isalnum(c) || (c == chars[62]) || (c == chars[63]));
   };
@@ -107,8 +114,8 @@ inline Try<std::string> decode(const std::string& s, const std::string& chars)
       break; // Reached the padding.
     }
 
-    // The base RFC (https://tools.ietf.org/html/rfc4648#section-3.3) explicitly
-    // asks to reject non-alphabet characters including newlines and
+    // The base RFC (https://tools.ietf.org/html/rfc4648#section-3.3)
+    // explicitly asks to reject non-alphabet characters including newlines and
     // whitespaces. However, other specifications like MIME simply ignore
     // characters outside the base alphabet ("be liberal in what you accept").
     // Further, most implementation ignore whiltespace characters when
@@ -158,8 +165,11 @@ inline Try<std::string> decode(const std::string& s, const std::string& chars)
   return result;
 }
 
-} // namespace internal {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace internal
+
+////////////////////////////////////////////////////////////////////////
 
 /**
  * Encode a string to Base64 with the standard Base64 alphabet.
@@ -167,11 +177,11 @@ inline Try<std::string> decode(const std::string& s, const std::string& chars)
  *
  * @param s The string to encode.
  */
-inline std::string encode(const std::string& s)
-{
+inline std::string encode(const std::string& s) {
   return internal::encode(s, internal::STANDARD_CHARS, true);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 /**
  * Decode a string that is Base64-encoded with the standard Base64
@@ -180,11 +190,11 @@ inline std::string encode(const std::string& s)
  *
  * @param s The string to decode.
  */
-inline Try<std::string> decode(const std::string& s)
-{
+inline Try<std::string> decode(const std::string& s) {
   return internal::decode(s, internal::STANDARD_CHARS);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 /**
  * Encode a string to Base64 with a URL and filename safe alphabet.
@@ -193,11 +203,11 @@ inline Try<std::string> decode(const std::string& s)
  * @param s The string to encode.
  * @param padding True if padding characters ('=') should be added.
  */
-inline std::string encode_url_safe(const std::string& s, bool padding = true)
-{
+inline std::string encode_url_safe(const std::string& s, bool padding = true) {
   return internal::encode(s, internal::URL_SAFE_CHARS, padding);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 /**
  * Decode a string that is Base64-encoded with a URL and filename safe
@@ -206,11 +216,12 @@ inline std::string encode_url_safe(const std::string& s, bool padding = true)
  *
  * @param s The string to decode.
  */
-inline Try<std::string> decode_url_safe(const std::string& s)
-{
+inline Try<std::string> decode_url_safe(const std::string& s) {
   return internal::decode(s, internal::URL_SAFE_CHARS);
 }
 
-} // namespace base64 {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_BASE64_HPP__
+} // namespace base64
+
+////////////////////////////////////////////////////////////////////////

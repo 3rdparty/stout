@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_RESULT_HPP__
-#define __STOUT_RESULT_HPP__
+#pragma once
 
 #include <assert.h>
 
@@ -19,12 +18,14 @@
 #include <string>
 #include <utility>
 
-#include <stout/abort.hpp>
-#include <stout/error.hpp>
-#include <stout/none.hpp>
-#include <stout/option.hpp>
-#include <stout/some.hpp>
-#include <stout/try.hpp>
+#include "stout/abort.hpp"
+#include "stout/error.hpp"
+#include "stout/none.hpp"
+#include "stout/option.hpp"
+#include "stout/some.hpp"
+#include "stout/try.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 // This class is equivalent to Try<Option<T>> and can represent only
 // one of these states at a time:
@@ -38,21 +39,17 @@
 // an error, in which case calling 'error' will return the error
 // string.
 template <typename T>
-class Result
-{
-public:
-  static Result<T> none()
-  {
+class Result {
+ public:
+  static Result<T> none() {
     return Result<T>(None());
   }
 
-  static Result<T> some(const T& t)
-  {
+  static Result<T> some(const T& t) {
     return Result<T>(t);
   }
 
-  static Result<T> error(const std::string& message)
-  {
+  static Result<T> error(const std::string& message) {
     return Result<T>(Error(message));
   }
 
@@ -70,14 +67,16 @@ public:
     : data(Some(u)) {}
 
   Result(const Option<T>& option)
-    : data(option.isSome() ?
-           Try<Option<T>>(Some(option.get())) :
-           Try<Option<T>>(None())) {}
+    : data(
+        option.isSome() ? Try<Option<T>>(
+            Some(option.get()))
+                        : Try<Option<T>>(None())) {}
 
   Result(const Try<T>& _t)
-    : data(_t.isSome() ?
-           Try<Option<T>>(Some(_t.get())) :
-           Try<Option<T>>(Error(_t.error()))) {}
+    : data(
+        _t.isSome() ? Try<Option<T>>(
+            Some(_t.get()))
+                    : Try<Option<T>>(Error(_t.error()))) {}
 
   Result(const None& none)
     : data(none) {}
@@ -92,10 +91,10 @@ public:
   Result(const ErrnoError& error)
     : data(error) {}
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
   Result(const WindowsError& error)
     : data(error) {}
-#endif // __WINDOWS__
+#endif // _WIN32
 
   // We don't need to implement these because we are leveraging
   // Try<Option<T>>.
@@ -109,31 +108,59 @@ public:
 
   // 'isSome', 'isNone', and 'isError' are mutually exclusive. They
   // correspond to the underlying unioned state of the Option and Try.
-  bool isSome() const { return data.isSome() && data->isSome(); }
-  bool isNone() const { return data.isSome() && data->isNone(); }
-  bool isError() const { return data.isError(); }
+  bool isSome() const {
+    return data.isSome() && data->isSome();
+  }
+  bool isNone() const {
+    return data.isSome() && data->isNone();
+  }
+  bool isError() const {
+    return data.isError();
+  }
 
-  T& get() & { return get(*this); }
-  const T& get() const& { return get(*this); }
-  T&& get() && { return get(std::move(*this)); }
-  const T&& get() const&& { return get(std::move(*this)); }
+  T& get() & {
+    return get(*this);
+  }
+  const T& get() const& {
+    return get(*this);
+  }
+  T&& get() && {
+    return get(std::move(*this));
+  }
+  const T&& get() const&& {
+    return get(std::move(*this));
+  }
 
-  const T* operator->() const { return &get(); }
-  T* operator->() { return &get(); }
+  const T* operator->() const {
+    return &get();
+  }
+  T* operator->() {
+    return &get();
+  }
 
-  const T& operator*() const& { return get(); }
-  T& operator*() & { return get(); }
-  const T&& operator*() const&& { return std::move(*this).get(); }
-  T&& operator*() && { return std::move(*this).get(); }
+  const T& operator*() const& {
+    return get();
+  }
+  T& operator*() & {
+    return get();
+  }
+  const T&& operator*() const&& {
+    return std::move(*this).get();
+  }
+  T&& operator*() && {
+    return std::move(*this).get();
+  }
 
-  const std::string& error() const { assert(isError()); return data.error(); }
+  const std::string& error() const {
+    assert(isError());
+    return data.error();
+  }
 
-private:
+ private:
   // This is made static to decouple us from the `const` qualifier of `this`.
   template <typename Self>
   static auto get(Self&& self)
-    -> decltype(**(std::forward<Self>(self).data))
-  {
+      -> decltype(**(std::forward<Self>(self).data)) {
     if (!self.isSome()) {
       std::string errorMessage = "Result::get() but state == ";
       if (self.isError()) {
@@ -152,4 +179,4 @@ private:
   Try<Option<T>> data;
 };
 
-#endif // __STOUT_RESULT_HPP__
+////////////////////////////////////////////////////////////////////////

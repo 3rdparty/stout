@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_STOPWATCH_HPP__
-#define __STOUT_STOPWATCH_HPP__
+#pragma once
 
 #include <stdint.h>
 #include <time.h>
@@ -21,38 +20,35 @@
 #include <mach/mach.h>
 #endif // __MACH__
 
-#ifndef __WINDOWS__
+#ifndef _WIN32
 #include <sys/time.h>
 #endif
 
 #include "duration.hpp"
 
-class Stopwatch
-{
-public:
+////////////////////////////////////////////////////////////////////////
+
+class Stopwatch {
+ public:
   Stopwatch()
-    : running(false)
-  {
+    : running(false) {
     started.tv_sec = 0;
     started.tv_nsec = 0;
     stopped.tv_sec = 0;
     stopped.tv_nsec = 0;
   }
 
-  void start()
-  {
+  void start() {
     started = now();
     running = true;
   }
 
-  void stop()
-  {
+  void stop() {
     stopped = now();
     running = false;
   }
 
-  Nanoseconds elapsed() const
-  {
+  Nanoseconds elapsed() const {
     if (!running) {
       return Nanoseconds(diff(stopped, started));
     }
@@ -60,9 +56,8 @@ public:
     return Nanoseconds(diff(now(), started));
   }
 
-private:
-  static timespec now()
-  {
+ private:
+  static timespec now() {
     timespec ts;
 #ifdef __MACH__
     // OS X does not have clock_gettime, use clock_get_time.
@@ -73,7 +68,7 @@ private:
     mach_port_deallocate(mach_task_self(), cclock);
     ts.tv_sec = mts.tv_sec;
     ts.tv_nsec = mts.tv_nsec;
-#elif __WINDOWS__
+#elif _WIN32
     const static __int64 ticks_in_second = 10000000i64;
     const static __int64 ns_in_tick = 100;
 
@@ -88,7 +83,7 @@ private:
 
     // Conversions. `tv_sec` is elapsed seconds, and `tv_nsec` is the remainder
     // of the elapsed time, in nanoseconds.
-    ts.tv_sec  = filetime_in_ticks / ticks_in_second;
+    ts.tv_sec = filetime_in_ticks / ticks_in_second;
     ts.tv_nsec = filetime_in_ticks % ticks_in_second * ns_in_tick;
 #else
     clock_gettime(CLOCK_REALTIME, &ts);
@@ -96,14 +91,13 @@ private:
     return ts;
   }
 
-  static uint64_t diff(const timespec& from, const timespec& to)
-  {
+  static uint64_t diff(const timespec& from, const timespec& to) {
     return ((from.tv_sec - to.tv_sec) * 1000000000LL)
-      + (from.tv_nsec - to.tv_nsec);
+        + (from.tv_nsec - to.tv_nsec);
   }
 
   bool running;
   timespec started, stopped;
 };
 
-#endif // __STOUT_STOPWATCH_HPP__
+////////////////////////////////////////////////////////////////////////

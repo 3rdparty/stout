@@ -14,21 +14,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_ARCHIVER_HPP__
-#define __STOUT_ARCHIVER_HPP__
+#pragma once
 
 #include <archive.h>
 #include <archive_entry.h>
 
-#include <stout/nothing.hpp>
-#include <stout/path.hpp>
-#include <stout/try.hpp>
+#include "stout/nothing.hpp"
+#include "stout/os/close.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/os/open.hpp"
+#include "stout/path.hpp"
+#include "stout/try.hpp"
 
-#include <stout/os/close.hpp>
-#include <stout/os/int_fd.hpp>
-#include <stout/os/open.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace archiver {
+
+////////////////////////////////////////////////////////////////////////
 
 // Extracts the archive in source to the destination folder (if specified).
 // If destination is not specified, it will use the working directory.
@@ -38,28 +40,27 @@ namespace archiver {
 //   ARCHIVE_EXTRACT_PERM
 //   ARCHIVE_EXTRACT_TIME
 inline Try<Nothing> extract(
-  const std::string& source,
-  const std::string& destination,
-  const int flags = ARCHIVE_EXTRACT_TIME | ARCHIVE_EXTRACT_SECURE_NODOTDOT)
-{
+    const std::string& source,
+    const std::string& destination,
+    const int flags = ARCHIVE_EXTRACT_TIME | ARCHIVE_EXTRACT_SECURE_NODOTDOT) {
   // Get references to libarchive for reading/handling a compressed file.
   std::unique_ptr<struct archive, std::function<void(struct archive*)>> reader(
-    archive_read_new(),
-    [](struct archive* p) {
-      archive_read_close(p);
-      archive_read_free(p);
-    });
+      archive_read_new(),
+      [](struct archive* p) {
+        archive_read_close(p);
+        archive_read_free(p);
+      });
 
   // Enable auto-detection of the archive type/format.
   archive_read_support_format_all(reader.get());
   archive_read_support_filter_all(reader.get());
 
   std::unique_ptr<struct archive, std::function<void(struct archive*)>> writer(
-    archive_write_disk_new(),
-    [](struct archive* p) {
-      archive_write_close(p);
-      archive_write_free(p);
-    });
+      archive_write_disk_new(),
+      [](struct archive* p) {
+        archive_write_close(p);
+        archive_write_free(p);
+      });
 
   archive_write_disk_set_options(writer.get(), flags);
   archive_write_disk_set_standard_lookup(writer.get());
@@ -73,7 +74,7 @@ inline Try<Nothing> extract(
     return Error(fd.error());
   }
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
   int fd_real = fd->crt();
 #else
   int fd_real = fd.get();
@@ -83,13 +84,16 @@ inline Try<Nothing> extract(
   // NOTE: On Windows, we need to explicitly allocate a CRT file descriptor
   // because libarchive requires it. Once the CRT fd is allocated, it must
   // be closed with _close instead of os::close.
-  struct Closer
-  {
+  struct Closer {
     int fd_value;
-#ifdef __WINDOWS__
-    ~Closer() { ::_close(fd_value); }
+#ifdef _WIN32
+    ~Closer() {
+      ::_close(fd_value);
+    }
 #else
-    ~Closer() { os::close(fd_value); }
+    ~Closer() {
+      os::close(fd_value);
+    }
 #endif
   } closer = {fd_real};
 
@@ -109,8 +113,8 @@ inline Try<Nothing> extract(
       break;
     } else if (result <= ARCHIVE_WARN) {
       return Error(
-          std::string("Failed to read archive header: ") +
-          archive_error_string(reader.get()));
+          std::string("Failed to read archive header: ")
+          + archive_error_string(reader.get()));
     }
 
     // If a destination path is specified, update the entry to reflect it.
@@ -133,8 +137,8 @@ inline Try<Nothing> extract(
     result = archive_write_header(writer.get(), entry);
     if (result <= ARCHIVE_WARN) {
       return Error(
-          std::string("Failed to write archive header: ") +
-          archive_error_string(writer.get()));
+          std::string("Failed to write archive header: ")
+          + archive_error_string(writer.get()));
     }
 
     if (archive_entry_size(entry) > 0) {
@@ -153,15 +157,15 @@ inline Try<Nothing> extract(
           break;
         } else if (result <= ARCHIVE_WARN) {
           return Error(
-              std::string("Failed to read archive data block: ") +
-              archive_error_string(reader.get()));
+              std::string("Failed to read archive data block: ")
+              + archive_error_string(reader.get()));
         }
 
         result = archive_write_data_block(writer.get(), buff, size, offset);
         if (result <= ARCHIVE_WARN) {
           return Error(
-              std::string("Failed to write archive data block: ") +
-              archive_error_string(writer.get()));
+              std::string("Failed to write archive data block: ")
+              + archive_error_string(writer.get()));
         }
       }
     }
@@ -169,14 +173,14 @@ inline Try<Nothing> extract(
     result = archive_write_finish_entry(writer.get());
     if (result <= ARCHIVE_WARN) {
       return Error(
-          std::string("Failed to write archive finish entry: ") +
-          archive_error_string(writer.get()));
+          std::string("Failed to write archive finish entry: ")
+          + archive_error_string(writer.get()));
     }
   }
 
   return Nothing();
 }
 
-} // namespace archiver {
+} // namespace archiver
 
-#endif // __STOUT_ARCHIVER_HPP__
+////////////////////////////////////////////////////////////////////////

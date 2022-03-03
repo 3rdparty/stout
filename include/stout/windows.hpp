@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_WINDOWS_HPP__
-#define __STOUT_WINDOWS_HPP__
+#pragma once
 
 // We include `WinSock2.h` before `Windows.h` explicitly to avoid symbol
 // re-definitions. This is a documented pattern, because `Windows.h` will
@@ -21,8 +20,10 @@
 // NOTE: The capitalization of these headers is based on the files
 // included in the SDK, rather than MSDN documentation.
 //
-// https://msdn.microsoft.com/en-us/library/windows/desktop/ms738562(v=vs.85).aspx
+// https://tinyurl.com/y7n9xu2u
 // NOLINT(whitespace/line_length)
+
+/* clang-format off */
 #include <WinSock2.h> // For Windows Sockets 2.
 #include <WS2tcpip.h> // For `getaddrinfo` etc.
 #include <iphlpapi.h> // For `GetAdaptersInfo`.
@@ -38,7 +39,9 @@
 #include <type_traits>
 
 #include <glog/logging.h>
+/* clang-format on */
 
+////////////////////////////////////////////////////////////////////////
 
 #if !defined(_UNICODE) || !defined(UNICODE)
 // Much of the Windows API is available both in `string` and `wstring`
@@ -68,13 +71,15 @@
 #error "Mesos must be built with `_UNICODE` and `UNICODE` defined."
 #endif // !defined(_UNICODE) || !defined(UNICODE)
 
-// An RAII `HANDLE`.
-class SharedHandle : public std::shared_ptr<void>
-{
-  static_assert(std::is_same<HANDLE, void*>::value,
-                "Expected `HANDLE` to be of type `void*`.");
+////////////////////////////////////////////////////////////////////////
 
-public:
+// An RAII `HANDLE`.
+class SharedHandle : public std::shared_ptr<void> {
+  static_assert(
+      std::is_same<HANDLE, void*>::value,
+      "Expected `HANDLE` to be of type `void*`.");
+
+ public:
   // We delete the default constructor so that the callsite is forced to make
   // an explicit decision about what the empty `HANDLE` value should be, as it
   // is not the same for all `HANDLE` types.  For example, `OpenProcess`
@@ -85,11 +90,14 @@ public:
 
   template <typename Deleter>
   SharedHandle(HANDLE handle, Deleter deleter)
-      : std::shared_ptr<void>(handle, deleter) {}
+    : std::shared_ptr<void>(handle, deleter) {}
 
-  HANDLE get_handle() const { return this->get(); }
+  HANDLE get_handle() const {
+    return this->get();
+  }
 };
 
+////////////////////////////////////////////////////////////////////////
 
 // Definitions and constants used for Windows compat.
 //
@@ -131,8 +139,7 @@ inline BOOL GetMessageWindows(
     LPMSG lpMsg,
     HWND hWnd,
     UINT wMsgFilterMin,
-    UINT wMsgFilterMax)
-{
+    UINT wMsgFilterMax) {
   return GetMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax);
 }
 #undef GetMessage
@@ -140,12 +147,12 @@ inline BOOL GetMessage(
     LPMSG lpMsg,
     HWND hWnd,
     UINT wMsgFilterMin,
-    UINT wMsgFilterMax)
-{
+    UINT wMsgFilterMax) {
   return GetMessageWindows(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax);
 }
 #endif // GetMessage
 
+////////////////////////////////////////////////////////////////////////
 
 // Define constants used for Windows compat. Allows a lot of code on
 // Windows and POSIX systems to be the same, because we can pass the
@@ -165,7 +172,7 @@ inline BOOL GetMessage(
 
 // NOTE: for details on what this value should be, consult [1], [2], and [3].
 //
-// [1] http://www.opensource.apple.com/source/gnumake/gnumake-119/make/w32/include/dirent.h
+// [1] https://tinyurl.com/3fu4yuw8
 // [2] https://en.wikipedia.org/wiki/Comparison_of_file_systems#Limits
 // [3] https://msdn.microsoft.com/en-us/library/930f87yf.aspx
 const int NAME_MAX = PATH_MAX;
@@ -193,50 +200,53 @@ constexpr int SHUT_WR = SD_SEND;
 constexpr int SHUT_RDWR = SD_BOTH;
 constexpr int MSG_NOSIGNAL = 0; // `SIGPIPE` signal does not exist on Windows.
 
+////////////////////////////////////////////////////////////////////////
+
 // The following functions are usually macros on POSIX; we provide them here as
 // functions to avoid having global macros lying around. Note that these
 // operate on the `_stat` struct (a Windows version of the standard POSIX
 // `stat` struct), of which the `st_mode` field is known to be an `int`.
-inline bool S_ISDIR(const int mode)
-{
+inline bool S_ISDIR(const int mode) {
   return (mode & S_IFMT) == S_IFDIR; // Directory.
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline bool S_ISREG(const int mode)
-{
-  return (mode & S_IFMT) == S_IFREG;  // File.
+inline bool S_ISREG(const int mode) {
+  return (mode & S_IFMT) == S_IFREG; // File.
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline bool S_ISCHR(const int mode)
-{
-  return (mode & S_IFMT) == S_IFCHR;  // Character device.
+inline bool S_ISCHR(const int mode) {
+  return (mode & S_IFMT) == S_IFCHR; // Character device.
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline bool S_ISFIFO(const int mode)
-{
+inline bool S_ISFIFO(const int mode) {
   return (mode & S_IFMT) == _S_IFIFO; // Pipe.
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline bool S_ISBLK(const int mode)
-{
-  return false;                       // Block special device.
+inline bool S_ISBLK(const int mode) {
+  return false; // Block special device.
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline bool S_ISSOCK(const int mode)
-{
-  return false;                       // Socket.
+inline bool S_ISSOCK(const int mode) {
+  return false; // Socket.
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline bool S_ISLNK(const int mode)
-{
-  return false;                       // Symbolic link.
+inline bool S_ISLNK(const int mode) {
+  return false; // Symbolic link.
 }
+
+////////////////////////////////////////////////////////////////////////
 
 // Permissions API. (cf. MESOS-3176 to track ongoing permissions work.)
 //
@@ -266,7 +276,7 @@ inline bool S_ISLNK(const int mode)
 //   (1) Flags which exist in both permission models, but which have
 //       different names (e.g., `S_IRUSR` in POSIX is called `_S_IREAD` on
 //       Windows). In this case, we define the POSIX name to be the Windows
-//       value (e.g., we define `S_IRUSR` to have the same value as `_S_IREAD`),
+//       value (e.g., we define `S_IRUSR` to have the same value as `_S_IREAD`)
 //       so that we can pass the POSIX name into Windows functions like
 //       `_open`.
 //   (2) Flags which exist only on POSIX (e.g., `S_IXUSR`). Here we
@@ -302,54 +312,58 @@ inline bool S_ISLNK(const int mode)
 
 
 // User permission flags.
-const mode_t S_IRUSR = mode_t(_S_IREAD);  // Readable by user.
+const mode_t S_IRUSR = mode_t(_S_IREAD); // Readable by user.
 const mode_t S_IWUSR = mode_t(_S_IWRITE); // Writeable by user.
-const mode_t S_IXUSR = S_IRUSR;           // Fallback to user read.
+const mode_t S_IXUSR = S_IRUSR; // Fallback to user read.
 const mode_t S_IRWXU = S_IRUSR | S_IWUSR | S_IXUSR;
 
 
 // Group permission flags. Lossy mapping to Windows permissions. See
 // note above about flag strictness for explanation.
-const mode_t S_IRGRP = 0x00200000;        // No-op.
-const mode_t S_IWGRP = 0x00100000;        // No-op.
-const mode_t S_IXGRP = 0x00080000;        // No-op.
+const mode_t S_IRGRP = 0x00200000; // No-op.
+const mode_t S_IWGRP = 0x00100000; // No-op.
+const mode_t S_IXGRP = 0x00080000; // No-op.
 const mode_t S_IRWXG = S_IRGRP | S_IWGRP | S_IXGRP;
 
 
 // Other permission flags. Lossy mapping to Windows permissions. See
 // note above about flag stictness for explanation.
-const mode_t S_IROTH = 0x00040000;        // No-op.
-const mode_t S_IWOTH = 0x00020000;        // No-op.
-const mode_t S_IXOTH = 0x00010000;        // No-op.
+const mode_t S_IROTH = 0x00040000; // No-op.
+const mode_t S_IWOTH = 0x00020000; // No-op.
+const mode_t S_IXOTH = 0x00010000; // No-op.
 const mode_t S_IRWXO = S_IROTH | S_IWOTH | S_IXOTH;
 
 
 // Flags for set-ID-on-exec.
-const mode_t S_ISUID = 0x08000000;        // No-op.
-const mode_t S_ISGID = 0x04000000;        // No-op.
-const mode_t S_ISVTX = 0x02000000;        // No-op.
+const mode_t S_ISUID = 0x08000000; // No-op.
+const mode_t S_ISGID = 0x04000000; // No-op.
+const mode_t S_ISVTX = 0x02000000; // No-op.
 
 // Even though SIGKILL doesn't exist on Windows, we define
 // it here, because Docker defines it. So, the docker
 // executor needs this signal value to properly kill containers.
-const mode_t SIGKILL = 0x00000009;     // Signal Kill.
+const mode_t SIGKILL = 0x00000009; // Signal Kill.
 
-inline auto strerror_r(int errnum, char* buffer, size_t length) ->
-decltype(strerror_s(buffer, length, errnum))
-{
+////////////////////////////////////////////////////////////////////////
+
+inline auto strerror_r(
+    int errnum,
+    char* buffer,
+    size_t length) -> decltype(strerror_s(buffer, length, errnum)) {
   return strerror_s(buffer, length, errnum);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // NOTE: Signals do not exist on Windows, so all signals are unknown.
 // If the signal number is unknown, the Posix specification leaves the
 // return value of `strsignal` unspecified.
-inline const char* strsignal(int signum)
-{
+inline const char* strsignal(int signum) {
   static const char UNKNOWN_STRSIGNAL[] = "Unknown signal";
   return UNKNOWN_STRSIGNAL;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 #define SIGPIPE 100
 
@@ -382,4 +396,4 @@ inline const char* strsignal(int signum)
 #define WNOHANG 1
 #endif // WNOHANG
 
-#endif // __STOUT_WINDOWS_HPP__
+////////////////////////////////////////////////////////////////////////

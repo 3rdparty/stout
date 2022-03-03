@@ -10,20 +10,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_PREPROCESSOR_HPP__
-#define __STOUT_PREPROCESSOR_HPP__
-
-#include <boost/preprocessor/cat.hpp>
+#pragma once
 
 #include <boost/preprocessor/arithmetic/inc.hpp>
-
+#include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/facilities/intercept.hpp>
-
 #include <boost/preprocessor/repetition/enum_binary_params.hpp>
 #include <boost/preprocessor/repetition/enum_params.hpp>
 #include <boost/preprocessor/repetition/enum_trailing_params.hpp>
 #include <boost/preprocessor/repetition/repeat.hpp>
 #include <boost/preprocessor/repetition/repeat_from_to.hpp>
+
+////////////////////////////////////////////////////////////////////////
 
 // Provides aliases to a bunch of preprocessor macros useful for
 // creating template definitions that have varying number of
@@ -39,4 +37,4 @@
 #define REPEAT BOOST_PP_REPEAT
 #define REPEAT_FROM_TO BOOST_PP_REPEAT_FROM_TO
 
-#endif // __STOUT_PREPROCESSOR_HPP__
+////////////////////////////////////////////////////////////////////////

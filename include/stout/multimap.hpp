@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_MULTIMAP_HPP__
-#define __STOUT_MULTIMAP_HPP__
+#pragma once
 
 #include <algorithm>
 #include <list>
@@ -19,7 +18,9 @@
 #include <set>
 #include <utility>
 
-#include <stout/foreach.hpp>
+#include "stout/foreach.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 // Implementation of a multimap via std::multimap but with a better
 // interface. The rationale for creating this is that the
@@ -27,9 +28,8 @@
 // iterator garbage, as well as the use of 'equal_range' which makes
 // for cluttered code).
 template <typename K, typename V>
-class Multimap : public std::multimap<K, V>
-{
-public:
+class Multimap : public std::multimap<K, V> {
+ public:
   Multimap() {}
   Multimap(std::initializer_list<std::pair<const K, V>> list);
 
@@ -42,27 +42,28 @@ public:
   bool contains(const K& key, const V& value) const;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename K, typename V>
 Multimap<K, V>::Multimap(std::initializer_list<std::pair<const K, V>> list)
-  : std::multimap<K, V>(list)
-{}
+  : std::multimap<K, V>(list) {}
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename K, typename V>
-void Multimap<K, V>::put(const K& key, const V& value)
-{
+void Multimap<K, V>::put(const K& key, const V& value) {
   std::multimap<K, V>::insert(std::pair<K, V>(key, value));
 }
 
-
+////////////////////////////////////////////////////////////////////////
 template <typename K, typename V>
-std::list<V> Multimap<K, V>::get(const K& key) const
-{
+std::list<V> Multimap<K, V>::get(const K& key) const {
   std::list<V> values; // Values to return.
 
-  std::pair<typename std::multimap<K, V>::const_iterator,
-    typename std::multimap<K, V>::const_iterator> range;
+  std::pair<
+      typename std::multimap<K, V>::const_iterator,
+      typename std::multimap<K, V>::const_iterator>
+      range;
 
   range = std::multimap<K, V>::equal_range(key);
 
@@ -74,30 +75,32 @@ std::list<V> Multimap<K, V>::get(const K& key) const
   return values;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename K, typename V>
-std::set<K> Multimap<K, V>::keys() const
-{
+std::set<K> Multimap<K, V>::keys() const {
   std::set<K> keys;
-  foreachkey (const K& key, *this) {
+  foreachkey(const K& key, *this) {
     keys.insert(key);
   }
   return keys;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename K, typename V>
-bool Multimap<K, V>::remove(const K& key)
-{
+bool Multimap<K, V>::remove(const K& key) {
   return std::multimap<K, V>::erase(key) > 0;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename K, typename V>
-bool Multimap<K, V>::remove(const K& key, const V& value)
-{
-  std::pair<typename std::multimap<K, V>::iterator,
-    typename std::multimap<K, V>::iterator> range;
+bool Multimap<K, V>::remove(const K& key, const V& value) {
+  std::pair<
+      typename std::multimap<K, V>::iterator,
+      typename std::multimap<K, V>::iterator>
+      range;
 
   range = std::multimap<K, V>::equal_range(key);
 
@@ -112,19 +115,19 @@ bool Multimap<K, V>::remove(const K& key, const V& value)
   return false;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename K, typename V>
-bool Multimap<K, V>::contains(const K& key) const
-{
+bool Multimap<K, V>::contains(const K& key) const {
   return std::multimap<K, V>::count(key) > 0;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename K, typename V>
-bool Multimap<K, V>::contains(const K& key, const V& value) const
-{
+bool Multimap<K, V>::contains(const K& key, const V& value) const {
   const std::list<V> values = get(key);
   return std::find(values.begin(), values.end(), value) != values.end();
 }
 
-#endif // __STOUT_MULTIMAP_HPP__
+////////////////////////////////////////////////////////////////////////

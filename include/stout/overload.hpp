@@ -10,11 +10,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OVERLOAD_HPP__
-#define __STOUT_OVERLOAD_HPP__
+#pragma once
 
-#include <stout/traits.hpp>
+#include "stout/traits.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 // Using `overload` you can pass in callable objects that have
 // `operator()` and get a new callable object that has all of the
@@ -34,10 +34,10 @@
 template <typename F, typename... Fs>
 struct Overload;
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename F>
-struct Overload<F> : F
-{
+struct Overload<F> : F {
   using F::operator();
 
   // NOTE: while not strictly necessary, we include `result_type` so
@@ -46,13 +46,14 @@ struct Overload<F> : F
   using result_type = typename LambdaTraits<F>::result_type;
 
   template <typename G>
-  Overload(G&& g) : F(std::forward<G>(g)) {}
+  Overload(G&& g)
+    : F(std::forward<G>(g)) {}
 };
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename F, typename... Fs>
-struct Overload : F, Overload<Fs...>
-{
+struct Overload : F, Overload<Fs...> {
   using F::operator();
   using Overload<Fs...>::operator();
 
@@ -63,15 +64,16 @@ struct Overload : F, Overload<Fs...>
 
   template <typename G, typename... Gs>
   Overload(G&& g, Gs&&... gs)
-    : F(std::forward<G>(g)), Overload<Fs...>(std::forward<Gs>(gs)...) {}
+    : F(std::forward<G>(g)),
+      Overload<Fs...>(std::forward<Gs>(gs)...) {}
 };
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename... Fs>
 auto overload(Fs&&... fs)
-  -> decltype(Overload<Fs...>(std::forward<Fs>(fs)...))
-{
+    -> decltype(Overload<Fs...>(std::forward<Fs>(fs)...)) {
   return Overload<Fs...>(std::forward<Fs>(fs)...);
 }
 
-#endif // __STOUT_OVERLOAD_HPP__
+////////////////////////////////////////////////////////////////////////

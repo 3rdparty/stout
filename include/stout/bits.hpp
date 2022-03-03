@@ -10,19 +10,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_BITS_HPP__
-#define __STOUT_BITS_HPP__
+#pragma once
 
 #include <stdint.h>
+
+////////////////////////////////////////////////////////////////////////
 
 // Provides efficient bit operations.
 // More details can be found at:
 // http://graphics.stanford.edu/~seander/bithacks.html
 namespace bits {
 
+////////////////////////////////////////////////////////////////////////
+
 // Counts set bits from a 32 bit unsigned integer using Hamming weight.
-inline int countSetBits(uint32_t value)
-{
+inline int countSetBits(uint32_t value) {
   int count = 0;
   value = value - ((value >> 1) & 0x55555555);
   value = (value & 0x33333333) + ((value >> 2) & 0x33333333);
@@ -31,6 +33,8 @@ inline int countSetBits(uint32_t value)
   return count;
 }
 
-} // namespace bits {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_BITS_HPP__
+} // namespace bits
+
+////////////////////////////////////////////////////////////////////////

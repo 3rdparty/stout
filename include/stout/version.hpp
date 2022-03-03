@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_VERSION_HPP__
-#define __STOUT_VERSION_HPP__
+#pragma once
 
 #include <algorithm>
 #include <cctype>
@@ -20,13 +19,15 @@
 #include <string>
 #include <vector>
 
-#include <stout/check.hpp>
-#include <stout/error.hpp>
-#include <stout/numify.hpp>
-#include <stout/option.hpp>
-#include <stout/stringify.hpp>
-#include <stout/strings.hpp>
-#include <stout/try.hpp>
+#include "stout/check.hpp"
+#include "stout/error.hpp"
+#include "stout/numify.hpp"
+#include "stout/option.hpp"
+#include "stout/stringify.hpp"
+#include "stout/strings.hpp"
+#include "stout/try.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 // This class provides convenience routines for working with version
 // numbers.  We support the SemVer 2.0.0 (http://semver.org) format,
@@ -38,8 +39,7 @@
 //
 // TODO(neilc): Consider providing a "strict" variant that does not
 // allow these extensions.
-struct Version
-{
+struct Version {
   // Expect the string in the following format:
   //   <major>[.<minor>[.<patch>]][-prerelease][+build]
   //
@@ -55,8 +55,7 @@ struct Version
   // "minor", and "patch". However, GNU libstdc++ already defines
   // these as macros for compatibility reasons (man 3 makedev for more
   // information) implicitly included in every compilation.
-  static Try<Version> parse(const std::string& input)
-  {
+  static Try<Version> parse(const std::string& input) {
     // The input string consists of the numeric components, optionally
     // followed by the prerelease label (prefixed with '-') and/or the
     // build label (prefixed with '+'). We parse the string from right
@@ -86,7 +85,7 @@ struct Version
     std::vector<std::string> prereleaseLabel;
 
     std::vector<std::string> prereleaseParts =
-      strings::split(remainder, "-", 2);
+        strings::split(remainder, "-", 2);
     CHECK(prereleaseParts.size() == 1 || prereleaseParts.size() == 2);
 
     if (prereleaseParts.size() == 2) {
@@ -103,12 +102,14 @@ struct Version
     remainder = prereleaseParts.front();
 
     constexpr size_t maxNumericComponents = 3;
-    std::vector<std::string> numericComponents = strings::split(remainder, ".");
+    std::vector<std::string> numericComponents =
+        strings::split(remainder, ".");
 
     if (numericComponents.size() > maxNumericComponents) {
-      return Error("Version has " + stringify(numericComponents.size()) +
-                   " components; maximum " + stringify(maxNumericComponents) +
-                   " components allowed");
+      return Error(
+          "Version has " + stringify(numericComponents.size())
+          + " components; maximum " + stringify(maxNumericComponents)
+          + " components allowed");
     }
 
     uint32_t versionNumbers[maxNumericComponents] = {0};
@@ -116,57 +117,58 @@ struct Version
     for (size_t i = 0; i < numericComponents.size(); i++) {
       Try<uint32_t> result = parseNumericIdentifier(numericComponents[i]);
       if (result.isError()) {
-        return Error("Invalid version component '" + numericComponents[i] + "'"
-                     ": " + result.error());
+        return Error("Invalid version component '" + numericComponents[i] +
+                     "'"
+                     ": "
+                     + result.error());
       }
 
       versionNumbers[i] = result.get();
     }
 
-    return Version(versionNumbers[0],
-                   versionNumbers[1],
-                   versionNumbers[2],
-                   prereleaseLabel,
-                   buildLabel);
+    return Version(
+        versionNumbers[0],
+        versionNumbers[1],
+        versionNumbers[2],
+        prereleaseLabel,
+        buildLabel);
   }
 
   // Construct a new Version. The `_prerelease` and `_build` arguments
   // contain lists of prerelease and build identifiers, respectively.
-  Version(uint32_t _majorVersion,
-          uint32_t _minorVersion,
-          uint32_t _patchVersion,
-          const std::vector<std::string>& _prerelease = {},
-          const std::vector<std::string>& _build = {})
+  Version(
+      uint32_t _majorVersion,
+      uint32_t _minorVersion,
+      uint32_t _patchVersion,
+      const std::vector<std::string>& _prerelease = {},
+      const std::vector<std::string>& _build = {})
     : majorVersion(_majorVersion),
       minorVersion(_minorVersion),
       patchVersion(_patchVersion),
       prerelease(_prerelease),
-      build(_build)
-      {
-        // As a sanity check, ensure that the caller has provided
-        // valid prerelease and build identifiers.
+      build(_build) {
+    // As a sanity check, ensure that the caller has provided
+    // valid prerelease and build identifiers.
 
-        foreach (const std::string& identifier, prerelease) {
-          CHECK_NONE(validateIdentifier(identifier));
-        }
+    foreach (const std::string& identifier, prerelease) {
+      CHECK_NONE(validateIdentifier(identifier));
+    }
 
-        foreach (const std::string& identifier, build) {
-          CHECK_NONE(validateIdentifier(identifier));
-        }
-      }
-
-  bool operator==(const Version& other) const
-  {
-    // NOTE: The `build` field is ignored when comparing two versions
-    // for equality, per SemVer spec.
-    return majorVersion == other.majorVersion &&
-        minorVersion == other.minorVersion &&
-        patchVersion == other.patchVersion &&
-        prerelease == other.prerelease;
+    foreach (const std::string& identifier, build) {
+      CHECK_NONE(validateIdentifier(identifier));
+    }
   }
 
-  bool operator!=(const Version& other) const
-  {
+  bool operator==(const Version& other) const {
+    // NOTE: The `build` field is ignored when comparing two versions
+    // for equality, per SemVer spec.
+    return majorVersion == other.majorVersion
+        && minorVersion == other.minorVersion
+        && patchVersion == other.patchVersion
+        && prerelease == other.prerelease;
+  }
+
+  bool operator!=(const Version& other) const {
     return !(*this == other);
   }
 
@@ -195,8 +197,7 @@ struct Version
   //
   // NOTE: The `build` field is ignored when comparing two versions
   // for precedence, per the SemVer spec text above.
-  bool operator<(const Version& other) const
-  {
+  bool operator<(const Version& other) const {
     // Compare version numbers numerically.
     if (majorVersion != other.majorVersion) {
       return majorVersion < other.majorVersion;
@@ -220,14 +221,15 @@ struct Version
     // Compare two versions with prerelease labels by proceeding from
     // left to right.
     size_t minPrereleaseSize = std::min(
-        prerelease.size(), other.prerelease.size());
+        prerelease.size(),
+        other.prerelease.size());
 
     for (size_t i = 0; i < minPrereleaseSize; i++) {
       // Check whether the two prerelease identifiers can be converted
       // to numbers.
       Try<uint32_t> identifier = parseNumericIdentifier(prerelease.at(i));
       Try<uint32_t> otherIdentifier =
-        parseNumericIdentifier(other.prerelease.at(i));
+          parseNumericIdentifier(other.prerelease.at(i));
 
       if (identifier.isSome() && otherIdentifier.isSome()) {
         // Both identifiers are numeric.
@@ -256,18 +258,15 @@ struct Version
     return prerelease.size() < other.prerelease.size();
   }
 
-  bool operator>(const Version& other) const
-  {
+  bool operator>(const Version& other) const {
     return other < *this;
   }
 
-  bool operator<=(const Version& other) const
-  {
+  bool operator<=(const Version& other) const {
     return *this < other || *this == other;
   }
 
-  bool operator>=(const Version& other) const
-  {
+  bool operator>=(const Version& other) const {
     return *this > other || *this == other;
   }
 
@@ -281,13 +280,13 @@ struct Version
   const std::vector<std::string> prerelease;
   const std::vector<std::string> build;
 
-private:
+ private:
   // Check that a string contains a valid identifier. An identifier is
   // a non-empty string; each character must be an ASCII alphanumeric
   // or hyphen. We allow leading zeros in numeric identifiers, which
   // inconsistent with the SemVer spec.
-  static Option<Error> validateIdentifier(const std::string& identifier)
-  {
+  static Option<Error> validateIdentifier(
+      const std::string& identifier) {
     if (identifier.empty()) {
       return Error("Empty identifier");
     }
@@ -297,11 +296,15 @@ private:
     };
 
     auto firstInvalid = std::find_if_not(
-        identifier.begin(), identifier.end(), alphaNumericOrHyphen);
+        identifier.begin(),
+        identifier.end(),
+        alphaNumericOrHyphen);
 
     if (firstInvalid != identifier.end()) {
-      return Error("Identifier contains illegal character: "
-                   "'" + stringify(*firstInvalid) + "'");
+      return Error(
+          "Identifier contains illegal character: "
+          "'"
+          + stringify(*firstInvalid) + "'");
     }
 
     return None();
@@ -310,8 +313,8 @@ private:
   // Parse a string containing a series of dot-separated identifiers
   // into a vector of strings; each element of the vector contains a
   // single identifier.
-  static Try<std::vector<std::string>> parseLabel(const std::string& label)
-  {
+  static Try<std::vector<std::string>> parseLabel(
+      const std::string& label) {
     if (label.empty()) {
       return Error("Empty label");
     }
@@ -334,7 +337,8 @@ private:
   //
   // TODO(neilc): Consider adding a variant of `numify<T>` that only
   // supports non-negative inputs.
-  static Try<uint32_t> parseNumericIdentifier(const std::string& identifier) {
+  static Try<uint32_t> parseNumericIdentifier(
+      const std::string& identifier) {
     if (strings::startsWith(identifier, '-')) {
       return Error("Contains leading hyphen");
     }
@@ -343,11 +347,11 @@ private:
   }
 };
 
+////////////////////////////////////////////////////////////////////////
 
 inline std::ostream& operator<<(
     std::ostream& stream,
-    const Version& version)
-{
+    const Version& version) {
   stream << version.majorVersion << "."
          << version.minorVersion << "."
          << version.patchVersion;
@@ -363,4 +367,4 @@ inline std::ostream& operator<<(
   return stream;
 }
 
-#endif // __STOUT_VERSION_HPP__
+////////////////////////////////////////////////////////////////////////

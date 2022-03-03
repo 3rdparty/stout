@@ -10,15 +10,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_SET_HPP__
-#define __STOUT_SET_HPP__
+#pragma once
 
 #include <algorithm> // For std::set_intersection and std::set_difference.
 #include <set>
 
+////////////////////////////////////////////////////////////////////////
+
 template <typename T>
-std::set<T> operator|(const std::set<T>& left, const std::set<T>& right)
-{
+std::set<T> operator|(const std::set<T>& left, const std::set<T>& right) {
   // Note, we're not using 'set_union' since it affords us no benefit
   // in efficiency and is more complicated to use given we have sets.
   std::set<T> result = left;
@@ -26,19 +26,19 @@ std::set<T> operator|(const std::set<T>& left, const std::set<T>& right)
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-std::set<T> operator+(const std::set<T>& left, const T& t)
-{
+std::set<T> operator+(const std::set<T>& left, const T& t) {
   std::set<T> result = left;
   result.insert(t);
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-std::set<T> operator&(const std::set<T>& left, const std::set<T>& right)
-{
+std::set<T> operator&(const std::set<T>& left, const std::set<T>& right) {
   std::set<T> result;
   std::set_intersection(
       left.begin(),
@@ -49,10 +49,10 @@ std::set<T> operator&(const std::set<T>& left, const std::set<T>& right)
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-std::set<T> operator-(const std::set<T>& left, const std::set<T>& right)
-{
+std::set<T> operator-(const std::set<T>& left, const std::set<T>& right) {
   std::set<T> result;
   std::set_difference(
       left.begin(),
@@ -63,4 +63,4 @@ std::set<T> operator-(const std::set<T>& left, const std::set<T>& right)
   return result;
 }
 
-#endif // __STOUT_SET_HPP__
+////////////////////////////////////////////////////////////////////////

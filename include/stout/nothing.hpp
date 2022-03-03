@@ -10,9 +10,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_NOTHING_HPP__
-#define __STOUT_NOTHING_HPP__
+#pragma once
+
+////////////////////////////////////////////////////////////////////////
 
 struct Nothing {};
 
-#endif // __STOUT_NOTHING_HPP__
+////////////////////////////////////////////////////////////////////////

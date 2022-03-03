@@ -10,13 +10,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_IP_HPP__
-#define __STOUT_IP_HPP__
+#pragma once
 
 // For 'sockaddr'.
-#ifndef __WINDOWS__
+#ifndef _WIN32
 #include <arpa/inet.h>
-#endif // __WINDOWS__
+#endif // _WIN32
 
 #if defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__)
 #include <ifaddrs.h>
@@ -34,45 +33,47 @@
 // Note: Header grouping and ordering is considered before
 // inclusion/exclusion by platform.
 // For 'inet_pton', 'inet_ntop'.
-#ifndef __WINDOWS__
+#ifndef _WIN32
 #include <netinet/in.h>
 #include <sys/socket.h>
-#endif // __WINDOWS__
+#endif // _WIN32
 
 #include <sys/types.h>
 
 #include <algorithm>
+#include <boost/functional/hash.hpp>
 #include <iostream>
 #include <numeric>
 #include <string>
 #include <vector>
 
-#include <boost/functional/hash.hpp>
+#include "stout/abort.hpp"
+#include "stout/bits.hpp"
+#include "stout/check.hpp"
+#include "stout/error.hpp"
+#include "stout/none.hpp"
+#include "stout/numify.hpp"
+#include "stout/option.hpp"
+#include "stout/os/strerror.hpp"
+#include "stout/result.hpp"
+#include "stout/stringify.hpp"
+#include "stout/strings.hpp"
+#include "stout/try.hpp"
+#include "stout/unreachable.hpp"
 
-#include <stout/abort.hpp>
-#include <stout/bits.hpp>
-#include <stout/check.hpp>
-#include <stout/error.hpp>
-#include <stout/none.hpp>
-#include <stout/numify.hpp>
-#include <stout/option.hpp>
-#include <stout/os/strerror.hpp>
-#include <stout/result.hpp>
-#include <stout/stringify.hpp>
-#include <stout/strings.hpp>
-#include <stout/try.hpp>
-#include <stout/unreachable.hpp>
+#ifdef _WIN32
+#include "stout/windows.hpp" // For `WS2tcpip.h`.
+#endif // _WIN32
 
-#ifdef __WINDOWS__
-#include <stout/windows.hpp> // For `WS2tcpip.h`.
-#endif // __WINDOWS__
+////////////////////////////////////////////////////////////////////////
 
 namespace net {
 
+////////////////////////////////////////////////////////////////////////
+
 // Represents an IP.
-class IP
-{
-public:
+class IP {
+ public:
   // Creates an IP from the given string that has the dot-decimal
   // format. For example:
   //   10.0.0.1
@@ -90,39 +91,34 @@ public:
   // Creates an IP from struct in_addr. Note that by standard, struct
   // in_addr stores the IP address in network order.
   explicit IP(const struct in_addr& _storage)
-    : family_(AF_INET)
-  {
-     clear();
-     storage_.in_ = _storage;
+    : family_(AF_INET) {
+    clear();
+    storage_.in_ = _storage;
   }
 
   // Creates an IP from struct in6_addr. Note that by standard, struct
   // in_addr stores the IP address in network order.
   explicit IP(const struct in6_addr& _storage)
-    : family_(AF_INET6)
-  {
-     clear();
-     storage_.in6_ = _storage;
+    : family_(AF_INET6) {
+    clear();
+    storage_.in6_ = _storage;
   }
 
   // Creates an IP from a 32 bit unsigned integer. Note that the
   // integer stores the IP address in host order.
   explicit IP(uint32_t _ip)
-    : family_(AF_INET)
-  {
-     clear();
-     storage_.in_.s_addr = htonl(_ip);
+    : family_(AF_INET) {
+    clear();
+    storage_.in_.s_addr = htonl(_ip);
   }
 
   // Returns the family type.
-  int family() const
-  {
+  int family() const {
     return family_;
   }
 
   // Returns the struct in_addr storage.
-  Try<struct in_addr> in() const
-  {
+  Try<struct in_addr> in() const {
     if (family_ == AF_INET) {
       return storage_.in_;
     } else {
@@ -131,18 +127,17 @@ public:
   }
 
   // Returns the struct in6_addr storage.
-  Try<struct in6_addr> in6() const
-  {
+  Try<struct in6_addr> in6() const {
     if (family_ == AF_INET6) {
       return storage_.in6_;
     } else {
-      return Error("Cannot create in6_addr from family: " + stringify(family_));
+      return Error(
+          "Cannot create in6_addr from family: " + stringify(family_));
     }
   }
 
   // Checks if this IP is for loopback (e.g., INADDR_LOOPBACK).
-  bool isLoopback() const
-  {
+  bool isLoopback() const {
     switch (family_) {
       case AF_INET:
         return storage_.in_.s_addr == htonl(INADDR_LOOPBACK);
@@ -154,8 +149,7 @@ public:
   }
 
   // Checks if this IP is for any incoming address (e.g., INADDR_ANY).
-  bool isAny() const
-  {
+  bool isAny() const {
     switch (family_) {
       case AF_INET:
         return storage_.in_.s_addr == htonl(INADDR_ANY);
@@ -166,8 +160,7 @@ public:
     }
   }
 
-  bool operator==(const IP& that) const
-  {
+  bool operator==(const IP& that) const {
     if (family_ != that.family_) {
       return false;
     } else {
@@ -175,13 +168,11 @@ public:
     }
   }
 
-  bool operator!=(const IP& that) const
-  {
+  bool operator!=(const IP& that) const {
     return !(*this == that);
   }
 
-  bool operator<(const IP& that) const
-  {
+  bool operator<(const IP& that) const {
     if (family_ != that.family_) {
       return family_ < that.family_;
     } else {
@@ -189,8 +180,7 @@ public:
     }
   }
 
-  bool operator>(const IP& that) const
-  {
+  bool operator>(const IP& that) const {
     if (family_ != that.family_) {
       return family_ > that.family_;
     } else {
@@ -200,9 +190,8 @@ public:
 
   // Represents an IP network. We store the IP address and the IP
   // netmask which defines the subnet.
-  class Network
-  {
-  public:
+  class Network {
+   public:
     // Returns the IPv4 network for loopback (i.e., 127.0.0.1/8).
     //
     // TODO(asridharan): We need to move this functionality to an
@@ -250,21 +239,23 @@ public:
 
     // Need to add a copy assignment operator due to the use of
     // `std::unique_ptr`.
-    Network& operator=(const Network& network)
-    {
+    Network& operator=(const Network& network) {
       address_.reset(new IP(network.address()));
       netmask_.reset(new IP(network.netmask()));
 
       return *this;
     }
 
-    IP address() const { return *address_; }
+    IP address() const {
+      return *address_;
+    }
 
-    IP netmask() const { return *netmask_; }
+    IP netmask() const {
+      return *netmask_;
+    }
 
     // Returns the prefix of the subnet defined by the IP netmask.
-    int prefix() const
-    {
+    int prefix() const {
       switch (netmask_->family()) {
         case AF_INET: {
           return bits::countSetBits(netmask_->in()->s_addr);
@@ -288,20 +279,18 @@ public:
       }
     }
 
-    bool operator==(const Network& that) const
-    {
-      return *(address_) == *(that.address_) &&
-        *(netmask_) == *(that.netmask_);
+    bool operator==(const Network& that) const {
+      return *(address_) == *(that.address_) && *(netmask_) == *(that.netmask_);
     }
 
-    bool operator!=(const Network& that) const
-    {
+    bool operator!=(const Network& that) const {
       return !(*this == that);
     }
 
-  protected:
+   protected:
     Network(const IP& _address, const IP& _netmask)
-      : address_(new IP(_address)), netmask_(new IP(_netmask)) {}
+      : address_(new IP(_address)),
+        netmask_(new IP(_netmask)) {}
 
     // NOTE: The reason we need to store `std::unique_ptr` and not
     // `net::IP` here is that since this class has a nested definition
@@ -312,16 +301,14 @@ public:
     std::unique_ptr<IP> netmask_;
   };
 
-protected:
+ protected:
   // NOTE: We need to clear the union when creating an IP because the
   // equality check uses memcmp.
-  void clear()
-  {
+  void clear() {
     memset(&storage_, 0, sizeof(storage_));
   }
 
-  union Storage
-  {
+  union Storage {
     struct in_addr in_;
     struct in6_addr in6_;
   };
@@ -330,22 +317,19 @@ protected:
   Storage storage_;
 };
 
+////////////////////////////////////////////////////////////////////////
 
-class IPv4 : public IP
-{
-public:
-  static IPv4 LOOPBACK()
-  {
+class IPv4 : public IP {
+ public:
+  static IPv4 LOOPBACK() {
     return IPv4(INADDR_LOOPBACK);
   }
 
-  static IPv4 ANY()
-  {
+  static IPv4 ANY() {
     return IPv4(INADDR_ANY);
   }
 
-  static Try<IPv4> parse(const std::string& value)
-  {
+  static Try<IPv4> parse(const std::string& value) {
     in_addr in;
 
     if (inet_pton(AF_INET, value.c_str(), &in) == 1) {
@@ -362,8 +346,7 @@ public:
     : IP(ip) {}
 
   // Returns the in_addr storage.
-  in_addr in() const
-  {
+  in_addr in() const {
     Try<in_addr> in = IP::in();
 
     // `_family` would already be set to `AF_INET` hence the above
@@ -374,22 +357,19 @@ public:
   }
 };
 
+////////////////////////////////////////////////////////////////////////
 
-class IPv6 : public IP
-{
-public:
-  static IPv6 LOOPBACK()
-  {
+class IPv6 : public IP {
+ public:
+  static IPv6 LOOPBACK() {
     return IPv6(in6addr_loopback);
   }
 
-  static IPv6 ANY()
-  {
+  static IPv6 ANY() {
     return IPv6(in6addr_any);
   }
 
-  static Try<IPv6> parse(const std::string& value)
-  {
+  static Try<IPv6> parse(const std::string& value) {
     in6_addr in6;
     if (inet_pton(AF_INET6, value.c_str(), &in6) == 1) {
       return IPv6(in6);
@@ -401,8 +381,7 @@ public:
   explicit IPv6(const in6_addr& in6)
     : IP(in6) {}
 
-  in6_addr in6() const
-  {
+  in6_addr in6() const {
     Try<in6_addr> in6 = IP::in6();
 
     // `_family` would already be set to `AF_INET6` hence the above
@@ -413,46 +392,46 @@ public:
   }
 };
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<IP> IP::parse(const std::string& value, int family)
-{
+inline Try<IP> IP::parse(const std::string& value, int family) {
   Storage storage;
   switch (family) {
-  case AF_INET: {
-    if (inet_pton(AF_INET, value.c_str(), &storage.in_) == 1) {
-      return IP(storage.in_);
-    }
+    case AF_INET: {
+      if (inet_pton(AF_INET, value.c_str(), &storage.in_) == 1) {
+        return IP(storage.in_);
+      }
 
-    return Error("Failed to parse IPv4: " + value);
-  }
-  case AF_INET6: {
-    if (inet_pton(AF_INET6, value.c_str(), &storage.in6_) == 1) {
-      return IP(storage.in6_);
+      return Error("Failed to parse IPv4: " + value);
     }
+    case AF_INET6: {
+      if (inet_pton(AF_INET6, value.c_str(), &storage.in6_) == 1) {
+        return IP(storage.in6_);
+      }
 
-    return Error("Failed to parse IPv6: " + value);
-  }
-  case AF_UNSPEC: {
-    Try<IP> ip4 = parse(value, AF_INET);
-    if (ip4.isSome()) {
-      return ip4;
+      return Error("Failed to parse IPv6: " + value);
     }
+    case AF_UNSPEC: {
+      Try<IP> ip4 = parse(value, AF_INET);
+      if (ip4.isSome()) {
+        return ip4;
+      }
 
-    Try<IP> ip6 = parse(value, AF_INET6);
-    if (ip6.isSome()) {
-      return ip6;
+      Try<IP> ip6 = parse(value, AF_INET6);
+      if (ip6.isSome()) {
+        return ip6;
+      }
+
+      return Error("Failed to parse IP as either IPv4 or IPv6:" + value);
     }
-
-    return Error("Failed to parse IP as either IPv4 or IPv6:" + value);
-  }
-  default:
-    return Error("Unsupported family type: " + stringify(family));
+    default:
+      return Error("Unsupported family type: " + stringify(family));
   }
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<IP> IP::create(const struct sockaddr_storage& _storage)
-{
+inline Try<IP> IP::create(const struct sockaddr_storage& _storage) {
   // According to POSIX: (IEEE Std 1003.1, 2004)
   //
   // (1) `sockaddr_storage` is "aligned at an appropriate boundary so that
@@ -470,24 +449,24 @@ inline Try<IP> IP::create(const struct sockaddr_storage& _storage)
   // `const sockaddr_storage*`) would NOT be safe, since the former might
   // not be aligned appropriately.
   const struct sockaddr* addr =
-    reinterpret_cast<const struct sockaddr*>(&_storage);
+      reinterpret_cast<const struct sockaddr*>(&_storage);
 
   return create(*addr);
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<IP> IP::create(const struct sockaddr& addr)
-{
+inline Try<IP> IP::create(const struct sockaddr& addr) {
   switch (addr.sa_family) {
     case AF_INET: {
       const struct sockaddr_in& addr4 =
-        reinterpret_cast<const struct sockaddr_in&>(addr);
+          reinterpret_cast<const struct sockaddr_in&>(addr);
 
       return IP(addr4.sin_addr);
     }
     case AF_INET6: {
       const struct sockaddr_in6& addr6 =
-        reinterpret_cast<const struct sockaddr_in6&>(addr);
+          reinterpret_cast<const struct sockaddr_in6&>(addr);
 
       return IP(addr6.sin6_addr);
     }
@@ -497,11 +476,11 @@ inline Try<IP> IP::create(const struct sockaddr& addr)
   }
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns the string representation of the given IP using the
 // canonical form, for example: "10.0.0.1" or "fe80::1".
-inline std::ostream& operator<<(std::ostream& stream, const IP& ip)
-{
+inline std::ostream& operator<<(std::ostream& stream, const IP& ip) {
   switch (ip.family()) {
     case AF_INET: {
       char buffer[INET_ADDRSTRLEN];
@@ -509,8 +488,9 @@ inline std::ostream& operator<<(std::ostream& stream, const IP& ip)
       if (inet_ntop(AF_INET, &in, buffer, sizeof(buffer)) == nullptr) {
         // We do not expect inet_ntop to fail because all parameters
         // passed in are valid.
-        ABORT("Failed to get human-readable IPv4 for " +
-              stringify(ntohl(in.s_addr)) + ": " + os::strerror(errno));
+        ABORT(
+            "Failed to get human-readable IPv4 for "
+            + stringify(ntohl(in.s_addr)) + ": " + os::strerror(errno));
       }
       return stream << buffer;
     }
@@ -528,15 +508,16 @@ inline std::ostream& operator<<(std::ostream& stream, const IP& ip)
   }
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<IP::Network> IP::Network::parse(const std::string& value, int family)
-{
+inline Try<IP::Network> IP::Network::parse(
+    const std::string& value,
+    int family) {
   std::vector<std::string> tokens = strings::split(value, "/");
 
   if (tokens.size() != 2) {
     return Error(
-        "Unexpected number of '/' detected: " +
-        stringify(tokens.size()));
+        "Unexpected number of '/' detected: " + stringify(tokens.size()));
   }
 
   // Parse the IP address.
@@ -554,28 +535,28 @@ inline Try<IP::Network> IP::Network::parse(const std::string& value, int family)
   return create(address.get(), prefix.get());
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline IP::Network IP::Network::LOOPBACK_V4()
-{
+inline IP::Network IP::Network::LOOPBACK_V4() {
   return parse("127.0.0.1/8", AF_INET).get();
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline IP::Network IP::Network::LOOPBACK_V6()
-{
+inline IP::Network IP::Network::LOOPBACK_V6() {
   return parse("::1/128", AF_INET6).get();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline Try<IP::Network> IP::Network::create(
     const IP& address,
-    const IP& netmask)
-{
+    const IP& netmask) {
   if (address.family() != netmask.family()) {
     return Error(
-        "The network families of the IP address '" +
-        stringify(address.family()) + "' and the IP netmask '" +
-        stringify(netmask.family()) + "' do not match");
+        "The network families of the IP address '"
+        + stringify(address.family()) + "' and the IP netmask '"
+        + stringify(netmask.family()) + "' do not match");
   }
 
   switch (address.family()) {
@@ -596,7 +577,7 @@ inline Try<IP::Network> IP::Network::create(
             return Error("IPv6 netmask is not valid");
           }
 
-          if (((uint8_t)(~mask.s6_addr[i] + 1) & (~mask.s6_addr[i])) != 0) {
+          if (((uint8_t) (~mask.s6_addr[i] + 1) & (~mask.s6_addr[i])) != 0) {
             return Error("IPv6 netmask is not valid");
           }
 
@@ -613,9 +594,9 @@ inline Try<IP::Network> IP::Network::create(
   return IP::Network(address, netmask);
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<IP::Network> IP::Network::create(const IP& address, int prefix)
-{
+inline Try<IP::Network> IP::Network::create(const IP& address, int prefix) {
   if (prefix < 0) {
     return Error("Subnet prefix is negative");
   }
@@ -661,32 +642,35 @@ inline Try<IP::Network> IP::Network::create(const IP& address, int prefix)
   }
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns the string representation of the given IP network using the
 // canonical form with prefix. For example: "10.0.0.1/8".
 inline std::ostream& operator<<(
     std::ostream& stream,
-    const IP::Network& network)
-{
+    const IP::Network& network) {
   stream << network.address() << "/" << network.prefix();
 
   return stream;
 }
 
-} // namespace net {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace net
+
+////////////////////////////////////////////////////////////////////////
 
 namespace std {
 
+////////////////////////////////////////////////////////////////////////
+
 template <>
-struct hash<net::IP>
-{
+struct hash<net::IP> {
   typedef size_t result_type;
 
   typedef net::IP argument_type;
 
-  result_type operator()(const argument_type& ip) const
-  {
+  result_type operator()(const argument_type& ip) const {
     size_t seed = 0;
 
     switch (ip.family()) {
@@ -695,7 +679,10 @@ struct hash<net::IP>
         return seed;
       case AF_INET6: {
         in6_addr in6 = ip.in6().get();
-        boost::hash_range(seed, std::begin(in6.s6_addr), std::end(in6.s6_addr));
+        boost::hash_range(
+            seed,
+            std::begin(in6.s6_addr),
+            std::end(in6.s6_addr));
         return seed;
       }
       default:
@@ -704,24 +691,22 @@ struct hash<net::IP>
   }
 };
 
+////////////////////////////////////////////////////////////////////////
 
 template <>
-struct hash<net::IPv4>
-{
-  size_t operator()(const net::IPv4& ip)
-  {
+struct hash<net::IPv4> {
+  size_t operator()(const net::IPv4& ip) {
     size_t seed = 0;
     boost::hash_combine(seed, htonl(ip.in().s_addr));
     return seed;
   }
 };
 
+////////////////////////////////////////////////////////////////////////
 
 template <>
-struct hash<net::IPv6>
-{
-  size_t operator()(const net::IPv6& ip)
-  {
+struct hash<net::IPv6> {
+  size_t operator()(const net::IPv6& ip) {
     size_t seed = 0;
     in6_addr in6 = ip.in6();
     boost::hash_range(seed, std::begin(in6.s6_addr), std::end(in6.s6_addr));
@@ -729,15 +714,18 @@ struct hash<net::IPv6>
   }
 };
 
-} // namespace std {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace std
+
+////////////////////////////////////////////////////////////////////////
 
 // NOTE: These headers are placed here because the platform specific code
 // requires classes defined in this file.
-#ifdef __WINDOWS__
-#include <stout/windows/ip.hpp>
+#ifdef _WIN32
+#include "stout/windows/ip.hpp"
 #else
-#include <stout/posix/ip.hpp>
-#endif // __WINDOWS__
+#include "stout/posix/ip.hpp"
+#endif // _WIN32
 
-#endif // __STOUT_IP_HPP__
+////////////////////////////////////////////////////////////////////////

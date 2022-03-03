@@ -10,8 +10,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_CACHE_HPP__
-#define __STOUT_CACHE_HPP__
+#pragma once
+
+#include <glog/logging.h>
 
 #include <functional>
 #include <iostream>
@@ -20,34 +21,38 @@
 #include <unordered_map>
 #include <utility>
 
-#include <glog/logging.h>
-
 #include "none.hpp"
 #include "option.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 // Forward declaration.
 template <typename Key, typename Value>
 class Cache;
 
+////////////////////////////////////////////////////////////////////////
+
 // Outputs the key/value pairs from least to most-recently used.
 template <typename Key, typename Value>
 std::ostream& operator<<(std::ostream& stream, const Cache<Key, Value>& c);
 
+////////////////////////////////////////////////////////////////////////
 
 // Provides a least-recently used (LRU) cache of some predefined
 // capacity. A "write" and a "read" both count as uses.
 template <typename Key, typename Value>
-class Cache
-{
-public:
+class Cache {
+ public:
   typedef std::list<Key> list;
   typedef std::unordered_map<
-    Key, std::pair<Value, typename list::iterator>> map;
+      Key,
+      std::pair<Value, typename list::iterator>>
+      map;
 
-  explicit Cache(size_t _capacity) : capacity(_capacity) {}
+  explicit Cache(size_t _capacity)
+    : capacity(_capacity) {}
 
-  void put(const Key& key, const Value& value)
-  {
+  void put(const Key& key, const Value& value) {
     typename map::iterator i = values.find(key);
     if (i == values.end()) {
       insert(key, value);
@@ -57,8 +62,7 @@ public:
     }
   }
 
-  Option<Value> get(const Key& key)
-  {
+  Option<Value> get(const Key& key) {
     typename map::iterator i = values.find(key);
 
     if (i != values.end()) {
@@ -69,8 +73,7 @@ public:
     return None();
   }
 
-  Option<Value> erase(const Key& key)
-  {
+  Option<Value> erase(const Key& key) {
     typename map::iterator i = values.find(key);
 
     if (i != values.end()) {
@@ -83,9 +86,11 @@ public:
     return None();
   }
 
-  size_t size() const { return keys.size(); }
+  size_t size() const {
+    return keys.size();
+  }
 
-private:
+ private:
   // Not copyable, not assignable.
   Cache(const Cache&);
   Cache& operator=(const Cache&);
@@ -96,8 +101,7 @@ private:
       const Cache<Key, Value>& c);
 
   // Insert key/value into the cache.
-  void insert(const Key& key, const Value& value)
-  {
+  void insert(const Key& key, const Value& value) {
     if (keys.size() == capacity) {
       evict();
     }
@@ -110,8 +114,7 @@ private:
   }
 
   // Updates the LRU ordering in the cache for the given iterator.
-  void use(const typename map::iterator& i)
-  {
+  void use(const typename map::iterator& i) {
     // Move the "pointer" to the end of the lru list.
     keys.splice(keys.end(), keys, (*i).second.second);
 
@@ -120,8 +123,7 @@ private:
   }
 
   // Evict the least-recently used element from the cache.
-  void evict()
-  {
+  void evict() {
     const typename map::iterator i = values.find(keys.front());
     CHECK(i != values.end());
     values.erase(i);
@@ -138,10 +140,10 @@ private:
   list keys;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename Key, typename Value>
-std::ostream& operator<<(std::ostream& stream, const Cache<Key, Value>& c)
-{
+std::ostream& operator<<(std::ostream& stream, const Cache<Key, Value>& c) {
   typename Cache<Key, Value>::list::const_iterator i1;
   for (i1 = c.keys.begin(); i1 != c.keys.end(); i1++) {
     stream << *i1 << ": ";
@@ -153,4 +155,4 @@ std::ostream& operator<<(std::ostream& stream, const Cache<Key, Value>& c)
   return stream;
 }
 
-#endif // __STOUT_CACHE_HPP__
+////////////////////////////////////////////////////////////////////////
