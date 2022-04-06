@@ -10,24 +10,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_RAW_ENVIRONMENT_HPP__
-#define __STOUT_OS_RAW_ENVIRONMENT_HPP__
+#pragma once
 
 #include <string.h>
 
 #include <string>
 
-#include <stout/foreach.hpp>
-#include <stout/json.hpp>
-#include <stout/stringify.hpp>
+#include "stout/foreach.hpp"
+#include "stout/json.hpp"
+#include "stout/stringify.hpp"
 
 #ifdef __APPLE__
 #include <crt_externs.h> // For _NSGetEnviron().
-#elif !defined(__WINDOWS__)
-// Need to declare 'environ' pointer for platforms that are not OS X or Windows.
+#elif !defined(_WIN32)
+// Need to declare 'environ' pointer for platforms that
+// are not OS X or Windows.
 extern char** environ;
 #endif
 
+////////////////////////////////////////////////////////////////////////
 
 // NOTE: The raw environment functions have been removed from the Windows API
 // because the CRT `environ` macro should never be used:
@@ -59,12 +60,16 @@ extern char** environ;
 // is in the POSIX standard. The existence of this macro on Windows makes it
 // impossible to use a function called `os::environ`.
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
+
 namespace raw {
 
+////////////////////////////////////////////////////////////////////////
+
 // NOTE: It is important this remain disabled on Windows. See first note above.
-#ifndef __WINDOWS__
-inline char** environment()
-{
+#ifndef _WIN32
+inline char** environment() {
   // Accessing the list of environment variables is platform-specific.
   // On OS X, the 'environ' symbol isn't visible to shared libraries,
   // so we must use the _NSGetEnviron() function (see 'man environ' on
@@ -79,14 +84,14 @@ inline char** environment()
   return environ;
 #endif
 }
-#endif // __WINDOWS__
+#endif // _WIN32
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns the address of os::environment().
 // NOTE: It is important this remain disabled on Windows. See first note above.
-#ifndef __WINDOWS__
-inline char*** environmentp()
-{
+#ifndef _WIN32
+inline char*** environmentp() {
   // Accessing the list of environment variables is platform-specific.
   // On OS X, the 'environ' symbol isn't visible to shared libraries,
   // so we must use the _NSGetEnviron() function (see 'man environ' on
@@ -101,8 +106,9 @@ inline char*** environmentp()
   return &environ;
 #endif
 }
-#endif // __WINDOWS__
+#endif // _WIN32
 
+////////////////////////////////////////////////////////////////////////
 
 // Represents the environment variable list expected by 'exec'
 // routines. The environment variable list is an array of pointers
@@ -116,22 +122,19 @@ inline char*** environmentp()
 //   };
 //   os::raw::Envp envp(environment);
 //   execle("/bin/sh", "sh", "-c", "echo hello", envp);
-class Envp
-{
-public:
+class Envp {
+ public:
   Envp(Envp&& that)
     : envp(that.envp),
       size(that.size),
-      environment(that.environment)
-  {
+      environment(that.environment) {
     that.envp = nullptr;
     that.size = 0;
     that.environment = std::map<std::string, std::string>();
   }
 
   template <typename Map>
-  explicit Envp(const Map& map)
-  {
+  explicit Envp(const Map& map) {
     size = map.size();
 
     // NOTE: We add 1 to the size for a `nullptr` terminator.
@@ -149,17 +152,17 @@ public:
     envp[index] = nullptr;
   }
 
-  explicit Envp(const JSON::Object& object)
-  {
+  explicit Envp(const JSON::Object& object) {
     size = object.values.size();
 
     // NOTE: We add 1 to the size for a `nullptr` terminator.
     envp = new char*[size + 1];
     size_t index = 0;
 
-    foreachpair (const std::string& key,
-                 const JSON::Value& value,
-                 object.values) {
+    foreachpair(
+        const std::string& key,
+        const JSON::Value& value,
+        object.values) {
       environment[key] = stringify(value.as<JSON::String>().value);
       std::string entry = key + "=" + value.as<JSON::String>().value;
       envp[index] = new char[entry.size() + 1];
@@ -170,8 +173,7 @@ public:
     envp[index] = nullptr;
   }
 
-  ~Envp()
-  {
+  ~Envp() {
     if (envp == nullptr) {
       return;
     }
@@ -182,26 +184,29 @@ public:
     delete[] envp;
   }
 
-  operator char**() const
-  {
+  operator char**() const {
     return envp;
   }
 
-  operator std::map<std::string, std::string>()
-  {
+  operator std::map<std::string, std::string>() {
     return environment;
   }
 
-private:
+ private:
   Envp(const Envp&) = delete;
   Envp& operator=(const Envp&) = delete;
 
-  char **envp;
+  char** envp;
   size_t size;
   std::map<std::string, std::string> environment;
 };
 
-} // namespace raw {
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_RAW_ENVIRONMENT_HPP__
+} // namespace raw
+
+////////////////////////////////////////////////////////////////////////
+
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

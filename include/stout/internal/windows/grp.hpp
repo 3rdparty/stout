@@ -23,11 +23,14 @@
 ////////////////////////////////////////////////////////////////////////
 
 // Dummy struct for POSIX compliance.
+// The name of the group - `gr_name`.
+// Numerical group ID - `gr_gid`.
+// Pointer to a null-terminated array of character pointers to
+// member names - `gr_mem`.
 struct group {
-  char* gr_name; // The name of the group.
-  gid_t gr_gid; // Numerical group ID.
-  char** gr_mem; // Pointer to a null-terminated array of character pointers to
-                 // member names.
+  char* gr_name;
+  gid_t gr_gid;
+  char** gr_mem;
 };
 
 ////////////////////////////////////////////////////////////////////////

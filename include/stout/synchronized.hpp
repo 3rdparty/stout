@@ -221,7 +221,7 @@ inline void synchronized_wait(std::condition_variable* cv, std::mutex* mutex) {
  * until both issues are resolved.
  *
  * @see https://rhn.redhat.com/errata/RHBA-2014-1035.html
- * @see http://stackoverflow.com/questions/11752155/behavior-of-condition-variable-any-when-used-with-a-recursive-mutex
+ * @see https://tinyurl.com/5n7awxe5
  */
 template <typename Lock>
 void synchronized_wait(std::condition_variable_any* cv, Lock* lock) = delete;

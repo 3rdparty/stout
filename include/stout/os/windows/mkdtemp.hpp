@@ -64,7 +64,10 @@ inline Try<std::string> mkdtemp(
   static const size_t maxAlphabetIndex = sizeof(alphabet) - 2;
 
   std::string postfix(postfixTemplate);
+
+  /* clang-format off */
   static thread_local std::mt19937 generator((std::random_device())());
+  /* clang-format on */
 
   for (int i = 0; i < postfixSize; ++i) {
     int index = generator() % maxAlphabetIndex;
