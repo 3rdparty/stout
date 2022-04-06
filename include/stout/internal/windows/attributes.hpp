@@ -10,19 +10,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_INTERNAL_WINDOWS_ATTRIBUTES_HPP__
-#define __STOUT_INTERNAL_WINDOWS_ATTRIBUTES_HPP__
+#pragma once
 
 #include <string>
 
-#include <stout/error.hpp>
-#include <stout/stringify.hpp>
-#include <stout/try.hpp>
-#include <stout/windows.hpp>
+#include "stout/error.hpp"
+#include "stout/stringify.hpp"
+#include "stout/try.hpp"
+#include "stout/windows.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 namespace internal {
+
+////////////////////////////////////////////////////////////////////////
+
 namespace windows {
+
+////////////////////////////////////////////////////////////////////////
 
 inline Try<DWORD> get_file_attributes(const std::wstring& path) {
   const DWORD attributes = ::GetFileAttributesW(path.data());
@@ -33,7 +38,12 @@ inline Try<DWORD> get_file_attributes(const std::wstring& path) {
   return attributes;
 }
 
-} // namespace windows {
-} // namespace internal {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_INTERNAL_WINDOWS_ATTRIBUTES_HPP__
+} // namespace windows
+
+////////////////////////////////////////////////////////////////////////
+
+} // namespace internal
+
+////////////////////////////////////////////////////////////////////////
