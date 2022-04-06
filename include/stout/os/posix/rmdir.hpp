@@ -10,24 +10,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_RMDIR_HPP__
-#define __STOUT_OS_POSIX_RMDIR_HPP__
+#pragma once
 
 #include <fts.h>
+#include <glog/logging.h>
 #include <unistd.h>
+
 #include <string>
 
-#include <glog/logging.h>
+#include "stout/error.hpp"
+#include "stout/nothing.hpp"
+#include "stout/os/exists.hpp"
+#include "stout/stringify.hpp"
+#include "stout/try.hpp"
 
-#include <stout/error.hpp>
-#include <stout/nothing.hpp>
-#include <stout/stringify.hpp>
-#include <stout/try.hpp>
-
-#include <stout/os/exists.hpp>
-
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // By default, recursively deletes a directory akin to: 'rm -r'. If
 // `recursive` is false, it deletes a directory akin to: 'rmdir'. In
@@ -43,8 +44,7 @@ inline Try<Nothing> rmdir(
     const std::string& directory,
     bool recursive = true,
     bool removeRoot = true,
-    bool continueOnError = false)
-{
+    bool continueOnError = false) {
   unsigned int errorCount = 0;
 
   if (!recursive) {
@@ -134,7 +134,8 @@ inline Try<Nothing> rmdir(
 }
 #endif // __sun
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace os
 
-#endif // __STOUT_OS_POSIX_RMDIR_HPP__
+////////////////////////////////////////////////////////////////////////

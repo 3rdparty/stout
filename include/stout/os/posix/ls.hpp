@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_LS_HPP__
-#define __STOUT_OS_POSIX_LS_HPP__
+#pragma once
 
 #include <dirent.h>
 #include <errno.h>
@@ -20,14 +19,16 @@
 #include <list>
 #include <string>
 
-#include <stout/error.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/try.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline Try<std::list<std::string>> ls(const std::string& directory)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Try<std::list<std::string>> ls(const std::string& directory) {
   DIR* dir = opendir(directory.c_str());
 
   if (dir == nullptr) {
@@ -62,6 +63,8 @@ inline Try<std::list<std::string>> ls(const std::string& directory)
   return result;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_LS_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

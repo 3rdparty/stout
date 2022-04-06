@@ -10,20 +10,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_CHDIR_HPP__
-#define __STOUT_OS_POSIX_CHDIR_HPP__
+#pragma once
 
 #include <string>
 
-#include <stout/error.hpp>
-#include <stout/nothing.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/nothing.hpp"
+#include "stout/try.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline Try<Nothing> chdir(const std::string& directory)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Try<Nothing> chdir(const std::string& directory) {
   if (::chdir(directory.c_str()) < 0) {
     return ErrnoError();
   }
@@ -31,7 +32,8 @@ inline Try<Nothing> chdir(const std::string& directory)
   return Nothing();
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace os
 
-#endif // __STOUT_OS_POSIX_CHDIR_HPP__
+////////////////////////////////////////////////////////////////////////

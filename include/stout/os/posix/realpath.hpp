@@ -10,19 +10,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_REALPATH_HPP__
-#define __STOUT_OS_POSIX_REALPATH_HPP__
+#pragma once
 
 #include <string>
 
-#include <stout/error.hpp>
-#include <stout/result.hpp>
+#include "stout/error.hpp"
+#include "stout/result.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline Result<std::string> realpath(const std::string& path)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Result<std::string> realpath(const std::string& path) {
   char temp[PATH_MAX];
   if (::realpath(path.c_str(), temp) == nullptr) {
     if (errno == ENOENT || errno == ENOTDIR) {
@@ -35,6 +36,8 @@ inline Result<std::string> realpath(const std::string& path)
   return std::string(temp);
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_REALPATH_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

@@ -10,27 +10,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_TEMP_HPP__
-#define __STOUT_OS_POSIX_TEMP_HPP__
+#pragma once
 
 #include <string>
 
-#include <stout/os/getenv.hpp>
+#include "stout/os/getenv.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // Attempts to resolve the system-designated temporary directory before
 // back on a sensible default. On POSIX platforms, this involves checking
 // the POSIX-standard `TMPDIR` environment variable before falling
 // back to `/tmp`.
-inline std::string temp()
-{
+inline std::string temp() {
   Option<std::string> tmpdir = os::getenv("TMPDIR");
 
   return tmpdir.getOrElse("/tmp");
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_TEMP_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

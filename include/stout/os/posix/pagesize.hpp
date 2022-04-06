@@ -10,25 +10,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_PAGESIZE_HPP__
-#define __STOUT_OS_POSIX_PAGESIZE_HPP__
-
-#include <unistd.h>
+#pragma once
 
 #include <glog/logging.h>
+#include <unistd.h>
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
+////////////////////////////////////////////////////////////////////////
+
 // The alternative `getpagesize()` is not defined by POSIX.
-inline size_t pagesize()
-{
+inline size_t pagesize() {
   // We assume that `sysconf` will not fail in practice.
   long result = ::sysconf(_SC_PAGESIZE);
   CHECK(result >= 0);
   return result;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_PAGESIZE_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

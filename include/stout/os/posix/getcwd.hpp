@@ -10,18 +10,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_GETCWD_HPP__
-#define __STOUT_OS_POSIX_GETCWD_HPP__
+#pragma once
 
 #include <string>
 
-#include <stout/try.hpp>
+#include "stout/try.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline std::string getcwd()
-{
+////////////////////////////////////////////////////////////////////////
+
+inline std::string getcwd() {
   size_t size = 100;
 
   while (true) {
@@ -43,7 +44,8 @@ inline std::string getcwd()
   return std::string();
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace os
 
-#endif // __STOUT_OS_POSIX_GETCWD_HPP__
+////////////////////////////////////////////////////////////////////////

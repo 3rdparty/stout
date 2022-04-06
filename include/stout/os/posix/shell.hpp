@@ -10,30 +10,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_SHELL_HPP__
-#define __STOUT_OS_POSIX_SHELL_HPP__
+#pragma once
 
+#include <glog/logging.h>
 #include <stdarg.h> // For va_list, va_start, etc.
 #include <stdio.h> // For ferror, fgets, FILE, pclose, popen.
-
 #include <sys/wait.h> // For waitpid.
 
 #include <ostream>
 #include <string>
 
-#include <glog/logging.h>
+#include "stout/error.hpp"
+#include "stout/format.hpp"
+#include "stout/none.hpp"
+#include "stout/option.hpp"
+#include "stout/os/raw/argv.hpp"
+#include "stout/try.hpp"
 
-#include <stout/error.hpp>
-#include <stout/format.hpp>
-#include <stout/none.hpp>
-#include <stout/option.hpp>
-#include <stout/try.hpp>
-
-#include <stout/os/raw/argv.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
+////////////////////////////////////////////////////////////////////////
+
 namespace Shell {
+
+////////////////////////////////////////////////////////////////////////
 
 // Canonical constants used as platform-dependent args to `exec`
 // calls. `name` is the command name, `arg0` is the first argument
@@ -44,7 +46,11 @@ constexpr const char* name = "sh";
 constexpr const char* arg0 = "sh";
 constexpr const char* arg1 = "-c";
 
-} // namespace Shell {
+////////////////////////////////////////////////////////////////////////
+
+} // namespace Shell
+
+////////////////////////////////////////////////////////////////////////
 
 /**
  * Runs a shell command with optional arguments.
@@ -70,8 +76,7 @@ constexpr const char* arg1 = "-c";
  *   an error message if the command's exit code is non-zero.
  */
 template <typename... T>
-Try<std::string> shell(const std::string& fmt, const T&... t)
-{
+Try<std::string> shell(const std::string& fmt, const T&... t) {
   const Try<std::string> command = strings::format(fmt, t...);
   if (command.isError()) {
     return Error(command.error());
@@ -103,20 +108,23 @@ Try<std::string> shell(const std::string& fmt, const T&... t)
 
   if (WIFSIGNALED(status)) {
     return Error(
-        "Running '" + command.get() + "' was interrupted by signal '" +
-        strsignal(WTERMSIG(status)) + "'");
+        "Running '" + command.get() + "' was interrupted by signal '"
+        + strsignal(WTERMSIG(status)) + "'");
   } else if ((WEXITSTATUS(status) != EXIT_SUCCESS)) {
     LOG(ERROR) << "Command '" << command.get()
-               << "' failed; this is the output:\n" << stdout.str();
+               << "' failed; this is the output:\n"
+               << stdout.str();
     return Error(
-        "Failed to execute '" + command.get() + "'; the command was either "
-        "not found or exited with a non-zero exit status: " +
-        stringify(WEXITSTATUS(status)));
+        "Failed to execute '" + command.get() +
+        "'; the command was either "
+        "not found or exited with a non-zero exit status: "
+        + stringify(WEXITSTATUS(status)));
   }
 
   return stdout.str();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Executes a command by calling "/bin/sh -c <command>", and returns
 // after the command has been completed. Returns the exit code on success
@@ -130,15 +138,18 @@ Try<std::string> shell(const std::string& fmt, const T&... t)
 // when using this method and use proper validation and sanitization
 // on the `command`. For this reason in general `os::spawn` is
 // preferred if a shell is not required.
-inline Option<int> system(const std::string& command)
-{
+inline Option<int> system(const std::string& command) {
   pid_t pid = ::fork();
   if (pid == -1) {
     return None();
   } else if (pid == 0) {
     // In child process.
     ::execlp(
-        Shell::name, Shell::arg0, Shell::arg1, command.c_str(), (char*)nullptr);
+        Shell::name,
+        Shell::arg0,
+        Shell::arg1,
+        command.c_str(),
+        (char*) nullptr);
     ::exit(127);
   } else {
     // In parent process.
@@ -153,6 +164,8 @@ inline Option<int> system(const std::string& command)
   }
 }
 
+////////////////////////////////////////////////////////////////////////
+
 // Executes a command by calling "<command> <arguments...>", and returns after
 // the command has been completed. Returns the exit code on success and `None`
 // on error (e.g., fork/exec/waitpid failed). This function is async signal
@@ -161,8 +174,7 @@ inline Option<int> system(const std::string& command)
 // not async signal safe.
 inline Option<int> spawn(
     const std::string& command,
-    const std::vector<std::string>& arguments)
-{
+    const std::vector<std::string>& arguments) {
   pid_t pid = ::fork();
 
   if (pid == -1) {
@@ -184,19 +196,21 @@ inline Option<int> spawn(
   }
 }
 
+////////////////////////////////////////////////////////////////////////
 
-template<typename... T>
-inline int execlp(const char* file, T... t)
-{
+template <typename... T>
+inline int execlp(const char* file, T... t) {
   return ::execlp(file, t...);
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline int execvp(const char* file, char* const argv[])
-{
+inline int execvp(const char* file, char* const argv[]) {
   return ::execvp(file, argv);
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_SHELL_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

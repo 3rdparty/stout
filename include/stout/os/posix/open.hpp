@@ -10,30 +10,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_OPEN_HPP__
-#define __STOUT_OS_POSIX_OPEN_HPP__
+#pragma once
 
 #include <sys/stat.h>
 #include <sys/types.h>
 
 #include <string>
 
-#include <stout/error.hpp>
-#include <stout/nothing.hpp>
-#include <stout/try.hpp>
-
-#include <stout/os/close.hpp>
-#include <stout/os/fcntl.hpp>
-#include <stout/os/int_fd.hpp>
+#include "stout/error.hpp"
+#include "stout/nothing.hpp"
+#include "stout/os/close.hpp"
+#include "stout/os/fcntl.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/try.hpp"
 
 #ifndef O_CLOEXEC
 #error "missing O_CLOEXEC support on this platform"
 #endif
 
+////////////////////////////////////////////////////////////////////////
+
 namespace os {
 
-inline Try<int_fd> open(const std::string& path, int oflag, mode_t mode = 0)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Try<int_fd> open(const std::string& path, int oflag, mode_t mode = 0) {
   int_fd fd = ::open(path.c_str(), oflag, mode);
   if (fd < 0) {
     return ErrnoError();
@@ -42,6 +43,8 @@ inline Try<int_fd> open(const std::string& path, int oflag, mode_t mode = 0)
   return fd;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_OPEN_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

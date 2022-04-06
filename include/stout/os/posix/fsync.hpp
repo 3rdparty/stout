@@ -10,24 +10,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_FSYNC_HPP__
-#define __STOUT_OS_POSIX_FSYNC_HPP__
+#pragma once
 
 #include <unistd.h>
 
 #include <string>
 
-#include <stout/nothing.hpp>
-#include <stout/try.hpp>
+#include "stout/nothing.hpp"
+#include "stout/os/close.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/os/open.hpp"
+#include "stout/try.hpp"
 
-#include <stout/os/close.hpp>
-#include <stout/os/int_fd.hpp>
-#include <stout/os/open.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline Try<Nothing> fsync(int fd)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Try<Nothing> fsync(int fd) {
   if (::fsync(fd) == -1) {
     return ErrnoError();
   }
@@ -35,12 +36,13 @@ inline Try<Nothing> fsync(int fd)
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
-// A wrapper function for the above `fsync()` with opening and closing the file.
+// A wrapper function for the above `fsync()` with opening and closing the
+// file.
 // NOTE: This function is POSIX only and can be used to commit changes to a
 // directory (e.g., renaming files) to the filesystem.
-inline Try<Nothing> fsync(const std::string& path)
-{
+inline Try<Nothing> fsync(const std::string& path) {
   Try<int_fd> fd = os::open(path, O_RDONLY | O_CLOEXEC);
 
   if (fd.isError()) {
@@ -56,6 +58,8 @@ inline Try<Nothing> fsync(const std::string& path)
   return result;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_FSYNC_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

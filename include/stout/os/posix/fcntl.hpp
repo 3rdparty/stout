@@ -10,22 +10,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_FCNTL_HPP__
-#define __STOUT_OS_POSIX_FCNTL_HPP__
+#pragma once
 
 #include <fcntl.h>
 
-#include <stout/error.hpp>
-#include <stout/nothing.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/nothing.hpp"
+#include "stout/try.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 // TODO(jieyu): Consider introducing a general os::fcntl function
 // which allows us to get/set multiple flags in one call.
 namespace os {
 
-inline Try<Nothing> cloexec(int fd)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Try<Nothing> cloexec(int fd) {
   int flags = ::fcntl(fd, F_GETFD);
 
   if (flags == -1) {
@@ -39,9 +40,9 @@ inline Try<Nothing> cloexec(int fd)
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<Nothing> unsetCloexec(int fd)
-{
+inline Try<Nothing> unsetCloexec(int fd) {
   int flags = ::fcntl(fd, F_GETFD);
 
   if (flags == -1) {
@@ -55,9 +56,9 @@ inline Try<Nothing> unsetCloexec(int fd)
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<bool> isCloexec(int fd)
-{
+inline Try<bool> isCloexec(int fd) {
   int flags = ::fcntl(fd, F_GETFD);
 
   if (flags == -1) {
@@ -67,9 +68,9 @@ inline Try<bool> isCloexec(int fd)
   return (flags & FD_CLOEXEC) != 0;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<Nothing> nonblock(int fd)
-{
+inline Try<Nothing> nonblock(int fd) {
   int flags = ::fcntl(fd, F_GETFL);
 
   if (flags == -1) {
@@ -83,9 +84,9 @@ inline Try<Nothing> nonblock(int fd)
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<bool> isNonblock(int fd)
-{
+inline Try<bool> isNonblock(int fd) {
   int flags = ::fcntl(fd, F_GETFL);
 
   if (flags == -1) {
@@ -95,6 +96,8 @@ inline Try<bool> isNonblock(int fd)
   return (flags & O_NONBLOCK) != 0;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_FCNTL_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

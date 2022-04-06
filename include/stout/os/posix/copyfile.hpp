@@ -10,22 +10,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_COPYFILE_HPP__
-#define __STOUT_OS_POSIX_COPYFILE_HPP__
+#pragma once
 
 #include <string>
 
-#include <stout/error.hpp>
-#include <stout/nothing.hpp>
-#include <stout/option.hpp>
-#include <stout/path.hpp>
-#include <stout/stringify.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/nothing.hpp"
+#include "stout/option.hpp"
+#include "stout/os/shell.hpp"
+#include "stout/os/stat.hpp"
+#include "stout/path.hpp"
+#include "stout/stringify.hpp"
+#include "stout/try.hpp"
 
-#include <stout/os/shell.hpp>
-#include <stout/os/stat.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // This implementation works by running the `cp` command with some
 // additional conditions to ensure we copy a single file only,
@@ -38,8 +40,8 @@ namespace os {
 // Relative paths are not allowed, as these are resolved based on
 // the current working directory and may be inconsistent.
 inline Try<Nothing> copyfile(
-    const std::string& source, const std::string& destination)
-{
+    const std::string& source,
+    const std::string& destination) {
   // NOTE: We check the form of the path too in case it does not exist, and to
   // prevent user error.
   if (stat::isdir(source) || source.back() == '/') {
@@ -71,6 +73,8 @@ inline Try<Nothing> copyfile(
   return Nothing();
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_COPYFILE_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

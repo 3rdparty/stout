@@ -10,19 +10,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_CLOSE_HPP__
-#define __STOUT_OS_POSIX_CLOSE_HPP__
+#pragma once
 
 #include <unistd.h>
 
-#include <stout/error.hpp>
-#include <stout/nothing.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/nothing.hpp"
+#include "stout/try.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline Try<Nothing> close(int fd)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Try<Nothing> close(int fd) {
   if (::close(fd) != 0) {
     return ErrnoError();
   }
@@ -30,6 +32,8 @@ inline Try<Nothing> close(int fd)
   return Nothing();
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_CLOSE_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

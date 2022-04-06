@@ -10,18 +10,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_DUP_HPP__
-#define __STOUT_OS_POSIX_DUP_HPP__
+#pragma once
 
 #include <unistd.h>
 
-#include <stout/nothing.hpp>
-#include <stout/try.hpp>
+#include "stout/nothing.hpp"
+#include "stout/try.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline Try<int> dup(int fd)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Try<int> dup(int fd) {
   int result = ::dup(fd);
   if (result < 0) {
     return ErrnoError();
@@ -29,6 +31,8 @@ inline Try<int> dup(int fd)
   return result;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_DUP_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

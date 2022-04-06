@@ -10,40 +10,41 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_MKDIR_HPP__
-#define __STOUT_OS_POSIX_MKDIR_HPP__
+#pragma once
 
 #include <sys/stat.h>
 
 #include <string>
 #include <vector>
 
-#include <stout/error.hpp>
-#include <stout/foreach.hpp>
-#include <stout/nothing.hpp>
-#include <stout/strings.hpp>
-#include <stout/path.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/foreach.hpp"
+#include "stout/nothing.hpp"
+#include "stout/os/constants.hpp"
+#include "stout/os/fsync.hpp"
+#include "stout/path.hpp"
+#include "stout/strings.hpp"
+#include "stout/try.hpp"
 
-#include <stout/os/constants.hpp>
-#include <stout/os/fsync.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // Make a directory.
 //
 // If `recursive` is set to true, all intermediate directories will be created
-// as required. If `sync` is set to true, `fsync()` will be called on the parent
-// of each created directory to ensure that the result is committed to its
-// filesystem.
+// as required. If `sync` is set to true, `fsync()` will be called on the
+// parent of each created directory to ensure that the result is committed to
+// its filesystem.
 //
 // NOTE: This function doesn't ensure that any existing directory is committed
 // to its filesystem, and it does not perform any cleanup in case of a failure.
 inline Try<Nothing> mkdir(
     const std::string& directory,
     bool recursive = true,
-    bool sync = false)
-{
+    bool sync = false) {
   if (!recursive) {
     if (::mkdir(directory.c_str(), 0755) < 0) {
       return ErrnoError();
@@ -59,7 +60,7 @@ inline Try<Nothing> mkdir(
     }
   } else {
     std::vector<std::string> tokens =
-      strings::tokenize(directory, stringify(os::PATH_SEPARATOR));
+        strings::tokenize(directory, stringify(os::PATH_SEPARATOR));
 
     std::string path;
 
@@ -90,6 +91,8 @@ inline Try<Nothing> mkdir(
   return Nothing();
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_MKDIR_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////
