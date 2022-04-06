@@ -10,30 +10,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_FLAGS_PARSE_HPP__
-#define __STOUT_FLAGS_PARSE_HPP__
+#pragma once
 
 #include <sstream> // For istringstream.
 #include <string>
 
-#include <stout/bytes.hpp>
-#include <stout/duration.hpp>
-#include <stout/error.hpp>
-#include <stout/ip.hpp>
-#include <stout/json.hpp>
-#include <stout/path.hpp>
-#include <stout/strings.hpp>
-#include <stout/try.hpp>
+#include "stout/bytes.hpp"
+#include "stout/duration.hpp"
+#include "stout/error.hpp"
+#include "stout/flags/flag.hpp"
+#include "stout/ip.hpp"
+#include "stout/json.hpp"
+#include "stout/os/read.hpp"
+#include "stout/path.hpp"
+#include "stout/strings.hpp"
+#include "stout/try.hpp"
 
-#include <stout/flags/flag.hpp>
-
-#include <stout/os/read.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace flags {
 
+////////////////////////////////////////////////////////////////////////
+
 template <typename T>
-Try<T> parse(const std::string& value)
-{
+Try<T> parse(const std::string& value) {
   T t;
   std::istringstream in(value);
   in >> t;
@@ -45,17 +45,17 @@ Try<T> parse(const std::string& value)
   return Error("Failed to convert into required type");
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <>
-inline Try<std::string> parse(const std::string& value)
-{
+inline Try<std::string> parse(const std::string& value) {
   return value;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <>
-inline Try<bool> parse(const std::string& value)
-{
+inline Try<bool> parse(const std::string& value) {
   if (value == "true" || value == "1") {
     return true;
   } else if (value == "false" || value == "0") {
@@ -64,46 +64,46 @@ inline Try<bool> parse(const std::string& value)
   return Error("Expecting a boolean (e.g., true or false)");
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <>
-inline Try<Duration> parse(const std::string& value)
-{
+inline Try<Duration> parse(const std::string& value) {
   return Duration::parse(value);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <>
-inline Try<Bytes> parse(const std::string& value)
-{
+inline Try<Bytes> parse(const std::string& value) {
   return Bytes::parse(value);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <>
-inline Try<net::IP> parse(const std::string& value)
-{
+inline Try<net::IP> parse(const std::string& value) {
   return net::IP::parse(value);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <>
-inline Try<net::IPv4> parse(const std::string& value)
-{
+inline Try<net::IPv4> parse(const std::string& value) {
   return net::IPv4::parse(value);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <>
-inline Try<net::IPv6> parse(const std::string& value)
-{
+inline Try<net::IPv6> parse(const std::string& value) {
   return net::IPv6::parse(value);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <>
-inline Try<JSON::Object> parse(const std::string& value)
-{
-#ifndef __WINDOWS__
+inline Try<JSON::Object> parse(const std::string& value) {
+#ifndef _WIN32
   // A value that already starts with 'file://' will properly be
   // loaded from the file and put into 'value' but if it starts with
   // '/' we need to explicitly handle it for backwards compatibility
@@ -125,15 +125,15 @@ inline Try<JSON::Object> parse(const std::string& value)
     }
     return JSON::parse<JSON::Object>(read.get());
   }
-#endif // __WINDOWS__
+#endif // _WIN32
   return JSON::parse<JSON::Object>(value);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <>
-inline Try<JSON::Array> parse(const std::string& value)
-{
-#ifndef __WINDOWS__
+inline Try<JSON::Array> parse(const std::string& value) {
+#ifndef _WIN32
   // A value that already starts with 'file://' will properly be
   // loaded from the file and put into 'value' but if it starts with
   // '/' we need to explicitly handle it for backwards compatibility
@@ -155,21 +155,21 @@ inline Try<JSON::Array> parse(const std::string& value)
     }
     return JSON::parse<JSON::Array>(read.get());
   }
-#endif // __WINDOWS__
+#endif // _WIN32
   return JSON::parse<JSON::Array>(value);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <>
-inline Try<Path> parse(const std::string& value)
-{
+inline Try<Path> parse(const std::string& value) {
   return Path(value);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <>
-inline Try<SecurePathOrValue> parse(const std::string& value)
-{
+inline Try<SecurePathOrValue> parse(const std::string& value) {
   SecurePathOrValue result;
   result.value = value;
 
@@ -189,11 +189,11 @@ inline Try<SecurePathOrValue> parse(const std::string& value)
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
 template <>
-inline Try<int_fd> parse(const std::string& value)
-{
+inline Try<int_fd> parse(const std::string& value) {
   // Looks like "WindowsFD::Type::HANDLE=0000000000000000".
   std::vector<std::string> fd = strings::split(value, "=");
   if (fd.size() != 2) {
@@ -216,8 +216,9 @@ inline Try<int_fd> parse(const std::string& value)
 
   return Error("`int_fd` was neither a `HANDLE` nor a `SOCKET`");
 }
-#endif // __WINDOWS__
+#endif // _WIN32
 
+////////////////////////////////////////////////////////////////////////
 
 // TODO(klueska): Generalize this parser to take any comma separated
 // list and convert it to its appropriate type (i.e., not just for
@@ -225,8 +226,7 @@ inline Try<int_fd> parse(const std::string& value)
 // string that contains commas though, so generalizing this is not as
 // straightforward as it looks at first glance.
 template <>
-inline Try<std::vector<unsigned int>> parse(const std::string& value)
-{
+inline Try<std::vector<unsigned int>> parse(const std::string& value) {
   std::vector<unsigned int> result;
 
   foreach (const std::string& token, strings::tokenize(value, ",")) {
@@ -242,6 +242,7 @@ inline Try<std::vector<unsigned int>> parse(const std::string& value)
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // NOTE: Strings in the set cannot contain commas, since that
 // is the delimiter and we provide no way to escape it.
@@ -250,8 +251,7 @@ inline Try<std::vector<unsigned int>> parse(const std::string& value)
 // list and convert it to its appropriate type (i.e., not just for
 // strings).
 template <>
-inline Try<std::set<std::string>> parse(const std::string& value)
-{
+inline Try<std::set<std::string>> parse(const std::string& value) {
   std::set<std::string> result;
 
   foreach (const std::string& token, strings::tokenize(value, ",")) {
@@ -265,6 +265,8 @@ inline Try<std::set<std::string>> parse(const std::string& value)
   return result;
 }
 
-} // namespace flags {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_FLAGS_PARSE_HPP__
+} // namespace flags
+
+////////////////////////////////////////////////////////////////////////
