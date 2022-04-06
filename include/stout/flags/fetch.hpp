@@ -10,24 +10,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_FLAGS_FETCH_HPP__
-#define __STOUT_FLAGS_FETCH_HPP__
+#pragma once
 
 #include <sstream> // For istringstream.
 #include <string>
 
-#include <stout/duration.hpp>
-#include <stout/error.hpp>
-#include <stout/json.hpp>
-#include <stout/path.hpp>
-#include <stout/strings.hpp>
-#include <stout/try.hpp>
+#include "stout/duration.hpp"
+#include "stout/error.hpp"
+#include "stout/flags/parse.hpp"
+#include "stout/json.hpp"
+#include "stout/os/read.hpp"
+#include "stout/path.hpp"
+#include "stout/strings.hpp"
+#include "stout/try.hpp"
 
-#include <stout/flags/parse.hpp>
-
-#include <stout/os/read.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace flags {
+
+////////////////////////////////////////////////////////////////////////
 
 // Allow the value for a flag to be fetched/resolved from a URL such
 // as file://foo/bar/baz. Use template specialization to add a custom
@@ -35,8 +36,7 @@ namespace flags {
 // has a custom fetcher so that it returns the path given rather than
 // the value read from that path.
 template <typename T>
-Try<T> fetch(const std::string& value)
-{
+Try<T> fetch(const std::string& value) {
   // If the flag value corresponds to a file indicated by file://
   // fetch and then parse the contents of that file.
   //
@@ -56,24 +56,26 @@ Try<T> fetch(const std::string& value)
   return parse<T>(value);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <>
-inline Try<Path> fetch(const std::string& value)
-{
+inline Try<Path> fetch(const std::string& value) {
   // Explicitly skip fetching the file if this is for a Path flag!
   return parse<Path>(value);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <>
-inline Try<SecurePathOrValue> fetch(const std::string& value)
-{
+inline Try<SecurePathOrValue> fetch(const std::string& value) {
   // Delegates fetching the value to its `parse` function so the two
   // values, the path and its contents are available when constructing
   // and instance of `SecurePathOrValue`.
   return parse<SecurePathOrValue>(value);
 }
 
-} // namespace flags {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_FLAGS_FETCH_HPP__
+} // namespace flags
+
+////////////////////////////////////////////////////////////////////////

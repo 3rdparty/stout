@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_FLAGS_FLAGS_HPP__
-#define __STOUT_FLAGS_FLAGS_HPP__
+#pragma once
 
 #include <algorithm>
 #include <map>
@@ -20,32 +19,32 @@
 #include <typeinfo> // For typeid.
 #include <vector>
 
-#include <stout/error.hpp>
-#include <stout/exit.hpp>
-#include <stout/foreach.hpp>
-#include <stout/lambda.hpp>
-#include <stout/multimap.hpp>
-#include <stout/none.hpp>
-#include <stout/nothing.hpp>
-#include <stout/option.hpp>
-#include <stout/path.hpp>
-#include <stout/some.hpp>
-#include <stout/stringify.hpp>
-#include <stout/strings.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/exit.hpp"
+#include "stout/flags/fetch.hpp"
+#include "stout/flags/flag.hpp"
+#include "stout/foreach.hpp"
+#include "stout/lambda.hpp"
+#include "stout/multimap.hpp"
+#include "stout/none.hpp"
+#include "stout/nothing.hpp"
+#include "stout/option.hpp"
+#include "stout/os/environment.hpp"
+#include "stout/path.hpp"
+#include "stout/some.hpp"
+#include "stout/stringify.hpp"
+#include "stout/strings.hpp"
+#include "stout/try.hpp"
 
-#include <stout/flags/fetch.hpp>
-#include <stout/flags/flag.hpp>
-
-#include <stout/os/environment.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace flags {
 
-class FlagsBase
-{
-public:
-  FlagsBase()
-  {
+////////////////////////////////////////////////////////////////////////
+
+class FlagsBase {
+ public:
+  FlagsBase() {
     add(&FlagsBase::help, "help", "Prints this help message", false);
   }
 
@@ -161,26 +160,33 @@ public:
 
   // Sets the default message that is prepended to the flags'
   // description in 'usage()'.
-  void setUsageMessage(const std::string& message)
-  {
+  void setUsageMessage(const std::string& message) {
     usageMessage_ = Some(message);
   }
 
   typedef std::map<std::string, Flag>::const_iterator const_iterator;
 
-  const_iterator begin() const { return flags_.begin(); }
-  const_iterator end() const { return flags_.end(); }
+  const_iterator begin() const {
+    return flags_.begin();
+  }
+  const_iterator end() const {
+    return flags_.end();
+  }
 
   typedef std::map<std::string, Flag>::iterator iterator;
 
-  iterator begin() { return flags_.begin(); }
-  iterator end() { return flags_.end(); }
+  iterator begin() {
+    return flags_.begin();
+  }
+  iterator end() {
+    return flags_.end();
+  }
 
-  // In the overloaded function signatures for `add` found below, we use a `T2*`
-  // for the default flag value where applicable. This is used instead of an
-  // `Option<T2>&` because when string literals are passed to this parameter,
-  // `Option` infers a character array type, which causes problems in the
-  // current implementation of `Option`. See MESOS-5471.
+  // In the overloaded function signatures for `add` found below, we use a
+  // `T2*` for the default flag value where applicable. This is used instead of
+  // an `Option<T2>&` because when string literals are passed to this
+  // parameter, `Option` infers a character array type, which causes problems
+  // in the current implementation of `Option`. See MESOS-5471.
 
   template <typename Flags, typename T1, typename T2, typename F>
   void add(
@@ -198,8 +204,7 @@ public:
       const Option<Name>& alias,
       const std::string& help,
       const T2& t2,
-      F validate)
-  {
+      F validate) {
     add(t1, name, alias, help, &t2, validate);
   }
 
@@ -209,8 +214,7 @@ public:
       const Name& name,
       const std::string& help,
       const T2& t2,
-      F validate)
-  {
+      F validate) {
     add(t1, name, None(), help, &t2, validate);
   }
 
@@ -219,8 +223,7 @@ public:
       T1 Flags::*t1,
       const Name& name,
       const std::string& help,
-      const T2& t2)
-  {
+      const T2& t2) {
     add(t1, name, None(), help, &t2, [](const T1&) { return None(); });
   }
 
@@ -228,8 +231,7 @@ public:
   void add(
       T Flags::*t,
       const Name& name,
-      const std::string& help)
-  {
+      const std::string& help) {
     add(t,
         name,
         None(),
@@ -244,8 +246,7 @@ public:
       const Name& name,
       const Option<Name>& alias,
       const std::string& help,
-      const T2& t2)
-  {
+      const T2& t2) {
     add(t1, name, alias, help, &t2, [](const T1&) { return None(); });
   }
 
@@ -262,8 +263,7 @@ public:
       Option<T> Flags::*option,
       const Name& name,
       const std::string& help,
-      F validate)
-  {
+      F validate) {
     add(option, name, None(), help, validate);
   }
 
@@ -271,8 +271,7 @@ public:
   void add(
       Option<T> Flags::*option,
       const Name& name,
-      const std::string& help)
-  {
+      const std::string& help) {
     add(option, name, None(), help, [](const Option<T>&) { return None(); });
   }
 
@@ -281,8 +280,7 @@ public:
       Option<T> Flags::*option,
       const Name& name,
       const Option<Name>& alias,
-      const std::string& help)
-  {
+      const std::string& help) {
     add(option, name, alias, help, [](const Option<T>&) { return None(); });
   }
 
@@ -302,7 +300,7 @@ public:
   std::map<std::string, std::string> buildEnvironment(
       const Option<std::string>& prefix = None()) const;
 
-protected:
+ protected:
   // The program's name, extracted from argv[0] by default;
   // declared 'protected' so that derived classes can alter this
   // behavior.
@@ -314,7 +312,7 @@ protected:
   // behavior is to print "Usage:" followed by the 'programName_'.
   Option<std::string> usageMessage_;
 
-private:
+ private:
   Try<Warnings> load(
       Multimap<std::string, Option<std::string>>& values,
       bool unknowns = false,
@@ -328,6 +326,7 @@ private:
   std::map<std::string, std::string> aliases;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename Flags, typename T1, typename T2, typename F>
 void FlagsBase::add(
@@ -336,8 +335,7 @@ void FlagsBase::add(
     const Option<Name>& alias,
     const std::string& help,
     const T2* t2,
-    F validate)
-{
+    F validate) {
   // Don't bother adding anything if the pointer is `nullptr`.
   if (t1 == nullptr) {
     return;
@@ -345,8 +343,7 @@ void FlagsBase::add(
 
   Flags* flags = dynamic_cast<Flags*>(this);
   if (flags == nullptr) {
-    ABORT("Attempted to add flag '" + name.value +
-          "' with incompatible type");
+    ABORT("Attempted to add flag '" + name.value + "' with incompatible type");
   }
 
   Flag flag;
@@ -403,8 +400,8 @@ void FlagsBase::add(
 
   // Update the help string to include the default value.
   flag.help += help.size() > 0 && help.find_last_of("\n\r") != help.size() - 1
-    ? " (default: " // On same line, add space.
-    : "(default: "; // On newline.
+      ? " (default: " // On same line, add space.
+      : "(default: "; // On newline.
   if (t2 != nullptr) {
     flag.help += stringify(*t2);
   }
@@ -413,6 +410,7 @@ void FlagsBase::add(
   add(flag);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename Flags, typename T, typename F>
 void FlagsBase::add(
@@ -420,8 +418,7 @@ void FlagsBase::add(
     const Name& name,
     const Option<Name>& alias,
     const std::string& help,
-    F validate)
-{
+    F validate) {
   // Don't bother adding anything if the pointer is `nullptr`.
   if (option == nullptr) {
     return;
@@ -429,8 +426,7 @@ void FlagsBase::add(
 
   Flags* flags = dynamic_cast<Flags*>(this);
   if (flags == nullptr) {
-    ABORT("Attempted to add flag '" + name.value +
-          "' with incompatible type");
+    ABORT("Attempted to add flag '" + name.value + "' with incompatible type");
   }
 
   Flag flag;
@@ -445,7 +441,7 @@ void FlagsBase::add(
   // parameter.
 
   flag.load =
-    [option](FlagsBase* base, const std::string& value) -> Try<Nothing> {
+      [option](FlagsBase* base, const std::string& value) -> Try<Nothing> {
     Flags* flags = dynamic_cast<Flags*>(base);
     if (flags != nullptr) {
       // NOTE: 'fetch' "retrieves" the value if necessary and then
@@ -482,16 +478,16 @@ void FlagsBase::add(
   add(flag);
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline void FlagsBase::add(const Flag& flag)
-{
+inline void FlagsBase::add(const Flag& flag) {
   // Check if the name and alias of the flag are valid.
   std::vector<Name> names = {flag.name};
   if (flag.alias.isSome()) {
     if (flag.alias.get() == flag.name) {
       EXIT(EXIT_FAILURE)
-        << "Attempted to add flag '" << flag.name.value << "' with an alias"
-        << " that is same as the flag name";
+          << "Attempted to add flag '" << flag.name.value << "' with an alias"
+          << " that is same as the flag name";
     }
 
     names.push_back(flag.alias.get());
@@ -500,11 +496,11 @@ inline void FlagsBase::add(const Flag& flag)
   foreach (const Name& name, names) {
     if (flags_.count(name.value) > 0) {
       EXIT(EXIT_FAILURE)
-        << "Attempted to add duplicate flag '" << name.value << "'";
+          << "Attempted to add duplicate flag '" << name.value << "'";
     } else if (name.value.find("no-") == 0) {
       EXIT(EXIT_FAILURE)
-        << "Attempted to add flag '" << name.value
-        << "' that starts with the reserved 'no-' prefix";
+          << "Attempted to add flag '" << name.value
+          << "' that starts with the reserved 'no-' prefix";
     }
   }
 
@@ -514,16 +510,17 @@ inline void FlagsBase::add(const Flag& flag)
   }
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Extract environment variable "flags" with the specified prefix.
 inline std::map<std::string, Option<std::string>> FlagsBase::extract(
-    const std::string& prefix) const
-{
+    const std::string& prefix) const {
   std::map<std::string, Option<std::string>> values;
 
-  foreachpair (const std::string& key,
-               const std::string& value,
-               os::environment()) {
+  foreachpair(
+      const std::string& key,
+      const std::string& value,
+      os::environment()) {
     if (key.find(prefix) == 0) {
       std::string name = key.substr(prefix.size());
       name = strings::lower(name); // Allow PREFIX_NAME or PREFIX_name.
@@ -541,18 +538,18 @@ inline std::map<std::string, Option<std::string>> FlagsBase::extract(
   return values;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline std::map<std::string, std::string> FlagsBase::buildEnvironment(
-    const Option<std::string>& prefix) const
-{
+    const Option<std::string>& prefix) const {
   std::map<std::string, std::string> result;
 
-  foreachvalue (const Flag& flag, flags_) {
+  foreachvalue(const Flag& flag, flags_) {
     Option<std::string> value = flag.stringify(*this);
     if (value.isSome()) {
       const std::string key = prefix.isSome()
-        ? prefix.get() + strings::upper(flag.effective_name().value)
-        : strings::upper(flag.effective_name().value);
+          ? prefix.get() + strings::upper(flag.effective_name().value)
+          : strings::upper(flag.effective_name().value);
 
       result[key] = value.get();
     }
@@ -561,20 +558,20 @@ inline std::map<std::string, std::string> FlagsBase::buildEnvironment(
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<Warnings> FlagsBase::load(const std::string& prefix)
-{
+inline Try<Warnings> FlagsBase::load(const std::string& prefix) {
   return load(extract(prefix));
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline Try<Warnings> FlagsBase::load(
     const Option<std::string>& prefix,
     int argc,
-    const char* const *argv,
+    const char* const* argv,
     bool unknowns,
-    bool duplicates)
-{
+    bool duplicates) {
   Multimap<std::string, Option<std::string>> values;
 
   // Grab the program name from argv[0].
@@ -600,9 +597,9 @@ inline Try<Warnings> FlagsBase::load(
     size_t eq = arg.find_first_of('=');
     if (eq == std::string::npos && arg.find("--no-") == 0) { // --no-name
       name = arg.substr(2);
-    } else if (eq == std::string::npos) {                    // --name
+    } else if (eq == std::string::npos) { // --name
       name = arg.substr(2);
-    } else {                                                 // --name=value
+    } else { // --name=value
       name = arg.substr(2, eq - 2);
       value = arg.substr(eq + 1);
     }
@@ -615,14 +612,14 @@ inline Try<Warnings> FlagsBase::load(
   return load(values, unknowns, duplicates, prefix);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline Try<Warnings> FlagsBase::load(
     const Option<std::string>& prefix,
     int* argc,
     char*** argv,
     bool unknowns,
-    bool duplicates)
-{
+    bool duplicates) {
   Multimap<std::string, Option<std::string>> values;
 
   // Grab the program name from argv, without removing it.
@@ -656,9 +653,9 @@ inline Try<Warnings> FlagsBase::load(
     size_t eq = arg.find_first_of('=');
     if (eq == std::string::npos && arg.find("--no-") == 0) { // --no-name
       name = arg.substr(2);
-    } else if (eq == std::string::npos) {                    // --name
+    } else if (eq == std::string::npos) { // --name
       name = arg.substr(2);
-    } else {                                                 // --name=value
+    } else { // --name=value
       name = arg.substr(2, eq - 2);
       value = arg.substr(eq + 1);
     }
@@ -689,41 +686,42 @@ inline Try<Warnings> FlagsBase::load(
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline Try<Warnings> FlagsBase::load(
     const std::map<std::string, Option<std::string>>& values,
     bool unknowns,
-    const Option<std::string>& prefix)
-{
+    const Option<std::string>& prefix) {
   Multimap<std::string, Option<std::string>> values_;
-  foreachpair (const std::string& name,
-               const Option<std::string>& value,
-               values) {
+  foreachpair(
+      const std::string& name,
+      const Option<std::string>& value,
+      values) {
     values_.put(name, value);
   }
   return load(values_, unknowns, false, prefix);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline Try<Warnings> FlagsBase::load(
     const std::map<std::string, std::string>& values,
     bool unknowns,
-    const Option<std::string>& prefix)
-{
+    const Option<std::string>& prefix) {
   Multimap<std::string, Option<std::string>> values_;
-  foreachpair (const std::string& name, const std::string& value, values) {
+  foreachpair(const std::string& name, const std::string& value, values) {
     values_.put(name, Some(value));
   }
   return load(values_, unknowns, false, prefix);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline Try<Warnings> FlagsBase::load(
     Multimap<std::string, Option<std::string>>& values,
     bool unknowns,
     bool duplicates,
-    const Option<std::string>& prefix)
-{
+    const Option<std::string>& prefix) {
   Warnings warnings;
 
   if (prefix.isSome()) {
@@ -732,29 +730,32 @@ inline Try<Warnings> FlagsBase::load(
     //
     // Other overloads parse command line flags into
     // the values map and pass them into this method.
-    foreachpair (const std::string& name,
-                 const Option<std::string>& value,
-                 extract(prefix.get())) {
+    foreachpair(
+        const std::string& name,
+        const Option<std::string>& value,
+        extract(prefix.get())) {
       if (!values.contains(name)) {
         values.put(name, value);
       }
     }
   }
 
-  foreachpair (const std::string& name,
-               const Option<std::string>& value,
-               values) {
+  foreachpair(
+      const std::string& name,
+      const Option<std::string>& value,
+      values) {
     bool is_negated = strings::startsWith(name, "no-");
     std::string flag_name = !is_negated ? name : name.substr(3);
 
     auto iter = aliases.count(flag_name)
-      ? flags_.find(aliases[flag_name])
-      : flags_.find(flag_name);
+        ? flags_.find(aliases[flag_name])
+        : flags_.find(flag_name);
 
     if (iter == flags_.end()) {
       if (!unknowns) {
-        return Error("Failed to load unknown flag '" + flag_name + "'" +
-                     (!is_negated ? "" : " via '" + name + "'"));
+        return Error(
+            "Failed to load unknown flag '"
+            + flag_name + "'" + (!is_negated ? "" : " via '" + name + "'"));
       } else {
         continue;
       }
@@ -763,33 +764,36 @@ inline Try<Warnings> FlagsBase::load(
     Flag* flag = &(iter->second);
 
     if (!duplicates && flag->loaded_name.isSome()) {
-      return Error("Flag '" + flag_name + "' is already loaded via name '" +
-                   flag->loaded_name->value + "'");
+      return Error(
+          "Flag '" + flag_name + "' is already loaded via name '"
+          + flag->loaded_name->value + "'");
     }
 
     // Validate the flag value.
     std::string value_;
-    if (!flag->boolean) {  // Non-boolean flag.
+    if (!flag->boolean) { // Non-boolean flag.
       if (is_negated) { // Non-boolean flag cannot be loaded with "no-" prefix.
-        return Error("Failed to load non-boolean flag '" + flag_name +
-                     "' via '" + name + "'");
+        return Error(
+            "Failed to load non-boolean flag '" + flag_name
+            + "' via '" + name + "'");
       }
 
       if (value.isNone()) {
-        return Error("Failed to load non-boolean flag '" + flag_name +
-                     "': Missing value");
+        return Error(
+            "Failed to load non-boolean flag '" + flag_name
+            + "': Missing value");
       }
 
       value_ = value.get();
-    } else {  // Boolean flag.
+    } else { // Boolean flag.
       if (value.isNone() || value.get() == "") {
         value_ = !is_negated ? "true" : "false";
       } else if (!is_negated) {
         value_ = value.get();
       } else { // Boolean flag with "no-" prefix cannot have non-empty value.
         return Error(
-            "Failed to load boolean flag '" + flag_name + "' via '" + name +
-            "' with value '" + value.get() + "'");
+            "Failed to load boolean flag '" + flag_name + "' via '" + name
+            + "' with value '" + value.get() + "'");
       }
     }
 
@@ -819,11 +823,11 @@ inline Try<Warnings> FlagsBase::load(
   // TODO(benh): Consider validating all flags at the same time in
   // order to provide more feedback rather than requiring a user to
   // fix one at a time.
-  foreachvalue (const Flag& flag, flags_) {
+  foreachvalue(const Flag& flag, flags_) {
     if (flag.required && flag.loaded_name.isNone()) {
-        return Error(
-            "Flag '" + flag.name.value +
-            "' is required, but it was not provided");
+      return Error(
+          "Flag '" + flag.name.value
+          + "' is required, but it was not provided");
     }
 
     Option<Error> error = flag.validate(*this);
@@ -835,9 +839,9 @@ inline Try<Warnings> FlagsBase::load(
   return warnings;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline std::string FlagsBase::usage(const Option<std::string>& message) const
-{
+inline std::string FlagsBase::usage(const Option<std::string>& message) const {
   const int PAD = 5;
 
   std::string usage;
@@ -857,7 +861,7 @@ inline std::string FlagsBase::usage(const Option<std::string>& message) const
   // Construct string for the first column and store width of column.
   size_t width = 0;
 
-  foreachvalue (const flags::Flag& flag, *this) {
+  foreachvalue(const flags::Flag& flag, *this) {
     if (flag.boolean) {
       col1[flag.name.value] += "  --[no-]" + flag.name.value;
       if (flag.alias.isSome()) {
@@ -873,9 +877,9 @@ inline std::string FlagsBase::usage(const Option<std::string>& message) const
     width = std::max(width, col1[flag.name.value].size());
   }
 
-  // TODO(vinod): Print the help on the next line instead of on the same line as
-  // the names.
-  foreachvalue (const flags::Flag& flag, *this) {
+  // TODO(vinod): Print the help on the next line instead of on the same line
+  // as the names.
+  foreachvalue(const flags::Flag& flag, *this) {
     std::string line = col1[flag.name.value];
 
     std::string pad(PAD + width - line.size(), ' ');
@@ -886,7 +890,7 @@ inline std::string FlagsBase::usage(const Option<std::string>& message) const
     line += flag.help.substr(pos1, pos2 - pos1) + "\n";
     usage += line;
 
-    while (pos2 != std::string::npos) {  // Handle multi-line help strings.
+    while (pos2 != std::string::npos) { // Handle multi-line help strings.
       line = "";
       pos1 = pos2 + 1;
       std::string pad2(PAD + width, ' ');
@@ -900,22 +904,26 @@ inline std::string FlagsBase::usage(const Option<std::string>& message) const
   return usage;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline std::ostream& operator<<(std::ostream& stream, const FlagsBase& flags)
-{
+inline std::ostream& operator<<(
+    std::ostream& stream,
+    const FlagsBase& flags) {
   std::vector<std::string> _flags;
 
-  foreachvalue (const flags::Flag& flag, flags) {
+  foreachvalue(const flags::Flag& flag, flags) {
     const Option<std::string> value = flag.stringify(flags);
     if (value.isSome()) {
-      _flags.push_back("--" + flag.effective_name().value + "=\"" +
-                       value.get() + '"');
+      _flags.push_back(
+          "--" + flag.effective_name().value + "=\"" + value.get() + '"');
     }
   }
 
   return stream << strings::join(" ", _flags);
 }
 
-} // namespace flags {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_FLAGS_FLAGS_HPP__
+} // namespace flags
+
+////////////////////////////////////////////////////////////////////////
