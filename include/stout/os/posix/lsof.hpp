@@ -10,23 +10,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_LSOF_HPP__
-#define __STOUT_OS_POSIX_LSOF_HPP__
+#pragma once
 
 #include <string>
 #include <vector>
 
-#include <stout/numify.hpp>
-#include <stout/try.hpp>
+#include "stout/numify.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/os/ls.hpp"
+#include "stout/try.hpp"
 
-#include <stout/os/int_fd.hpp>
-#include <stout/os/ls.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
+////////////////////////////////////////////////////////////////////////
+
 // Get all the open file descriptors of the current process.
-inline Try<std::vector<int_fd>> lsof()
-{
+inline Try<std::vector<int_fd>> lsof() {
   int fdDir = ::open("/dev/fd", O_RDONLY | O_CLOEXEC);
   if (fdDir == -1) {
     return ErrnoError("Failed to open '/dev/fd'");
@@ -54,8 +55,8 @@ inline Try<std::vector<int_fd>> lsof()
     Try<int_fd> fd = numify<int_fd>(entry->d_name);
     if (fd.isError()) {
       return Error(
-          "Could not interpret file descriptor '" +
-          std::string(entry->d_name) + "': " + fd.error());
+          "Could not interpret file descriptor '"
+          + std::string(entry->d_name) + "': " + fd.error());
     }
 
     if (fd.get() != fdDir) {
@@ -77,6 +78,8 @@ inline Try<std::vector<int_fd>> lsof()
   return result;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif /* __STOUT_OS_POSIX_LSOF_HPP__  */
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

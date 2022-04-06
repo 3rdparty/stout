@@ -10,28 +10,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_BOOTID_HPP__
-#define __STOUT_OS_POSIX_BOOTID_HPP__
-
-#include <string>
+#pragma once
 
 #include <sys/time.h>
 
-#include <stout/error.hpp>
-#include <stout/stringify.hpp>
-#include <stout/strings.hpp>
-#include <stout/try.hpp>
+#include <string>
 
-#include <stout/os/read.hpp>
+#include "stout/error.hpp"
+#include "stout/os/read.hpp"
+#include "stout/stringify.hpp"
+#include "stout/strings.hpp"
+#include "stout/try.hpp"
 #if defined(__APPLE__) || defined(__FreeBSD__)
 #include <stout/os/sysctl.hpp>
 #endif // __APPLE__ || __FreeBSD__
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline Try<std::string> bootId()
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Try<std::string> bootId() {
 #ifdef __linux__
   Try<std::string> read = os::read("/proc/sys/kernel/random/boot_id");
   if (read.isError()) {
@@ -54,6 +54,8 @@ inline Try<std::string> bootId()
 #endif
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_BOOTID_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

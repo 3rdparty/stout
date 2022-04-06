@@ -10,28 +10,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_WHICH_HPP__
-#define __STOUT_OS_POSIX_WHICH_HPP__
+#pragma once
 
 #include <string>
 #include <vector>
 
-#include <stout/none.hpp>
-#include <stout/option.hpp>
-#include <stout/os.hpp>
-#include <stout/path.hpp>
-#include <stout/strings.hpp>
+#include "stout/none.hpp"
+#include "stout/option.hpp"
+#include "stout/os.hpp"
+#include "stout/os/exists.hpp"
+#include "stout/os/permissions.hpp"
+#include "stout/path.hpp"
+#include "stout/strings.hpp"
 
-#include <stout/os/exists.hpp>
-#include <stout/os/permissions.hpp>
-
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
+////////////////////////////////////////////////////////////////////////
+
 inline Option<std::string> which(
     const std::string& command,
-    const Option<std::string>& _path = None())
-{
+    const Option<std::string>& _path = None()) {
   Option<std::string> path = _path;
 
   if (path.isNone()) {
@@ -54,9 +54,9 @@ inline Option<std::string> which(
       continue;
     }
 
-    if (!permissions->owner.x &&
-        !permissions->group.x &&
-        !permissions->others.x) {
+    if (!permissions->owner.x
+        && !permissions->group.x
+        && !permissions->others.x) {
       continue;
     }
 
@@ -66,7 +66,8 @@ inline Option<std::string> which(
   return None();
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace os
 
-#endif // __STOUT_OS_POSIX_WHICH_HPP__
+////////////////////////////////////////////////////////////////////////

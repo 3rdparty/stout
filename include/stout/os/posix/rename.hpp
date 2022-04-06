@@ -10,23 +10,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_RENAME_HPP__
-#define __STOUT_OS_POSIX_RENAME_HPP__
+#pragma once
 
 #include <stdio.h>
 
 #include <string>
 #include <vector>
 
-#include <stout/error.hpp>
-#include <stout/foreach.hpp>
-#include <stout/nothing.hpp>
-#include <stout/path.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/foreach.hpp"
+#include "stout/nothing.hpp"
+#include "stout/os/fsync.hpp"
+#include "stout/path.hpp"
+#include "stout/try.hpp"
 
-#include <stout/os/fsync.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // Rename a given path to another one. If `sync` is set to true, `fsync()` will
 // be called on both the source directory and the destination directory to
@@ -35,13 +37,13 @@ namespace os {
 // NOTE: This function can fail with `sync` set to true if either the source
 // directory or the destination directory gets removed before it returns. If
 // multiple processes or threads access to the filesystems concurrently, the
-// caller should either enforce a proper synchronization, or set `sync` to false
-// and call `fsync()` explicitly on POSIX systems to handle such failures.
+// caller should either enforce a proper synchronization, or set `sync` to
+// false and call `fsync()` explicitly on POSIX systems to handle such
+// failures.
 inline Try<Nothing> rename(
     const std::string& from,
     const std::string& to,
-    bool sync = false)
-{
+    bool sync = false) {
   if (::rename(from.c_str(), to.c_str()) != 0) {
     return ErrnoError();
   }
@@ -68,6 +70,8 @@ inline Try<Nothing> rename(
   return Nothing();
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_RENAME_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

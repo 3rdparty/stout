@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_SIGNALS_HPP__
-#define __STOUT_OS_POSIX_SIGNALS_HPP__
+#pragma once
 
 #include <errno.h>
 #include <pthread.h>
@@ -19,14 +18,18 @@
 #include <string.h>
 #include <unistd.h>
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
+////////////////////////////////////////////////////////////////////////
+
 namespace signals {
 
+////////////////////////////////////////////////////////////////////////
+
 // Installs the given signal handler.
-inline int install(int signal, void(*handler)(int))
-{
+inline int install(int signal, void (*handler)(int)) {
   struct sigaction action;
   memset(&action, 0, sizeof(action));
   sigemptyset(&action.sa_mask);
@@ -34,10 +37,10 @@ inline int install(int signal, void(*handler)(int))
   return sigaction(signal, &action, nullptr);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Resets the signal handler to the default handler of the signal.
-inline int reset(int signal)
-{
+inline int reset(int signal) {
   struct sigaction action;
   memset(&action, 0, sizeof(action));
   sigemptyset(&action.sa_mask);
@@ -45,21 +48,21 @@ inline int reset(int signal)
   return sigaction(signal, &action, nullptr);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns true iff the signal is pending.
-inline bool pending(int signal)
-{
+inline bool pending(int signal) {
   sigset_t set;
   sigemptyset(&set);
   sigpending(&set);
   return sigismember(&set, signal);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns true if the signal has been blocked, or false if the
 // signal was already blocked.
-inline bool block(int signal)
-{
+inline bool block(int signal) {
   sigset_t set;
   sigemptyset(&set);
   sigaddset(&set, signal);
@@ -74,11 +77,11 @@ inline bool block(int signal)
   return !sigismember(&oldset, signal);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns true if the signal has been unblocked, or false if the
 // signal was not previously blocked.
-inline bool unblock(int signal)
-{
+inline bool unblock(int signal) {
   sigset_t set;
   sigemptyset(&set);
   sigaddset(&set, signal);
@@ -91,17 +94,21 @@ inline bool unblock(int signal)
   return sigismember(&oldset, signal);
 }
 
+////////////////////////////////////////////////////////////////////////
+
 namespace internal {
+
+////////////////////////////////////////////////////////////////////////
 
 // Suppresses a signal on the current thread for the lifetime of
 // the Suppressor. The signal *must* be synchronous and delivered
 // per-thread. The suppression occurs only on the thread of
 // execution of the Suppressor.
-struct Suppressor
-{
+struct Suppressor {
   Suppressor(int _signal)
-    : signal(_signal), pending(false), unblock(false)
-  {
+    : signal(_signal),
+      pending(false),
+      unblock(false) {
     // Check to see if the signal is already reported as pending.
     // If pending, it means the thread already blocks the signal!
     // Therefore, any new instances of the signal will also be
@@ -116,8 +123,7 @@ struct Suppressor
     }
   }
 
-  ~Suppressor()
-  {
+  ~Suppressor() {
     // We want to preserve errno when the Suppressor drops out of
     // scope. Otherwise, one needs to potentially store errno when
     // using the suppress() macro.
@@ -132,7 +138,7 @@ struct Suppressor
       // able to clear it here. This can happen if the signal was
       // generated for the whole process (e.g. a kill was issued).
       // See 2.4.1 here:
-      // http://pubs.opengroup.org/onlinepubs/009695399/functions/xsh_chap02_04.html
+      // https://tinyurl.com/yckk6umn
       // To handle the above scenario, one can either:
       //   1. Use sigtimedwait() with a timeout of 0, to ensure we
       //      don't block forever. However, this only works on Linux
@@ -172,17 +178,26 @@ struct Suppressor
   }
 
   // Needed for the suppress() macro.
-  operator bool() { return true; }
-private:
+  operator bool() {
+    return true;
+  }
+
+ private:
   const int signal;
   bool pending; // Whether the signal is already pending.
   bool unblock; // Whether to unblock the signal on destruction.
 };
 
-} // namespace internal {
+////////////////////////////////////////////////////////////////////////
 
-} // namespace signals {
+} // namespace internal
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_SIGNALS_HPP__
+} // namespace signals
+
+////////////////////////////////////////////////////////////////////////
+
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

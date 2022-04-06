@@ -10,52 +10,57 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_XATTR_HPP__
-#define __STOUT_OS_POSIX_XATTR_HPP__
+#pragma once
 
 #ifdef __FreeBSD__
-#include <sys/types.h>
 #include <sys/extattr.h>
+#include <sys/types.h>
 #else
 #include <sys/xattr.h>
 #endif
 
 #include <string>
 
-#include <stout/error.hpp>
-#include <stout/nothing.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/nothing.hpp"
+#include "stout/try.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 inline Try<Nothing> setxattr(
     const std::string& path,
     const std::string& name,
     const std::string& value,
-    int flags)
-{
+    int flags) {
 #ifdef __APPLE__
   if (::setxattr(
-      path.c_str(),
-      name.c_str(),
-      value.c_str(),
-      value.length(),
-      0,
-      flags) < 0) {
+          path.c_str(),
+          name.c_str(),
+          value.c_str(),
+          value.length(),
+          0,
+          flags)
+      < 0) {
 #elif __FreeBSD__
   if (::extattr_set_file(
-        path.c_str(),
-        EXTATTR_NAMESPACE_USER,
-        name.c_str(),
-        value.c_str(),
-        value.length()) < 0) {
+          path.c_str(),
+          EXTATTR_NAMESPACE_USER,
+          name.c_str(),
+          value.c_str(),
+          value.length())
+      < 0) {
 #else
   if (::setxattr(
-        path.c_str(),
-        name.c_str(),
-        value.c_str(),
-        value.length(),
-        flags) < 0) {
+          path.c_str(),
+          name.c_str(),
+          value.c_str(),
+          value.length(),
+          flags)
+      < 0) {
 #endif
     return ErrnoError();
   }
@@ -63,20 +68,22 @@ inline Try<Nothing> setxattr(
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline Try<std::string> getxattr(
     const std::string& path,
-    const std::string& name)
-{
+    const std::string& name) {
   // Get the current size of the attribute.
 #ifdef __APPLE__
   ssize_t size = ::getxattr(path.c_str(), name.c_str(), nullptr, 0, 0, 0);
 #elif __FreeBSD__
-  ssize_t size = ::extattr_get_file(path.c_str(),
-                                    EXTATTR_NAMESPACE_USER,
-                                    name.c_str(),
-                                    nullptr,
-                                    0);
+  ssize_t size =
+      ::extattr_get_file(
+          path.c_str(),
+          EXTATTR_NAMESPACE_USER,
+          name.c_str(),
+          nullptr,
+          0);
 #else
   ssize_t size = ::getxattr(path.c_str(), name.c_str(), nullptr, 0);
 #endif
@@ -85,19 +92,27 @@ inline Try<std::string> getxattr(
   }
 
   char* temp = new char[size + 1];
-  ::memset(temp, 0, (size_t)size + 1);
+  ::memset(temp, 0, (size_t) size + 1);
 
 #ifdef __APPLE__
-  if (::getxattr(path.c_str(), name.c_str(), temp, (size_t)size, 0, 0) < 0) {
+  if (::getxattr(
+          path.c_str(),
+          name.c_str(),
+          temp,
+          (size_t) size,
+          0,
+          0)
+      < 0) {
 #elif __FreeBSD__
   if (::extattr_get_file(
-              path.c_str(),
-              EXTATTR_NAMESPACE_USER,
-              name.c_str(),
-              temp,
-              (size_t)size) < 0) {
+          path.c_str(),
+          EXTATTR_NAMESPACE_USER,
+          name.c_str(),
+          temp,
+          (size_t) size)
+      < 0) {
 #else
-  if (::getxattr(path.c_str(), name.c_str(), temp, (size_t)size) < 0) {
+  if (::getxattr(path.c_str(), name.c_str(), temp, (size_t) size) < 0) {
 #endif
     delete[] temp;
     return ErrnoError();
@@ -109,17 +124,18 @@ inline Try<std::string> getxattr(
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline Try<Nothing> removexattr(
     const std::string& path,
-    const std::string& name)
-{
+    const std::string& name) {
 #ifdef __APPLE__
   if (::removexattr(path.c_str(), name.c_str(), 0) < 0) {
 #elif __FreeBSD__
-  if (::extattr_delete_file(path.c_str(),
-                            EXTATTR_NAMESPACE_USER,
-                            name.c_str())) {
+  if (::extattr_delete_file(
+          path.c_str(),
+          EXTATTR_NAMESPACE_USER,
+          name.c_str())) {
 #else
   if (::removexattr(path.c_str(), name.c_str()) < 0) {
 #endif
@@ -129,6 +145,8 @@ inline Try<Nothing> removexattr(
   return Nothing();
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif /* __STOUT_OS_POSIX_XATTR_HPP__  */
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

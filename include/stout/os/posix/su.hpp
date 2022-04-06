@@ -14,32 +14,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_SU_HPP__
-#define __STOUT_OS_POSIX_SU_HPP__
+#pragma once
 
 #include <errno.h>
 #include <grp.h>
 #include <limits.h>
 #include <pwd.h>
-#include <unistd.h>
-
 #include <sys/syscall.h>
+#include <unistd.h>
 
 #include <string>
 #include <vector>
 
-#include <stout/error.hpp>
-#include <stout/none.hpp>
-#include <stout/nothing.hpp>
-#include <stout/option.hpp>
-#include <stout/result.hpp>
-#include <stout/try.hpp>
-#include <stout/unreachable.hpp>
+#include "stout/error.hpp"
+#include "stout/none.hpp"
+#include "stout/nothing.hpp"
+#include "stout/option.hpp"
+#include "stout/result.hpp"
+#include "stout/try.hpp"
+#include "stout/unreachable.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline Result<uid_t> getuid(const Option<std::string>& user = None())
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Result<uid_t> getuid(const Option<std::string>& user = None()) {
   if (user.isNone()) {
     return ::getuid();
   }
@@ -89,11 +90,9 @@ inline Result<uid_t> getuid(const Option<std::string>& user = None())
       // assume the user name wasn't found.
       //
       // TODO(neilc): Consider retrying on EINTR.
-      if (errno != EIO &&
-          errno != EINTR &&
-          errno != EMFILE &&
-          errno != ENFILE &&
-          errno != ENOMEM) {
+      if (errno != EIO
+          && errno != EINTR && errno != EMFILE
+          && errno != ENFILE && errno != ENOMEM) {
         return None();
       }
 
@@ -104,9 +103,9 @@ inline Result<uid_t> getuid(const Option<std::string>& user = None())
   UNREACHABLE();
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<Nothing> setuid(uid_t uid)
-{
+inline Try<Nothing> setuid(uid_t uid) {
   if (::setuid(uid) == -1) {
     return ErrnoError();
   }
@@ -114,9 +113,9 @@ inline Try<Nothing> setuid(uid_t uid)
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Result<gid_t> getgid(const Option<std::string>& user = None())
-{
+inline Result<gid_t> getgid(const Option<std::string>& user = None()) {
   if (user.isNone()) {
     return ::getgid();
   }
@@ -166,11 +165,8 @@ inline Result<gid_t> getgid(const Option<std::string>& user = None())
       // assume the user name wasn't found.
       //
       // TODO(neilc): Consider retrying on EINTR.
-      if (errno != EIO &&
-          errno != EINTR &&
-          errno != EMFILE &&
-          errno != ENFILE &&
-          errno != ENOMEM) {
+      if (errno != EIO && errno != EINTR
+          && errno != EMFILE && errno != ENFILE && errno != ENOMEM) {
         return None();
       }
 
@@ -181,9 +177,9 @@ inline Result<gid_t> getgid(const Option<std::string>& user = None())
   UNREACHABLE();
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<Nothing> setgid(gid_t gid)
-{
+inline Try<Nothing> setgid(gid_t gid) {
   if (::setgid(gid) == -1) {
     return ErrnoError();
   }
@@ -191,15 +187,16 @@ inline Try<Nothing> setgid(gid_t gid)
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<std::vector<gid_t>> getgrouplist(const std::string& user)
-{
+inline Try<std::vector<gid_t>> getgrouplist(const std::string& user) {
   // TODO(jieyu): Consider adding a 'gid' parameter and avoid calling
   // getgid here. In some cases, the primary gid might be known.
   Result<gid_t> gid = os::getgid(user);
   if (!gid.isSome()) {
-    return Error("Failed to get the gid of the user: " +
-                 (gid.isError() ? gid.error() : "group not found"));
+    return Error(
+        "Failed to get the gid of the user: "
+        + (gid.isError() ? gid.error() : "group not found"));
   }
 
 #ifdef __APPLE__
@@ -221,11 +218,11 @@ inline Try<std::vector<gid_t>> getgrouplist(const std::string& user)
   return std::vector<gid_t>(gids, gids + ngroups);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline Try<Nothing> setgroups(
     const std::vector<gid_t>& gids,
-    const Option<uid_t>& uid = None())
-{
+    const Option<uid_t>& uid = None()) {
   int ngroups = static_cast<int>(gids.size());
   gid_t _gids[ngroups];
 
@@ -239,7 +236,7 @@ inline Try<Nothing> setgroups(
   // opendirectoryd. Darwin kernel caches part of the groups in
   // kernel, and the rest in opendirectoryd.
   // For more detail please see:
-  // https://github.com/practicalswift/osx/blob/master/src/samba/patches/support-darwin-initgroups-syscall // NOLINT
+  // https://tinyurl.com/2p927td6 // NOLINT
   int maxgroups = sysconf(_SC_NGROUPS_MAX);
   if (maxgroups == -1) {
     return Error("Failed to get sysconf(_SC_NGROUPS_MAX)");
@@ -280,9 +277,9 @@ inline Try<Nothing> setgroups(
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Result<std::string> user(Option<uid_t> uid = None())
-{
+inline Result<std::string> user(Option<uid_t> uid = None()) {
   if (uid.isNone()) {
     uid = ::getuid();
   }
@@ -322,13 +319,13 @@ inline Result<std::string> user(Option<uid_t> uid = None())
   }
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<Nothing> su(const std::string& user)
-{
+inline Try<Nothing> su(const std::string& user) {
   Result<gid_t> gid = os::getgid(user);
   if (gid.isError() || gid.isNone()) {
-    return Error("Failed to getgid: " +
-        (gid.isError() ? gid.error() : "unknown user"));
+    return Error(
+        "Failed to getgid: " + (gid.isError() ? gid.error() : "unknown user"));
   } else if (::setgid(gid.get())) {
     return ErrnoError("Failed to set gid");
   }
@@ -342,8 +339,8 @@ inline Try<Nothing> su(const std::string& user)
 
   Result<uid_t> uid = os::getuid(user);
   if (uid.isError() || uid.isNone()) {
-    return Error("Failed to getuid: " +
-        (uid.isError() ? uid.error() : "unknown user"));
+    return Error(
+        "Failed to getuid: " + (uid.isError() ? uid.error() : "unknown user"));
   } else if (::setuid(uid.get())) {
     return ErrnoError("Failed to setuid");
   }
@@ -351,6 +348,8 @@ inline Try<Nothing> su(const std::string& user)
   return Nothing();
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_SU_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

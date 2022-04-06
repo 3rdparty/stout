@@ -10,19 +10,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_ENVIRONMENT_HPP__
-#define __STOUT_OS_POSIX_ENVIRONMENT_HPP__
+#pragma once
 
 #include <map>
 #include <string>
 
-#include <stout/os/raw/environment.hpp>
+#include "stout/os/raw/environment.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline std::map<std::string, std::string> environment()
-{
+////////////////////////////////////////////////////////////////////////
+
+inline std::map<std::string, std::string> environment() {
   char** env = os::raw::environment();
 
   std::map<std::string, std::string> result;
@@ -40,6 +41,8 @@ inline std::map<std::string, std::string> environment()
   return result;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_ENVIRONMENT_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

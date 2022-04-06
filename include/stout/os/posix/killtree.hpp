@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_KILLTREE_HPP__
-#define __STOUT_OS_POSIX_KILLTREE_HPP__
+#pragma once
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -20,13 +19,15 @@
 #include <queue>
 #include <set>
 
-#include <stout/check.hpp>
-#include <stout/os.hpp>
+#include "stout/check.hpp"
+#include "stout/os.hpp"
+#include "stout/os/pstree.hpp"
 
-#include <stout/os/pstree.hpp>
-
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // Forward declarations from os.hpp.
 inline std::set<pid_t> children(pid_t, const std::list<Process>&, bool);
@@ -37,6 +38,7 @@ inline Try<std::list<ProcessTree>> pstrees(
     const std::set<pid_t>&,
     const std::list<Process>&);
 
+////////////////////////////////////////////////////////////////////////
 
 // Sends a signal to a process tree rooted at the specified pid.
 // If groups is true, this also sends the signal to all encountered
@@ -59,8 +61,7 @@ inline Try<std::list<ProcessTree>> killtree(
     pid_t pid,
     int signal,
     bool groups = false,
-    bool sessions = false)
-{
+    bool sessions = false) {
   Try<std::list<Process>> processes = os::processes();
 
   if (processes.isError()) {
@@ -78,9 +79,9 @@ inline Try<std::list<ProcessTree>> killtree(
     foreach (const Process& _process, processes.get()) {
       if (groups && _process.group == pid) {
         queue.push(_process.pid);
-      } else if (sessions &&
-                 _process.session.isSome() &&
-                 _process.session.get() == pid) {
+      } else if (
+          sessions && _process.session.isSome()
+          && _process.session.get() == pid) {
         queue.push(_process.pid);
       }
     }
@@ -220,6 +221,8 @@ inline Try<std::list<ProcessTree>> killtree(
   return pstrees(visited.pids, visited.processes);
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_KILLTREE_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

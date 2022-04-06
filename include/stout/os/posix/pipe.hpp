@@ -10,28 +10,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_PIPE_HPP__
-#define __STOUT_OS_POSIX_PIPE_HPP__
-
-#include <unistd.h>
+#pragma once
 
 #include <sys/syscall.h>
+#include <unistd.h>
 
 #include <array>
 
-#include <stout/error.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/os/posix/fcntl.hpp"
+#include "stout/try.hpp"
 
-#include <stout/os/posix/fcntl.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // Create pipes for interprocess communication. The pipe file descriptors
 // will be marked O_CLOEXEC (atomically if the platform supports it). To
 // pass the pipe to a child process, the caller should clear the CLOEXEC
 // flag after fork(2) but before exec(2).
-inline Try<std::array<int, 2>> pipe()
-{
+inline Try<std::array<int, 2>> pipe() {
   std::array<int, 2> result;
 
   // The pipe2() function appeared in FreeBSD 10.0.
@@ -82,6 +82,8 @@ inline Try<std::array<int, 2>> pipe()
   return result;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_PIPE_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

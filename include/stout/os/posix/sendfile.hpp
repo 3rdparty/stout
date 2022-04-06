@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_SENDFILE_HPP__
-#define __STOUT_OS_POSIX_SENDFILE_HPP__
+#pragma once
 
 #include <errno.h>
 
@@ -24,13 +23,16 @@
 #include <sys/uio.h>
 #endif // __APPLE__ || __FreeBSD__
 
-#include <stout/os/signals.hpp>
-#include <stout/unreachable.hpp>
+#include "stout/error.hpp"
+#include "stout/os/signals.hpp"
+#include "stout/try.hpp"
+#include "stout/unreachable.hpp"
 
-#include <stout/error.hpp>
-#include <stout/try.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // Returns the amount of bytes written from the input file
 // descriptor to the output socket. On error,
@@ -40,10 +42,12 @@ namespace os {
 //   1. s must be a stream oriented socket descriptor.
 //   2. fd must be a regular file descriptor.
 inline Try<ssize_t, SocketError> sendfile(
-    int s, int fd, off_t offset, size_t length)
-{
+    int s,
+    int fd,
+    off_t offset,
+    size_t length) {
 #if defined(__linux__) || defined(__sun)
-  SUPPRESS (SIGPIPE) {
+  SUPPRESS(SIGPIPE) {
     // This will set errno to EPIPE if a SIGPIPE occurs.
     ssize_t sent = ::sendfile(s, fd, &offset, length);
     if (sent < 0) {
@@ -68,19 +72,21 @@ inline Try<ssize_t, SocketError> sendfile(
 #elif defined __FreeBSD__
   off_t _length = 0;
 
-  SUPPRESS (SIGPIPE) {
-      if (::sendfile(fd, s, offset, length, nullptr, &_length, 0) < 0) {
-        if (errno == EAGAIN && length > 0) {
-          return _length;
-        }
-        return SocketError();
+  SUPPRESS(SIGPIPE) {
+    if (::sendfile(fd, s, offset, length, nullptr, &_length, 0) < 0) {
+      if (errno == EAGAIN && length > 0) {
+        return _length;
       }
+      return SocketError();
+    }
   }
 
   return _length;
 #endif
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_SENDFILE_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

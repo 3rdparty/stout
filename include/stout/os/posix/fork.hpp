@@ -10,13 +10,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_FORK_HPP__
-#define __STOUT_OS_POSIX_FORK_HPP__
+#pragma once
 
 #include <fcntl.h>
-#include <unistd.h>
-
 #include <sys/mman.h>
+#include <unistd.h>
 #ifdef __FreeBSD__
 #include <sys/stat.h>
 #endif // __FreeBSD__
@@ -29,19 +27,19 @@
 #include <set>
 #include <string>
 
-#include <stout/abort.hpp>
-#include <stout/check.hpp>
-#include <stout/error.hpp>
-#include <stout/exit.hpp>
-#include <stout/foreach.hpp>
-#include <stout/os/strerror.hpp>
-#include <stout/stringify.hpp>
-#include <stout/try.hpp>
+#include "stout/abort.hpp"
+#include "stout/check.hpp"
+#include "stout/error.hpp"
+#include "stout/exit.hpp"
+#include "stout/foreach.hpp"
+#include "stout/os/close.hpp"
+#include "stout/os/ftruncate.hpp"
+#include "stout/os/process.hpp"
+#include "stout/os/strerror.hpp"
+#include "stout/stringify.hpp"
+#include "stout/try.hpp"
 
-#include <stout/os/close.hpp>
-#include <stout/os/ftruncate.hpp>
-#include <stout/os/process.hpp>
-
+////////////////////////////////////////////////////////////////////////
 
 // Abstractions around forking process trees. You can declare a
 // process tree "template" using 'Fork', 'Exec', and 'Wait'. For
@@ -91,59 +89,59 @@
 // the instant in time after the forking has completed but before
 // 'Exec', 'Wait' or 'exit(0)' has occurred (i.e., the process tree
 // will be complete).
-
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // Forward declaration.
 inline Result<Process> process(pid_t);
 
+////////////////////////////////////////////////////////////////////////
 
-struct Exec
-{
+struct Exec {
   Exec(const std::string& _command)
     : command(_command) {}
 
   const std::string command;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 struct Wait {};
 
+////////////////////////////////////////////////////////////////////////
 
-struct Fork
-{
+struct Fork {
   //  -+- parent.
-  Fork(const Option<void(*)()>& _function,
-       const Exec& _exec)
+  Fork(const Option<void (*)()>& _function, const Exec& _exec)
     : function(_function),
       exec(_exec) {}
 
-  Fork(const Exec& _exec) : exec(_exec) {}
+  Fork(const Exec& _exec)
+    : exec(_exec) {}
 
   //  -+- parent
   //   \--- child.
-  Fork(const Option<void(*)()>& _function,
-       const Fork& fork1)
-    : function(_function)
-  {
+  Fork(const Option<void (*)()>& _function, const Fork& fork1)
+    : function(_function) {
     children.push_back(fork1);
   }
 
-  Fork(const Option<void(*)()>& _function,
-       const Fork& fork1,
-       const Exec& _exec)
+  Fork(
+      const Option<void (*)()>& _function,
+      const Fork& fork1,
+      const Exec& _exec)
     : function(_function),
-      exec(_exec)
-  {
+      exec(_exec) {
     children.push_back(fork1);
   }
 
-  Fork(const Option<void(*)()>& _function,
-       const Fork& fork1,
-       const Wait& _wait)
+  Fork(
+      const Option<void (*)()>& _function,
+      const Fork& fork1,
+      const Wait& _wait)
     : function(_function),
-      wait(_wait)
-  {
+      wait(_wait) {
     children.push_back(fork1);
   }
 
@@ -151,33 +149,33 @@ struct Fork
   // -+- parent
   //   |--- child
   //   \--- child.
-  Fork(const Option<void(*)()>& _function,
-       const Fork& fork1,
-       const Fork& fork2)
-    : function(_function)
-  {
+  Fork(
+      const Option<void (*)()>& _function,
+      const Fork& fork1,
+      const Fork& fork2)
+    : function(_function) {
     children.push_back(fork1);
     children.push_back(fork2);
   }
 
-  Fork(const Option<void(*)()>& _function,
-       const Fork& fork1,
-       const Fork& fork2,
-       const Exec& _exec)
+  Fork(
+      const Option<void (*)()>& _function,
+      const Fork& fork1,
+      const Fork& fork2,
+      const Exec& _exec)
     : function(_function),
-      exec(_exec)
-  {
+      exec(_exec) {
     children.push_back(fork1);
     children.push_back(fork2);
   }
 
-  Fork(const Option<void(*)()>& _function,
-       const Fork& fork1,
-       const Fork& fork2,
-       const Wait& _wait)
+  Fork(
+      const Option<void (*)()>& _function,
+      const Fork& fork1,
+      const Fork& fork2,
+      const Wait& _wait)
     : function(_function),
-      wait(_wait)
-  {
+      wait(_wait) {
     children.push_back(fork1);
     children.push_back(fork2);
   }
@@ -187,49 +185,48 @@ struct Fork
   //   |--- child
   //   |--- child
   //   \--- child.
-  Fork(const Option<void(*)()>& _function,
-       const Fork& fork1,
-       const Fork& fork2,
-       const Fork& fork3)
-    : function(_function)
-  {
+  Fork(
+      const Option<void (*)()>& _function,
+      const Fork& fork1,
+      const Fork& fork2,
+      const Fork& fork3)
+    : function(_function) {
     children.push_back(fork1);
     children.push_back(fork2);
     children.push_back(fork3);
   }
 
-  Fork(const Option<void(*)()>& _function,
-       const Fork& fork1,
-       const Fork& fork2,
-       const Fork& fork3,
-       const Exec& _exec)
+  Fork(
+      const Option<void (*)()>& _function,
+      const Fork& fork1,
+      const Fork& fork2,
+      const Fork& fork3,
+      const Exec& _exec)
     : function(_function),
-      exec(_exec)
-  {
+      exec(_exec) {
     children.push_back(fork1);
     children.push_back(fork2);
     children.push_back(fork3);
   }
 
-  Fork(const Option<void(*)()>& _function,
-       const Fork& fork1,
-       const Fork& fork2,
-       const Fork& fork3,
-       const Wait& _wait)
+  Fork(
+      const Option<void (*)()>& _function,
+      const Fork& fork1,
+      const Fork& fork2,
+      const Fork& fork3,
+      const Wait& _wait)
     : function(_function),
-      wait(_wait)
-  {
+      wait(_wait) {
     children.push_back(fork1);
     children.push_back(fork2);
     children.push_back(fork3);
   }
 
-private:
+ private:
   // Represents the "tree" of descendants where each node has a
   // pointer (into shared memory) from which we can read the
   // descendants process information as well as a vector of children.
-  struct Tree
-  {
+  struct Tree {
     // NOTE: This struct is stored in shared memory and thus cannot
     // hold any pointers to heap allocated memory.
     struct Memory {
@@ -259,18 +256,18 @@ private:
   // automagically when the process exits, but we use a special
   // "deleter" (in combination with shared_ptr) in order to clean this
   // stuff up when we are actually finished using the shared memory.
-  struct SharedMemoryDeleter
-  {
-    SharedMemoryDeleter(int _fd) : fd(_fd) {}
+  struct SharedMemoryDeleter {
+    SharedMemoryDeleter(int _fd)
+      : fd(_fd) {}
 
-    void operator()(Tree::Memory* process) const
-    {
+    void operator()(Tree::Memory* process) const {
       if (munmap(process, sizeof(Tree::Memory)) == -1) {
         ABORT(std::string("Failed to unmap memory: ") + os::strerror(errno));
       }
       if (::close(fd) == -1) {
-        ABORT(std::string("Failed to close shared memory file descriptor: ") +
-              os::strerror(errno));
+        ABORT(
+            std::string("Failed to close shared memory file descriptor: ")
+            + os::strerror(errno));
       }
     }
 
@@ -278,8 +275,7 @@ private:
   };
 
   // Constructs a Tree (see above) from this fork template.
-  Try<Tree> prepare() const
-  {
+  Try<Tree> prepare() const {
     static std::atomic_int forks(0);
 
     // Each "instance" of an instantiated Fork needs a unique name for
@@ -287,7 +283,7 @@ private:
     int instance = forks.fetch_add(1);
 
     std::string name =
-      "/stout-forks-" + stringify(getpid()) + stringify(instance);
+        "/stout-forks-" + stringify(getpid()) + stringify(instance);
 
     int fd = shm_open(name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
 
@@ -304,7 +300,8 @@ private:
     void* memory = mmap(
         nullptr,
         sizeof(Tree::Memory),
-        PROT_READ | PROT_WRITE, MAP_SHARED,
+        PROT_READ | PROT_WRITE,
+        MAP_SHARED,
         fd,
         0);
 
@@ -319,7 +316,8 @@ private:
     SharedMemoryDeleter deleter(fd);
 
     Tree tree;
-    tree.memory = std::shared_ptr<Tree::Memory>((Tree::Memory*)memory, deleter);
+    tree.memory =
+        std::shared_ptr<Tree::Memory>((Tree::Memory*) memory, deleter);
     tree.memory->set.store(false);
 
     for (size_t i = 0; i < children.size(); i++) {
@@ -335,8 +333,7 @@ private:
 
   // Performs the fork, executes the function, recursively
   // instantiates any children, and then executes/waits/exits.
-  pid_t instantiate(const Tree& tree) const
-  {
+  pid_t instantiate(const Tree& tree) const {
     pid_t pid = ::fork();
     if (pid > 0) {
       return pid;
@@ -367,7 +364,7 @@ private:
       const char* command = exec->command.c_str();
       execlp("sh", "sh", "-c", command, (char*) nullptr);
       EXIT(EXIT_FAILURE)
-        << "Failed to execute '" << command << "': " << os::strerror(errno);
+          << "Failed to execute '" << command << "': " << os::strerror(errno);
     } else if (wait.isSome()) {
       foreach (pid_t pid, pids) {
         // TODO(benh): Check for signal interruption or other errors.
@@ -382,11 +379,11 @@ private:
   // Waits for all of the descendant processes in the tree to update
   // their pids and constructs a ProcessTree using the Tree::Memory
   // information from shared memory.
-  static Try<ProcessTree> coordinate(const Tree& tree)
-  {
+  static Try<ProcessTree> coordinate(const Tree& tree) {
     // Wait for the forked process.
     // TODO(benh): Don't wait forever?
-    while (!tree.memory->set.load());
+    while (!tree.memory->set.load())
+      ;
 
     // All processes in the returned ProcessTree will have the
     // command-line of the top level process, since we construct the
@@ -417,10 +414,9 @@ private:
     return ProcessTree(process, children);
   }
 
-public:
+ public:
   // Prepares and instantiates the process tree.
-  Try<ProcessTree> operator()() const
-  {
+  Try<ProcessTree> operator()() const {
     Try<Tree> tree = prepare();
 
     if (tree.isError()) {
@@ -436,13 +432,15 @@ public:
     return coordinate(tree.get());
   }
 
-private:
-  Option<void(*)()> function;
+ private:
+  Option<void (*)()> function;
   Option<const Exec> exec;
   Option<const Wait> wait;
   std::vector<Fork> children;
 };
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_FORK_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

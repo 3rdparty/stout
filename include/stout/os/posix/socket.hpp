@@ -10,25 +10,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_SOCKET_HPP__
-#define __STOUT_OS_POSIX_SOCKET_HPP__
+#pragma once
+
+#include <errno.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include <array>
 
-#include <errno.h>
-#include <unistd.h>
+#include "stout/error.hpp"
+#include "stout/nothing.hpp"
+#include "stout/os/fcntl.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/try.hpp"
 
-#include <sys/socket.h>
-#include <sys/stat.h>
-
-#include <stout/error.hpp>
-#include <stout/nothing.hpp>
-#include <stout/try.hpp>
-
-#include <stout/os/int_fd.hpp>
-#include <stout/os/fcntl.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace net {
+
+////////////////////////////////////////////////////////////////////////
 
 // Import `socket` functions into `net::` namespace.
 using ::accept;
@@ -37,11 +38,11 @@ using ::connect;
 using ::recv;
 using ::send;
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns a socket file descriptor for the specified options.
 // NOTE: on OS X, the returned socket will have the SO_NOSIGPIPE option set.
-inline Try<int_fd> socket(int family, int type, int protocol)
-{
+inline Try<int_fd> socket(int family, int type, int protocol) {
   int_fd s;
   if ((s = ::socket(family, type, protocol)) < 0) {
     return ErrnoError();
@@ -59,32 +60,32 @@ inline Try<int_fd> socket(int family, int type, int protocol)
   return s;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // The error indicates the last socket operation has been
 // interupted, the operation can be restarted immediately.
-inline bool is_restartable_error(int error)
-{
+inline bool is_restartable_error(int error) {
   return (error == EINTR);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // The error indicates the last socket function on a non-blocking socket
 // cannot be completed. This is a temporary condition and the caller can
 // retry the operation later.
-inline bool is_retryable_error(int error)
-{
+inline bool is_retryable_error(int error) {
   return (error == EWOULDBLOCK || error == EAGAIN);
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline bool is_inprogress_error(int error)
-{
+inline bool is_inprogress_error(int error) {
   return (error == EINPROGRESS);
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline bool is_socket(int fd)
-{
+inline bool is_socket(int fd) {
   struct stat statbuf;
   if (::fstat(fd, &statbuf) < 0) {
     return false;
@@ -93,9 +94,12 @@ inline bool is_socket(int fd)
   return S_ISSOCK(statbuf.st_mode) != 0;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<std::array<int_fd, 2>> socketpair(int family, int type, int protocol)
-{
+inline Try<std::array<int_fd, 2>> socketpair(
+    int family,
+    int type,
+    int protocol) {
   std::array<int_fd, 2> result;
 
 #if __APPLE__ || !defined(SOCK_CLOEXEC)
@@ -136,21 +140,23 @@ inline Try<std::array<int_fd, 2>> socketpair(int family, int type, int protocol)
   const int enable = 1;
 
   if (::setsockopt(
-        result[0],
-        SOL_SOCKET,
-        SO_NOSIGPIPE,
-        &enable,
-        sizeof(enable)) == -1) {
+          result[0],
+          SOL_SOCKET,
+          SO_NOSIGPIPE,
+          &enable,
+          sizeof(enable))
+      == -1) {
     close(result);
     return ErrnoError("Failed to clear sigpipe");
   }
 
   if (::setsockopt(
-        result[1],
-        SOL_SOCKET,
-        SO_NOSIGPIPE,
-        &enable,
-        sizeof(enable)) == -1) {
+          result[1],
+          SOL_SOCKET,
+          SO_NOSIGPIPE,
+          &enable,
+          sizeof(enable))
+      == -1) {
     close(result);
     return ErrnoError("Failed to clear sigpipe");
   }
@@ -159,6 +165,8 @@ inline Try<std::array<int_fd, 2>> socketpair(int family, int type, int protocol)
   return result;
 }
 
-} // namespace net {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_SOCKET_HPP__
+} // namespace net
+
+////////////////////////////////////////////////////////////////////////

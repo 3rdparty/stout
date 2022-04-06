@@ -10,20 +10,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_LSEEK_HPP__
-#define __STOUT_OS_POSIX_LSEEK_HPP__
+#pragma once
 
 #include <unistd.h>
 
-#include <stout/error.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/try.hpp"
 
-#include <stout/os/int_fd.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline Try<off_t> lseek(int_fd fd, off_t offset, int whence)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Try<off_t> lseek(int_fd fd, off_t offset, int whence) {
   off_t result = ::lseek(fd, offset, whence);
   if (result < 0) {
     return ErrnoError();
@@ -31,6 +32,8 @@ inline Try<off_t> lseek(int_fd fd, off_t offset, int whence)
   return result;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_LSEEK_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

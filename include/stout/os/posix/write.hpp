@@ -10,21 +10,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_WRITE_HPP__
-#define __STOUT_OS_POSIX_WRITE_HPP__
+#pragma once
 
 #include <errno.h>
 #include <unistd.h>
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // Compatibility function. On POSIX, this function is trivial, but on Windows,
 // we have to check whether the file descriptor is a socket or a file to write
 // to it.
 using ::write;
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace os
 
-#endif // __STOUT_OS_POSIX_READ_HPP__
+////////////////////////////////////////////////////////////////////////

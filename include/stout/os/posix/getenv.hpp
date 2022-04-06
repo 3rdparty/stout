@@ -10,24 +10,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_GETENV_HPP__
-#define __STOUT_OS_POSIX_GETENV_HPP__
+#pragma once
 
 #include <stdlib.h>
 
 #include <string>
 
-#include <stout/none.hpp>
-#include <stout/option.hpp>
+#include "stout/none.hpp"
+#include "stout/option.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // Looks in the environment variables for the specified key and
 // returns a string representation of its value. If no environment
 // variable matching key is found, None() is returned.
-inline Option<std::string> getenv(const std::string& key)
-{
+inline Option<std::string> getenv(const std::string& key) {
   char* value = ::getenv(key.c_str());
 
   if (value == nullptr) {
@@ -37,6 +38,8 @@ inline Option<std::string> getenv(const std::string& key)
   return std::string(value);
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_GETENV_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

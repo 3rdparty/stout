@@ -10,12 +10,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_READ_HPP__
-#define __STOUT_OS_POSIX_READ_HPP__
+#pragma once
 
 #include <errno.h>
 #include <unistd.h>
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
@@ -24,6 +24,6 @@ namespace os {
 // from it.
 using ::read;
 
-} // namespace os {
+} // namespace os
 
-#endif // __STOUT_OS_POSIX_READ_HPP__
+////////////////////////////////////////////////////////////////////////

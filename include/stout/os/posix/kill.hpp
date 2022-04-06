@@ -10,19 +10,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_POSIX_KILL_HPP__
-#define __STOUT_OS_POSIX_KILL_HPP__
+#pragma once
 
 #include <signal.h>
 #include <sys/types.h>
 
+////////////////////////////////////////////////////////////////////////
+
 namespace os {
 
-inline int kill(pid_t pid, int sig)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline int kill(pid_t pid, int sig) {
   return ::kill(pid, sig);
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_POSIX_KILL_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////
