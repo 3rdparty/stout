@@ -10,25 +10,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_WINDOWS_IP_HPP__
-#define __STOUT_WINDOWS_IP_HPP__
+#pragma once
 
 #include <string>
 
-#include <stout/error.hpp>
-#include <stout/foreach.hpp>
-#include <stout/none.hpp>
-#include <stout/result.hpp>
-#include <stout/try.hpp>
-#include <stout/windows.hpp> // For `iphlpapi.h`.
+#include "stout/error.hpp"
+#include "stout/foreach.hpp"
+#include "stout/none.hpp"
+#include "stout/result.hpp"
+#include "stout/try.hpp"
+#include "stout/windows.hpp> // For `iphlpapi.h`.
 
+////////////////////////////////////////////////////////////////////////
 
 namespace net {
 
+////////////////////////////////////////////////////////////////////////
+
 inline Result<IP::Network> IP::Network::fromLinkDevice(
     const std::string& name,
-    int family)
-{
+    int family) {
   DWORD result;
   ULONG size = 0;
 
@@ -55,7 +56,7 @@ inline Result<IP::Network> IP::Network::fromLinkDevice(
     return WindowsError(result, "GetAdaptersInfo failed");
   }
 
-  foreach(const IP_ADAPTER_INFO& ip_adapter, adapter_info) {
+  foreach (const IP_ADAPTER_INFO& ip_adapter, adapter_info) {
     if (!strcmp(ip_adapter.AdapterName, name.c_str())) {
       found = true;
 
@@ -66,7 +67,7 @@ inline Result<IP::Network> IP::Network::fromLinkDevice(
 
         Try<IP::Network> network = IP::Network::create(address, netmask);
         if (network.isError()) {
-           return Error(network.error());
+          return Error(network.error());
         }
 
         return network.get();
@@ -92,6 +93,8 @@ inline Result<IP::Network> IP::Network::fromLinkDevice(
   return None();
 }
 
-} // namespace net {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_WINDOWS_IP_HPP__
+} // namespace net
+
+////////////////////////////////////////////////////////////////////////

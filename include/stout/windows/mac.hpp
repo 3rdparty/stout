@@ -10,26 +10,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_WINDOWS_MAC_HPP__
-#define __STOUT_WINDOWS_MAC_HPP__
+#pragma once
 
 #include <algorithm>
 #include <vector>
 
-#include <stout/error.hpp>
-#include <stout/none.hpp>
-#include <stout/result.hpp>
-#include <stout/stringify.hpp>
-#include <stout/windows.hpp> // For `iphlpapi.h`.
+#include "stout/error.hpp"
+#include "stout/none.hpp"
+#include "stout/result.hpp"
+#include "stout/stringify.hpp"
+#include "stout/windows.hpp> // For `iphlpapi.h`.
 
+////////////////////////////////////////////////////////////////////////
 
 // Network utilities.
 namespace net {
 
+////////////////////////////////////////////////////////////////////////
+
 // Returns the MAC address of a given link device. The link device is
 // specified using its name. Returns an error if the link device is not found.
-inline Result<MAC> mac(const std::string& name)
-{
+inline Result<MAC> mac(const std::string& name) {
   DWORD result;
   ULONG size = 0;
 
@@ -81,6 +82,8 @@ inline Result<MAC> mac(const std::string& name)
   return None();
 }
 
-} // namespace net {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_WINDOWS_MAC_HPP__
+} // namespace net
+
+////////////////////////////////////////////////////////////////////////

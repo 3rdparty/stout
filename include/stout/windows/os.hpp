@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_WINDOWS_OS_HPP__
-#define __STOUT_WINDOWS_OS_HPP__
+#pragma once
 
 #include <sys/utime.h>
 
@@ -24,37 +23,41 @@
 #include <string>
 #include <vector>
 
-#include <stout/bytes.hpp>
-#include <stout/duration.hpp>
-#include <stout/none.hpp>
-#include <stout/nothing.hpp>
-#include <stout/option.hpp>
-#include <stout/path.hpp>
-#include <stout/stringify.hpp>
-#include <stout/strings.hpp>
-#include <stout/try.hpp>
-#include <stout/version.hpp>
-#include <stout/windows.hpp>
-
-#include <stout/os/os.hpp>
-#include <stout/os/getenv.hpp>
-#include <stout/os/process.hpp>
-#include <stout/os/read.hpp>
-
-#include <stout/os/raw/environment.hpp>
+#include "stout/bytes.hpp"
+#include "stout/duration.hpp"
+#include "stout/none.hpp"
+#include "stout/nothing.hpp"
+#include "stout/option.hpp"
+#include "stout/os/getenv.hpp"
+#include "stout/os/os.hpp"
+#include "stout/os/process.hpp"
+#include "stout/os/raw/environment.hpp"
+#include "stout/os/read.hpp"
+#include "stout/path.hpp"
+#include "stout/stringify.hpp"
+#include "stout/strings.hpp"
+#include "stout/try.hpp"
+#include "stout/version.hpp"
+#include "stout/windows.hpp"
 
 // NOTE: These system headers must be included after `stout/windows.hpp`
 // as they may include `Windows.h`. See comments in `stout/windows.hpp`
 // for why this ordering is important.
-#include <Psapi.h>    // For `EnumProcesses` and `GetProcessMemoryInfo`.
+#include <Psapi.h> // For `EnumProcesses` and `GetProcessMemoryInfo`.
 #include <TlHelp32.h> // For `PROCESSENTRY32W` and `CreateToolhelp32Snapshot`.
-#include <Userenv.h>  // For `GetAllUsersProfileDirectoryW`.
+#include <Userenv.h> // For `GetAllUsersProfileDirectoryW`.
+
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
+
 namespace internal {
 
-inline Try<std::string> nodename()
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Try<std::string> nodename() {
   // MSDN documentation states "The names are established at system startup,
   // when the system reads them from the registry." This is akin to the
   // Linux `gethostname` which calls `uname`, thus avoiding a DNS lookup.
@@ -80,12 +83,12 @@ inline Try<std::string> nodename()
   return stringify(std::wstring(buffer.data()));
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Converts a `FILETIME` from an absoute Windows time, which is the number of
 // 100-nanosecond intervals since 1601-01-01 00:00:00 +0000, to an UNIX
 // absolute time, which is number of seconds from 1970-01-01 00:00:00 +0000.
-inline double windows_to_unix_epoch(const FILETIME& filetime)
-{
+inline double windows_to_unix_epoch(const FILETIME& filetime) {
   ULARGE_INTEGER time;
 
   // `FILETIME` isn't 8 byte aligned so they suggest not do cast to int64*.
@@ -93,7 +96,7 @@ inline double windows_to_unix_epoch(const FILETIME& filetime)
   time.LowPart = filetime.dwLowDateTime;
 
   // Constant taken from here:
-  // https://msdn.microsoft.com/en-us/library/windows/desktop/ms724228(v=vs.85).aspx. // NOLINT(whitespace/line_length)
+  // https://tinyurl.com/2zwpdtue // NOLINT(whitespace/line_length)
   // It is the number of 100ns periods between the Windows and UNIX epochs.
   constexpr uint64_t epoch_offset = 116444736000000000ULL;
 
@@ -104,21 +107,23 @@ inline double windows_to_unix_epoch(const FILETIME& filetime)
       "Expected `ULARGE_INTEGER.QuadPart` to be of type `uint64_t`");
 
   CHECK_GE(time.QuadPart, epoch_offset)
-    << "windows_to_unix_epoch: Given time was before UNIX epoch: "
-    << time.QuadPart;
+      << "windows_to_unix_epoch: Given time was before UNIX epoch: "
+      << time.QuadPart;
 
   return static_cast<double>(time.QuadPart - epoch_offset) / 10000000;
 }
 
-} // namespace internal {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace internal
+
+////////////////////////////////////////////////////////////////////////
 
 // Overload of os::pids for filtering by groups and sessions. A group / session
 // id of 0 will fitler on the group / session ID of the calling process.
 // NOTE: Windows does not have the concept of a process group, so we need to
 // enumerate all processes.
-inline Try<std::set<pid_t>> pids(Option<pid_t> group, Option<pid_t> session)
-{
+inline Try<std::set<pid_t>> pids(Option<pid_t> group, Option<pid_t> session) {
   DWORD max_items = 4096;
   DWORD bytes_returned;
   std::vector<pid_t> processes;
@@ -160,57 +165,59 @@ inline Try<std::set<pid_t>> pids(Option<pid_t> group, Option<pid_t> session)
   return pids_set;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<std::set<pid_t>> pids()
-{
+inline Try<std::set<pid_t>> pids() {
   return pids(None(), None());
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Sets the value associated with the specified key in the set of
 // environment variables.
 inline void setenv(
     const std::string& key,
     const std::string& value,
-    bool overwrite = true)
-{
+    bool overwrite = true) {
   // Do not set the variable if already set and `overwrite` was not specified.
   //
   // Per MSDN, `GetEnvironmentVariable` returns 0 on error and sets the
   // error code to `ERROR_ENVVAR_NOT_FOUND` if the variable was not found.
   //
-  // https://msdn.microsoft.com/en-us/library/windows/desktop/ms683188(v=vs.85).aspx // NOLINT(whitespace/line_length)
-  if (!overwrite &&
-      ::GetEnvironmentVariableW(wide_stringify(key).data(), nullptr, 0) != 0 &&
-      ::GetLastError() == ERROR_ENVVAR_NOT_FOUND) {
+  // https://tinyurl.com/mrk2naw7 // NOLINT(whitespace/line_length)
+  if (!overwrite
+      && ::GetEnvironmentVariableW(wide_stringify(key).data(), nullptr, 0) != 0
+      && ::GetLastError() == ERROR_ENVVAR_NOT_FOUND) {
     return;
   }
 
   // `SetEnvironmentVariable` returns an error code, but we can't act on it.
   ::SetEnvironmentVariableW(
-      wide_stringify(key).data(), wide_stringify(value).data());
+      wide_stringify(key).data(),
+      wide_stringify(value).data());
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Unsets the value associated with the specified key in the set of
 // environment variables.
-inline void unsetenv(const std::string& key)
-{
+inline void unsetenv(const std::string& key) {
   // Per MSDN documentation[1], passing `nullptr` as the value will cause
   // `SetEnvironmentVariable` to delete the key from the process's environment.
   ::SetEnvironmentVariableW(wide_stringify(key).data(), nullptr);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // NOTE: This exists for compatibility with the POSIX API. On Windows,
 // either function is suitable for clearing a secret from the
 // environment, as the pointers returned by `GetEnvironmentVariable`
 // and `GetEnvironmentStrings` are to blocks allocated on invocation.
-inline void eraseenv(const std::string& key)
-{
+inline void eraseenv(const std::string& key) {
   unsetenv(key);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Suspends execution of the calling process until a child specified by `pid`
 // has changed state. Unlike the POSIX standard function `::waitpid`, this
@@ -247,16 +254,17 @@ inline void eraseenv(const std::string& key)
 //         `pid` in the Windows implementation, we should error out.
 //   * Finally, on Windows, we currently do not check that the process we are
 //     attempting to await is a child process.
-inline Result<pid_t> waitpid(long pid, int* status, int options)
-{
+inline Result<pid_t> waitpid(long pid, int* status, int options) {
   const bool wait_for_child = (options & WNOHANG) == 0;
 
   // NOTE: Windows does not implement pids <= 0.
   if (pid <= 0) {
     errno = ENOSYS;
     return ErrnoError(
-        "os::waitpid: Value of pid is '" + stringify(pid) +
-        "'; the Windows implementation currently does not allow values <= 0");
+        "os::waitpid: Value of pid is '" + stringify(pid)
+        +
+        "'; the Windows implementation currently "
+        "does not allow values <= 0");
   } else if (options != 0 && options != WNOHANG) {
     // NOTE: We only support `options == 0` or `options == WNOHANG`. On Windows
     // no flags other than `WNOHANG` are supported.
@@ -275,8 +283,9 @@ inline Result<pid_t> waitpid(long pid, int* status, int options)
       static_cast<DWORD>(pid));
 
   if (process == nullptr) {
-    return WindowsError("os::waitpid: Failed to open process for pid '" +
-                        stringify(pid) + "'");
+    return WindowsError(
+        "os::waitpid: Failed to open process for pid '"
+        + stringify(pid) + "'");
   }
 
   SharedHandle scoped_process(process, ::CloseHandle);
@@ -295,22 +304,23 @@ inline Result<pid_t> waitpid(long pid, int* status, int options)
     // state change in `scoped_process`.
     errno = ECHILD;
     return WindowsError(
-        "os::waitpid: Failed to wait for pid '" + stringify(pid) +
-        "'. `::WaitForSingleObject` should have waited for child process to " +
-        "exit, but returned code '" + stringify(wait_results) +
-        "' instead");
-  } else if (wait_for_child && !state_signaled &&
-             wait_results != WAIT_TIMEOUT) {
+        "os::waitpid: Failed to wait for pid '" + stringify(pid)
+        + "'. `::WaitForSingleObject` should have waited for child process to "
+        + "exit, but returned code '"
+        + stringify(wait_results) + "' instead");
+  } else if (
+      wait_for_child && !state_signaled && wait_results != WAIT_TIMEOUT) {
     // If `WNOHANG` is set, then a successful wait should report either a
     // timeout (since we set the time to wait to `0`), or a successful state
     // change of `scoped_process`. Anything else is an error.
     errno = ECHILD;
     return WindowsError(
-        "os::waitpid: Failed to wait for pid '" + stringify(pid) +
-        "'. `ENOHANG` flag was passed in, so `::WaitForSingleObject` should " +
-        "have either returned `WAIT_OBJECT_0` or `WAIT_TIMEOUT` (the " +
-        "timeout was set to 0, because we are not waiting for the child), " +
-        "but instead returned code '" + stringify(wait_results) + "'");
+        "os::waitpid: Failed to wait for pid '"
+        + stringify(pid)
+        + "'. `ENOHANG` flag was passed in, so `::WaitForSingleObject` should "
+        + "have either returned `WAIT_OBJECT_0` or `WAIT_TIMEOUT` (the "
+        + "timeout was set to 0, because we are not waiting for the child), "
+        + "but instead returned code '" + stringify(wait_results) + "'");
   }
 
   if (!wait_for_child && wait_results == WAIT_TIMEOUT) {
@@ -325,8 +335,8 @@ inline Result<pid_t> waitpid(long pid, int* status, int options)
   if (!::GetExitCodeProcess(scoped_process.get(), &child_exit_code)) {
     errno = ECHILD;
     return WindowsError(
-        "os::waitpid: Successfully waited on child process with pid '" +
-        std::to_string(pid) + "', but could not retrieve exit code");
+        "os::waitpid: Successfully waited on child process with pid '"
+        + std::to_string(pid) + "', but could not retrieve exit code");
   }
 
   if (status != nullptr) {
@@ -337,9 +347,11 @@ inline Result<pid_t> waitpid(long pid, int* status, int options)
   return pid;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline std::string hstrerror(int err) = delete;
 
+////////////////////////////////////////////////////////////////////////
 
 inline Try<Nothing> chown(
     uid_t uid,
@@ -347,22 +359,24 @@ inline Try<Nothing> chown(
     const std::string& path,
     bool recursive) = delete;
 
+////////////////////////////////////////////////////////////////////////
 
 inline Try<Nothing> chmod(const std::string& path, int mode) = delete;
 
+////////////////////////////////////////////////////////////////////////
 
 inline Try<Nothing> mknod(
     const std::string& path,
     mode_t mode,
     dev_t dev) = delete;
 
+////////////////////////////////////////////////////////////////////////
 
 // Suspends execution for the given duration.
 // NOTE: This implementation features a millisecond-resolution sleep API, while
-// the POSIX version uses a nanosecond-resolution sleep API. As of this writing,
-// Mesos only requires millisecond resolution, so this is ok for now.
-inline Try<Nothing> sleep(const Duration& duration)
-{
+// the POSIX version uses a nanosecond-resolution sleep API. As of this
+// writing, Mesos only requires millisecond resolution, so this is ok for now.
+inline Try<Nothing> sleep(const Duration& duration) {
   if (duration.ms() < 0) {
     return WindowsError(ERROR_INVALID_PARAMETER);
   }
@@ -372,38 +386,40 @@ inline Try<Nothing> sleep(const Duration& duration)
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns the list of files that match the given (shell) pattern.
 // NOTE: Deleted on Windows, as a POSIX-API-compliant `glob` is much more
 // trouble than its worth, considering our relatively simple usage.
 inline Try<std::list<std::string>> glob(const std::string& pattern) = delete;
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns the total number of cpus (cores).
-inline Try<long> cpus()
-{
+inline Try<long> cpus() {
   SYSTEM_INFO sys_info;
   ::GetSystemInfo(&sys_info);
   return static_cast<long>(sys_info.dwNumberOfProcessors);
 }
+////////////////////////////////////////////////////////////////////////
 
 // Returns load struct with average system loads for the last
 // 1, 5 and 15 minutes respectively.
 // Load values should be interpreted as usual average loads from
 // uptime(1).
-inline Try<Load> loadavg()
-{
+inline Try<Load> loadavg() {
   // No Windows equivalent, return an error until there is a need. We can
   // construct an approximation of this function by periodically polling
   // `GetSystemTimes` and using a sliding window of statistics.
-  return WindowsError(ERROR_NOT_SUPPORTED,
-                      "Failed to determine system load averages");
+  return WindowsError(
+      ERROR_NOT_SUPPORTED,
+      "Failed to determine system load averages");
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns the total size of main and free memory.
-inline Try<Memory> memory()
-{
+inline Try<Memory> memory() {
   Memory memory;
 
   MEMORYSTATUSEX memory_status;
@@ -420,22 +436,24 @@ inline Try<Memory> memory()
   return memory;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline Try<Version> release() = delete;
 
+////////////////////////////////////////////////////////////////////////
 
 // Return the system information.
 inline Try<UTSInfo> uname() = delete;
 
+////////////////////////////////////////////////////////////////////////
 
-inline tm* gmtime_r(const time_t* timep, tm* result)
-{
+inline tm* gmtime_r(const time_t* timep, tm* result) {
   return ::gmtime_s(result, timep) == ERROR_SUCCESS ? result : nullptr;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Result<PROCESSENTRY32W> process_entry(pid_t pid)
-{
+inline Result<PROCESSENTRY32W> process_entry(pid_t pid) {
   // Get a snapshot of the processes in the system. NOTE: We should not check
   // whether the handle is `nullptr`, because this API will always return
   // `INVALID_HANDLE_VALUE` on error.
@@ -462,7 +480,8 @@ inline Result<PROCESSENTRY32W> process_entry(pid_t pid)
     // we elect to return `Error` because something terrible has probably
     // happened.
     if (::GetLastError() != ERROR_SUCCESS) {
-      return WindowsError("os::process_entry: Call to `Process32First` failed");
+      return WindowsError(
+          "os::process_entry: Call to `Process32First` failed");
     } else {
       return Error("os::process_entry: Call to `Process32First` failed");
     }
@@ -488,16 +507,16 @@ inline Result<PROCESSENTRY32W> process_entry(pid_t pid)
   return None();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Generate a `Process` object for the process associated with `pid`. If
 // process is not found, we return `None`; error is reserved for the case where
 // something went wrong.
-inline Result<Process> process(pid_t pid)
-{
+inline Result<Process> process(pid_t pid) {
   if (pid == 0) {
-    // The 0th PID is that of the System Idle Process on Windows. However, it is
-    // invalid to attempt to get a proces handle or else perform any operation
-    // on this pseudo-process.
+    // The 0th PID is that of the System Idle Process on Windows. However, it
+    // is invalid to attempt to get a proces handle or else perform any
+    // operation on this pseudo-process.
     return Error("os::process: Invalid parameter: pid == 0");
   }
 
@@ -566,25 +585,25 @@ inline Result<Process> process(pid_t pid)
 
   return Process(
       pid,
-      entry.get().th32ParentProcessID,         // Parent process id.
-      0,                                       // Group id.
+      entry.get().th32ParentProcessID, // Parent process id.
+      0, // Group id.
       session_id,
       Bytes(proc_mem_counters.WorkingSetSize),
       utime.isSome() ? utime.get() : Option<Duration>::none(),
       stime.isSome() ? stime.get() : Option<Duration>::none(),
-      stringify(entry.get().szExeFile),        // Executable filename.
-      false);                                  // Is not zombie process.
+      stringify(entry.get().szExeFile), // Executable filename.
+      false); // Is not zombie process.
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline int random()
-{
+inline int random() {
   return rand();
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<std::string> var()
-{
+inline Try<std::string> var() {
   // Get the `ProgramData` path. First, find the size of the output buffer.
   // This size includes the null-terminating character.
   DWORD size = 0;
@@ -604,26 +623,29 @@ inline Try<std::string> var()
   return stringify(std::wstring(buffer.data()));
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns a host-specific default for the `PATH` environment variable, based
 // on the configuration of the host.
-inline std::string host_default_path()
-{
+inline std::string host_default_path() {
   // NOTE: On Windows, this code must run on the host where we are
   // expecting to `exec` the task, because the value of
   // `%SystemRoot%` is not identical on all platforms.
   const Option<std::string> system_root_env = os::getenv("SystemRoot");
   const std::string system_root = system_root_env.isSome()
-    ? system_root_env.get()
-    : path::join("C:", "Windows");
+      ? system_root_env.get()
+      : path::join("C:", "Windows");
 
-  return strings::join(";",
+  return strings::join(
+      ";",
       path::join(system_root, "System32"),
       system_root,
       path::join(system_root, "System32", "Wbem"),
       path::join(system_root, "System32", "WindowsPowerShell", "v1.0"));
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_WINDOWS_OS_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

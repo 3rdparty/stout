@@ -36,16 +36,15 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef __STOUT_WINDOWS_FORMAT_HPP__
-#define __STOUT_WINDOWS_FORMAT_HPP__
+#pragma once
 
+#include <limits.h> // For 'INT_MAX'.
 #include <stdio.h> // For '_vscprintf', 'vsnprintf'.
 #include <stdlib.h> // For 'malloc', 'free'.
-#include <limits.h> // For 'INT_MAX'.
 
+////////////////////////////////////////////////////////////////////////
 
-inline int vasprintf(char** buffer, const char* format, va_list args)
-{
+inline int vasprintf(char** buffer, const char* format, va_list args) {
   int result = -1;
   int size = _vscprintf(format, args) + 1;
 
@@ -64,5 +63,4 @@ inline int vasprintf(char** buffer, const char* format, va_list args)
   return result;
 }
 
-
-#endif // __STOUT_WINDOWS_FORMAT_HPP__
+////////////////////////////////////////////////////////////////////////
