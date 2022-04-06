@@ -14,16 +14,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_CHROOT_HPP__
-#define __STOUT_OS_WINDOWS_CHROOT_HPP__
+#pragma once
 
 #include <string>
 
-#include <stout/nothing.hpp>
-#include <stout/try.hpp>
+#include "stout/nothing.hpp"
+#include "stout/try.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // NOTE: `chroot` is deleted because Windows does not support POSIX `chroot`
 // semantics. On POSIX platforms it remains important to (e.g.) the launcher
@@ -31,10 +33,10 @@ namespace os {
 // `chroot` to that directory, before launching the process. On Windows, we
 // simply conditionally compile out the `rootfs` flag so we can be guaranteed
 // to never have to invoke `chroot`.
-
 inline Try<Nothing> chroot(const std::string& directory) = delete;
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace os
 
-#endif // __STOUT_OS_WINDOWS_CHROOT_HPP__
+////////////////////////////////////////////////////////////////////////

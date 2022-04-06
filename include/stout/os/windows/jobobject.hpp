@@ -10,34 +10,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_WINDOWS_JOBOBJECT_HPP__
-#define __STOUT_WINDOWS_JOBOBJECT_HPP__
+#pragma once
 
 #include <algorithm>
 #include <numeric>
 #include <set>
 #include <string>
 
-#include <stout/bytes.hpp>
-#include <stout/none.hpp>
-#include <stout/nothing.hpp>
-#include <stout/stringify.hpp>
-#include <stout/strings.hpp>
-#include <stout/try.hpp>
-#include <stout/windows.hpp>
+#include "stout/bytes.hpp"
+#include "stout/none.hpp"
+#include "stout/nothing.hpp"
+#include "stout/os/os.hpp"
+#include "stout/os/process.hpp"
+#include "stout/stringify.hpp"
+#include "stout/strings.hpp"
+#include "stout/try.hpp"
+#include "stout/windows.hpp"
 
-#include <stout/os/os.hpp>
-#include <stout/os/process.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // `name_job` maps a `pid` to a `wstring` name for a job object.
 // Only named job objects are accessible via `OpenJobObject`.
 // Thus all our job objects must be named. This is essentially a shim
 // to map the Linux concept of a process tree's root `pid` to a
 // named job object so that the process group can be treated similarly.
-inline Try<std::wstring> name_job(pid_t pid)
-{
+inline Try<std::wstring> name_job(pid_t pid) {
   Try<std::string> alpha_pid = strings::internal::format("MESOS_JOB_%X", pid);
   if (alpha_pid.isError()) {
     return Error(alpha_pid.error());
@@ -45,6 +46,7 @@ inline Try<std::wstring> name_job(pid_t pid)
   return wide_stringify(alpha_pid.get());
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // `open_job` returns a safe shared handle to the named job object `name`.
 // `desired_access` is a job object access rights flag.
@@ -54,25 +56,26 @@ inline Try<std::wstring> name_job(pid_t pid)
 inline Try<SharedHandle> open_job(
     const DWORD desired_access,
     const BOOL inherit_handles,
-    const std::wstring& name)
-{
+    const std::wstring& name) {
   SharedHandle job_handle(
       ::OpenJobObjectW(desired_access, inherit_handles, name.data()),
       ::CloseHandle);
 
   if (job_handle.get_handle() == nullptr) {
     return WindowsError(
-        "os::open_job: Call to `OpenJobObject` failed for job: " +
-        stringify(name));
+        "os::open_job: Call to `OpenJobObject` failed for job: "
+        + stringify(name));
   }
 
   return job_handle;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline Try<SharedHandle> open_job(
-    const DWORD desired_access, const BOOL inherit_handles, const pid_t pid)
-{
+    const DWORD desired_access,
+    const BOOL inherit_handles,
+    const pid_t pid) {
   const Try<std::wstring> name = os::name_job(pid);
   if (name.isError()) {
     return Error(name.error());
@@ -81,33 +84,34 @@ inline Try<SharedHandle> open_job(
   return open_job(desired_access, inherit_handles, name.get());
 }
 
+////////////////////////////////////////////////////////////////////////
+
 // `create_job` function creates a named job object using `name`.
-inline Try<SharedHandle> create_job(const std::wstring& name)
-{
+inline Try<SharedHandle> create_job(const std::wstring& name) {
   SharedHandle job_handle(
       ::CreateJobObjectW(
-          nullptr,       // Use a default security descriptor, and
-                         // the created handle cannot be inherited.
-          name.data()),  // The name of the job.
+          nullptr, // Use a default security descriptor, and
+                   // the created handle cannot be inherited.
+          name.data()), // The name of the job.
       ::CloseHandle);
 
   if (job_handle.get_handle() == nullptr) {
     return WindowsError(
-        "os::create_job: Call to `CreateJobObject` failed for job: " +
-        stringify(name));
+        "os::create_job: Call to `CreateJobObject` failed for job: "
+        + stringify(name));
   }
 
   return job_handle;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // `get_job_info` gets the job object information for the process group
 // represented by `pid`, assuming it is assigned to a job object. This function
 // will fail otherwise.
 //
-// https://msdn.microsoft.com/en-us/library/windows/desktop/ms684925(v=vs.85).aspx // NOLINT(whitespace/line_length)
-inline Try<JOBOBJECT_BASIC_ACCOUNTING_INFORMATION> get_job_info(pid_t pid)
-{
+// https://tinyurl.com/56f7vbdz // NOLINT(whitespace/line_length)
+inline Try<JOBOBJECT_BASIC_ACCOUNTING_INFORMATION> get_job_info(pid_t pid) {
   Try<SharedHandle> job_handle = os::open_job(JOB_OBJECT_QUERY, false, pid);
   if (job_handle.isError()) {
     return Error(job_handle.error());
@@ -129,12 +133,12 @@ inline Try<JOBOBJECT_BASIC_ACCOUNTING_INFORMATION> get_job_info(pid_t pid)
   return info;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <size_t max_pids>
-Result<std::set<Process>> _get_job_processes(const SharedHandle& job_handle)
-{
-  // This is a statically allocated `JOBOBJECT_BASIC_PROCESS_ID_LIST`. We lie to
-  // the Windows API and construct our own struct to avoid (a) having to do
+Result<std::set<Process>> _get_job_processes(const SharedHandle& job_handle) {
+  // This is a statically allocated `JOBOBJECT_BASIC_PROCESS_ID_LIST`. We lie
+  // to the Windows API and construct our own struct to avoid (a) having to do
   // hairy size calculations and (b) having to allocate dynamically, and then
   // worry about deallocating.
   struct
@@ -172,9 +176,9 @@ Result<std::set<Process>> _get_job_processes(const SharedHandle& job_handle)
   return processes;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<std::set<Process>> get_job_processes(pid_t pid)
-{
+inline Try<std::set<Process>> get_job_processes(pid_t pid) {
   // TODO(andschwa): Overload open_job to use pid.
   Try<SharedHandle> job_handle = os::open_job(JOB_OBJECT_QUERY, false, pid);
   if (job_handle.isError()) {
@@ -184,7 +188,7 @@ inline Try<std::set<Process>> get_job_processes(pid_t pid)
   // Try to enumerate the processes with three sizes: 32, 1K, and 32K.
 
   Result<std::set<Process>> result =
-    os::_get_job_processes<32>(job_handle.get());
+      os::_get_job_processes<32>(job_handle.get());
   if (result.isError()) {
     return Error(result.error());
   } else if (result.isSome()) {
@@ -210,9 +214,9 @@ inline Try<std::set<Process>> get_job_processes(pid_t pid)
   return Error("os::get_job_processes: failed to get processes");
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<Bytes> get_job_mem(pid_t pid)
-{
+inline Try<Bytes> get_job_mem(pid_t pid) {
   const Try<std::set<Process>> processes = os::get_job_processes(pid);
   if (processes.isError()) {
     return Error(processes.error());
@@ -231,15 +235,15 @@ inline Try<Bytes> get_job_mem(pid_t pid)
       });
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // `set_job_kill_on_close_limit` causes the job object to terminate all
 // processes assigned to it when the last handle to the job object is closed.
 // This can be used to limit the lifetime of the process group represented by
 // the job object. Without this limit set, the processes will continue to run.
-inline Try<Nothing> set_job_kill_on_close_limit(pid_t pid)
-{
+inline Try<Nothing> set_job_kill_on_close_limit(pid_t pid) {
   Try<SharedHandle> job_handle =
-    os::open_job(JOB_OBJECT_SET_ATTRIBUTES, false, pid);
+      os::open_job(JOB_OBJECT_SET_ATTRIBUTES, false, pid);
 
   if (job_handle.isError()) {
     return Error(job_handle.error());
@@ -263,17 +267,18 @@ inline Try<Nothing> set_job_kill_on_close_limit(pid_t pid)
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // `set_job_cpu_limit` sets a CPU limit for the process represented by
 // `pid`, assuming it is assigned to a job object. This function will fail
 // otherwise. This limit is a hard cap enforced by the OS.
 //
-// https://msdn.microsoft.com/en-us/library/windows/desktop/hh448384(v=vs.85).aspx // NOLINT(whitespace/line_length)
-inline Try<Nothing> set_job_cpu_limit(pid_t pid, double cpus)
-{
+// https://tinyurl.com/ydn4367v // NOLINT(whitespace/line_length)
+inline Try<Nothing> set_job_cpu_limit(pid_t pid, double cpus) {
   JOBOBJECT_CPU_RATE_CONTROL_INFORMATION control_info = {};
   control_info.ControlFlags =
-    JOB_OBJECT_CPU_RATE_CONTROL_ENABLE | JOB_OBJECT_CPU_RATE_CONTROL_HARD_CAP;
+      JOB_OBJECT_CPU_RATE_CONTROL_ENABLE
+      | JOB_OBJECT_CPU_RATE_CONTROL_HARD_CAP;
 
   // This `CpuRate` is the number of cycles per 10,000 cycles, or a percentage
   // times 100, e.g. 20% yields 20 * 100 = 2,000. However, the `cpus` argument
@@ -295,7 +300,7 @@ inline Try<Nothing> set_job_cpu_limit(pid_t pid, double cpus)
   const long cpu_rate = std::min(std::max(cycles, 1L), 10000L);
   control_info.CpuRate = static_cast<DWORD>(cpu_rate);
   Try<SharedHandle> job_handle =
-    os::open_job(JOB_OBJECT_SET_ATTRIBUTES, false, pid);
+      os::open_job(JOB_OBJECT_SET_ATTRIBUTES, false, pid);
   if (job_handle.isError()) {
     return Error(job_handle.error());
   }
@@ -313,20 +318,20 @@ inline Try<Nothing> set_job_cpu_limit(pid_t pid, double cpus)
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // `set_job_mem_limit` sets a memory limit for the process represented by
 // `pid`, assuming it is assigned to a job object. This function will fail
 // otherwise. This limit is a hard cap enforced by the OS.
 //
-// https://msdn.microsoft.com/en-us/library/windows/desktop/ms684156(v=vs.85).aspx // NOLINT(whitespace/line_length)
-inline Try<Nothing> set_job_mem_limit(pid_t pid, Bytes limit)
-{
+// https://tinyurl.com/3e8wse9u // NOLINT(whitespace/line_length)
+inline Try<Nothing> set_job_mem_limit(pid_t pid, Bytes limit) {
   JOBOBJECT_EXTENDED_LIMIT_INFORMATION info = {};
   info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_JOB_MEMORY;
   info.JobMemoryLimit = limit.bytes();
 
   Try<SharedHandle> job_handle =
-    os::open_job(JOB_OBJECT_SET_ATTRIBUTES, false, pid);
+      os::open_job(JOB_OBJECT_SET_ATTRIBUTES, false, pid);
   if (job_handle.isError()) {
     return Error(job_handle.error());
   }
@@ -344,12 +349,12 @@ inline Try<Nothing> set_job_mem_limit(pid_t pid, Bytes limit)
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // `assign_job` assigns a process with `pid` to the job object `job_handle`.
 // Every process started by the `pid` process using `CreateProcess`
 // will also be owned by the job object.
-inline Try<Nothing> assign_job(SharedHandle job_handle, pid_t pid)
-{
+inline Try<Nothing> assign_job(SharedHandle job_handle, pid_t pid) {
   // Get process handle for `pid`.
   SharedHandle process_handle(
       ::OpenProcess(
@@ -364,7 +369,8 @@ inline Try<Nothing> assign_job(SharedHandle job_handle, pid_t pid)
   }
 
   const BOOL result = ::AssignProcessToJobObject(
-      job_handle.get_handle(), process_handle.get_handle());
+      job_handle.get_handle(),
+      process_handle.get_handle());
 
   if (result == FALSE) {
     return WindowsError(
@@ -374,12 +380,12 @@ inline Try<Nothing> assign_job(SharedHandle job_handle, pid_t pid)
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // The `kill_job` function wraps the Windows sytem call `TerminateJobObject`
 // for the job object `job_handle`. This will call `TerminateProcess`
 // for every associated child process.
-inline Try<Nothing> kill_job(SharedHandle job_handle)
-{
+inline Try<Nothing> kill_job(SharedHandle job_handle) {
   const BOOL result = ::TerminateJobObject(
       job_handle.get_handle(),
       // The exit code to be used by all processes in the job object.
@@ -392,6 +398,8 @@ inline Try<Nothing> kill_job(SharedHandle job_handle)
   return Nothing();
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_WINDOWS_JOBOBJECT_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

@@ -10,30 +10,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_FTRUNCATE_HPP__
-#define __STOUT_OS_WINDOWS_FTRUNCATE_HPP__
+#pragma once
 
-#include <stout/error.hpp>
-#include <stout/nothing.hpp>
-#include <stout/try.hpp>
-#include <stout/windows.hpp>
+#include "stout/error.hpp"
+#include "stout/nothing.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/try.hpp"
+#include "stout/windows.hpp"
 
-#include <stout/os/int_fd.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline Try<Nothing> ftruncate(const int_fd& fd, off_t length)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Try<Nothing> ftruncate(const int_fd& fd, off_t length) {
   FILE_END_OF_FILE_INFO info;
   info.EndOfFile.QuadPart = length;
   if (::SetFileInformationByHandle(
-          fd, FileEndOfFileInfo, &info, sizeof(info)) == FALSE) {
+          fd,
+          FileEndOfFileInfo,
+          &info,
+          sizeof(info))
+      == FALSE) {
     return WindowsError();
   }
 
   return Nothing();
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_WINDOWS_FTRUNCATE_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

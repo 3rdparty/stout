@@ -10,23 +10,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_SOCKET_HPP__
-#define __STOUT_OS_WINDOWS_SOCKET_HPP__
+#pragma once
 
 #include <glog/logging.h>
 
-#include <stout/abort.hpp>
-#include <stout/try.hpp>
-#include <stout/error.hpp>
-#include <stout/windows.hpp> // For `WinSock2.h`.
+#include "stout/abort.hpp"
+#include "stout/error.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/try.hpp"
+#include "stout/windows.hpp" // For `WinSock2.h`.
 
-#include <stout/os/int_fd.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace net {
 
+////////////////////////////////////////////////////////////////////////
+
 // Initialize Windows socket stack.
-inline bool wsa_initialize()
-{
+inline bool wsa_initialize() {
   // Initialize WinSock (request version 2.2).
   WORD requestedVersion = MAKEWORD(2, 2);
   WSADATA data;
@@ -40,8 +41,9 @@ inline bool wsa_initialize()
 
   // Check that the WinSock version we got back is 2.2 or higher.
   // The high-order byte specifies the minor version number.
-  if (LOBYTE(data.wVersion) < 2 ||
-      (LOBYTE(data.wVersion) == 2 && HIBYTE(data.wVersion) != 2)) {
+  if (
+      LOBYTE(data.wVersion) < 2
+      || (LOBYTE(data.wVersion) == 2 && HIBYTE(data.wVersion) != 2)) {
     LOG(ERROR) << "Incorrect WinSock version found : " << LOBYTE(data.wVersion)
                << "." << HIBYTE(data.wVersion);
 
@@ -58,9 +60,9 @@ inline bool wsa_initialize()
   return true;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline bool wsa_cleanup()
-{
+inline bool wsa_cleanup() {
   // Cleanup WinSock. Wait for any outstanding socket operations to complete
   // before exiting. Retry for a maximum of 10 times at 1 second intervals.
   int retriesLeft = 10;
@@ -93,20 +95,32 @@ inline bool wsa_cleanup()
   return true;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // The error indicates the last socket operation has been
 // interupted, the operation can be restarted immediately.
 // The error will append on Windows only when the operation
 // is interupted using  `WSACancelBlockingCall`.
-inline bool is_restartable_error(int error) { return (error == WSAEINTR); }
+inline bool is_restartable_error(int error) {
+  return (error == WSAEINTR);
+}
 
+////////////////////////////////////////////////////////////////////////
 
 // The error indicates the last socket function on a non-blocking socket
 // cannot be completed. This is a temporary condition and the caller can
 // retry the operation later.
-inline bool is_retryable_error(int error) { return (error == WSAEWOULDBLOCK); }
-inline bool is_inprogress_error(int error) { return (error == WSAEWOULDBLOCK); }
+inline bool is_retryable_error(int error) {
+  return (error == WSAEWOULDBLOCK);
+}
 
+////////////////////////////////////////////////////////////////////////
+
+inline bool is_inprogress_error(int error) {
+  return (error == WSAEWOULDBLOCK);
+}
+
+////////////////////////////////////////////////////////////////////////
 
 // Returns a socket file descriptor for the specified options.
 //
@@ -116,8 +130,7 @@ inline Try<int_fd> socket(
     int family,
     int type,
     int protocol,
-    DWORD flags = WSA_FLAG_OVERLAPPED | WSA_FLAG_NO_HANDLE_INHERIT)
-{
+    DWORD flags = WSA_FLAG_OVERLAPPED | WSA_FLAG_NO_HANDLE_INHERIT) {
   SOCKET s = ::WSASocketW(family, type, protocol, nullptr, 0, flags);
   if (s == INVALID_SOCKET) {
     return WindowsSocketError();
@@ -126,51 +139,66 @@ inline Try<int_fd> socket(
   return s;
 }
 
+////////////////////////////////////////////////////////////////////////
+
 // NOTE: The below wrappers are used to silence some implicit
 // type-casting warnings.
 
 inline int_fd accept(
-    const int_fd& fd, sockaddr* addr, socklen_t* addrlen)
-{
+    const int_fd& fd,
+    sockaddr* addr,
+    socklen_t* addrlen) {
   return int_fd(::accept(fd, addr, reinterpret_cast<int*>(addrlen)));
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // NOTE: If `::bind` or `::connect` fail, they return `SOCKET_ERROR`, which is
 // defined to be `-1`. Therefore, the error checking logic of `result < 0` used
 // on POSIX will also work on Windows.
 
 inline int bind(
-    const int_fd& fd, const sockaddr* addr, socklen_t addrlen)
-{
+    const int_fd& fd,
+    const sockaddr* addr,
+    socklen_t addrlen) {
   CHECK_LE(addrlen, INT32_MAX);
   return ::bind(fd, addr, static_cast<int>(addrlen));
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline int connect(
-    const int_fd& fd, const sockaddr* address, socklen_t addrlen)
-{
+    const int_fd& fd,
+    const sockaddr* address,
+    socklen_t addrlen) {
   CHECK_LE(addrlen, INT32_MAX);
   return ::connect(fd, address, static_cast<int>(addrlen));
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline ssize_t send(
-    const int_fd& fd, const void* buf, size_t len, int flags)
-{
+    const int_fd& fd,
+    const void* buf,
+    size_t len,
+    int flags) {
   CHECK_LE(len, INT32_MAX);
   return ::send(
-      fd, static_cast<const char*>(buf), static_cast<int>(len), flags);
+      fd,
+      static_cast<const char*>(buf),
+      static_cast<int>(len),
+      flags);
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline ssize_t recv(const int_fd& fd, void* buf, size_t len, int flags)
-{
+inline ssize_t recv(const int_fd& fd, void* buf, size_t len, int flags) {
   CHECK_LE(len, INT32_MAX);
   return ::recv(fd, static_cast<char*>(buf), static_cast<int>(len), flags);
 }
 
-} // namespace net {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_WINDOWS_SOCKET_HPP__
+} // namespace net
+
+////////////////////////////////////////////////////////////////////////

@@ -10,19 +10,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_ENVIRONMENT_HPP__
-#define __STOUT_OS_WINDOWS_ENVIRONMENT_HPP__
+#pragma once
 
 #include <map>
 #include <memory>
 #include <string>
-#include <stout/stringify.hpp>
 
+#include "stout/stringify.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline std::map<std::string, std::string> environment()
-{
+////////////////////////////////////////////////////////////////////////
+
+inline std::map<std::string, std::string> environment() {
   // NOTE: The `GetEnvironmentStrings` call returns a pointer to a
   // read-only block of memory with the following format (minus newlines):
   // Var1=Value1\0
@@ -31,10 +33,11 @@ inline std::map<std::string, std::string> environment()
   // ...
   // VarN=ValueN\0\0
   const std::unique_ptr<wchar_t[], decltype(&::FreeEnvironmentStringsW)> env(
-      ::GetEnvironmentStringsW(), &::FreeEnvironmentStringsW);
+      ::GetEnvironmentStringsW(),
+      &::FreeEnvironmentStringsW);
   std::map<std::string, std::string> result;
 
-  for (size_t i = 0; env[i] != L'\0' && env[i+1] != L'\0';
+  for (size_t i = 0; env[i] != L'\0' && env[i + 1] != L'\0';
        /* incremented below */) {
     std::wstring entry(&env[i]);
 
@@ -49,12 +52,14 @@ inline std::map<std::string, std::string> environment()
     }
 
     result[stringify(entry.substr(0, position))] =
-      stringify(entry.substr(position + 1));
+        stringify(entry.substr(position + 1));
   }
 
   return result;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_WINDOWS_ENVIRONMENT_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

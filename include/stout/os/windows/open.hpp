@@ -10,20 +10,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_OPEN_HPP__
-#define __STOUT_OS_WINDOWS_OPEN_HPP__
+#pragma once
 
 #include <fcntl.h> // For file access flags like `_O_CREAT`.
 
 #include <string>
 
-#include <stout/error.hpp>
-#include <stout/try.hpp>
-#include <stout/windows.hpp> // For `mode_t`.
+#include "stout/error.hpp"
+#include "stout/internal/windows/longpath.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/try.hpp"
+#include "stout/windows.hpp" // For `mode_t`.
 
-#include <stout/os/int_fd.hpp>
-
-#include <stout/internal/windows/longpath.hpp>
+////////////////////////////////////////////////////////////////////////
 
 // TODO(andschwa): Windows does not support the Linux extension
 // O_NONBLOCK, as asynchronous I/O is done through other mechanisms.
@@ -40,7 +39,11 @@ constexpr int O_SYNC = 0;
 // default we set all handles to be non-inheritable.
 constexpr int O_CLOEXEC = 0;
 
+////////////////////////////////////////////////////////////////////////
+
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // TODO(andschwa): Handle specified creation permissions in `mode_t mode`. See
 // MESOS-3176.
@@ -48,8 +51,7 @@ namespace os {
 // NOTE: This function always opens files in non-overlapped mode, because
 // we only support overlapped pipes and sockets through the `os::pipe`
 // and `os::socket` functions.
-inline Try<int_fd> open(const std::string& path, int oflag, mode_t mode = 0)
-{
+inline Try<int_fd> open(const std::string& path, int oflag, mode_t mode = 0) {
   std::wstring longpath = ::internal::windows::longpath(path);
 
   // Map the POSIX `oflag` access flags.
@@ -136,6 +138,8 @@ inline Try<int_fd> open(const std::string& path, int oflag, mode_t mode = 0)
   return handle;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_WINDOWS_OPEN_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

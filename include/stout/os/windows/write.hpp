@@ -10,20 +10,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_WRITE_HPP__
-#define __STOUT_OS_WINDOWS_WRITE_HPP__
+#pragma once
 
-#include <stout/nothing.hpp>
-#include <stout/try.hpp>
-#include <stout/unreachable.hpp>
-#include <stout/windows.hpp>
+#include "stout/internal/windows/overlapped.hpp"
+#include "stout/nothing.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/os/socket.hpp"
+#include "stout/try.hpp"
+#include "stout/unreachable.hpp"
+#include "stout/windows.hpp"
 
-#include <stout/internal/windows/overlapped.hpp>
-
-#include <stout/os/int_fd.hpp>
-#include <stout/os/socket.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // Asynchronous write on a overlapped int_fd. Returns `Error` on fatal errors,
 // `None()` on a successful pending IO operation or number of bytes written on
@@ -32,15 +33,14 @@ inline Result<size_t> write_async(
     const int_fd& fd,
     const void* data,
     size_t size,
-    OVERLAPPED* overlapped)
-{
+    OVERLAPPED* overlapped) {
   CHECK_LE(size, UINT_MAX);
 
   switch (fd.type()) {
     case WindowsFD::Type::HANDLE: {
       DWORD bytes;
       const bool success =
-        ::WriteFile(fd, data, static_cast<DWORD>(size), &bytes, overlapped);
+          ::WriteFile(fd, data, static_cast<DWORD>(size), &bytes, overlapped);
 
       return ::internal::windows::process_async_io_result(success, bytes);
     }
@@ -51,15 +51,14 @@ inline Result<size_t> write_async(
 
       // Note that it's okay to allocate this on the stack, since the WinSock
       // providers must copy the WSABUF to their internal buffers. See
-      // https://msdn.microsoft.com/en-us/library/windows/desktop/ms741688(v=vs.85).aspx // NOLINT(whitespace/line_length)
+      // https://tinyurl.com/3e3yzyns // NOLINT(whitespace/line_length)
       WSABUF buf = {
-        static_cast<u_long>(size),
-        static_cast<char*>(const_cast<void*>(data))
-      };
+          static_cast<u_long>(size),
+          static_cast<char*>(const_cast<void*>(data))};
 
       DWORD bytes;
       const int result =
-        ::WSASend(fd, &buf, 1, &bytes, 0, overlapped, nullptr);
+          ::WSASend(fd, &buf, 1, &bytes, 0, overlapped, nullptr);
 
       return ::internal::windows::process_async_io_result(result == 0, bytes);
     }
@@ -68,9 +67,9 @@ inline Result<size_t> write_async(
   UNREACHABLE();
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline ssize_t write(const int_fd& fd, const void* data, size_t size)
-{
+inline ssize_t write(const int_fd& fd, const void* data, size_t size) {
   CHECK_LE(size, INT_MAX);
 
   switch (fd.type()) {
@@ -80,7 +79,7 @@ inline ssize_t write(const int_fd& fd, const void* data, size_t size)
       if (!fd.is_overlapped()) {
         DWORD bytes;
         const BOOL result =
-          ::WriteFile(fd, data, static_cast<DWORD>(size), &bytes, nullptr);
+            ::WriteFile(fd, data, static_cast<DWORD>(size), &bytes, nullptr);
 
         if (result == FALSE) {
           // Indicates an error, but we can't return a `WindowsError`.
@@ -93,7 +92,7 @@ inline ssize_t write(const int_fd& fd, const void* data, size_t size)
       // Asynchronous handle, we can use the `write_async` function
       // and then wait on the overlapped object for a synchronous write.
       Try<OVERLAPPED> overlapped_ =
-        ::internal::windows::init_overlapped_for_sync_io();
+          ::internal::windows::init_overlapped_for_sync_io();
 
       if (overlapped_.isError()) {
         return -1;
@@ -113,7 +112,7 @@ inline ssize_t write(const int_fd& fd, const void* data, size_t size)
       // IO is pending, so wait for the overlapped object.
       DWORD bytes;
       const BOOL wait_success =
-        ::GetOverlappedResult(fd, &overlapped, &bytes, TRUE);
+          ::GetOverlappedResult(fd, &overlapped, &bytes, TRUE);
 
       if (wait_success == FALSE) {
         return -1;
@@ -122,14 +121,15 @@ inline ssize_t write(const int_fd& fd, const void* data, size_t size)
       return static_cast<ssize_t>(bytes);
     }
     case WindowsFD::Type::SOCKET: {
-      return ::send(fd, (const char*)data, static_cast<int>(size), 0);
+      return ::send(fd, (const char*) data, static_cast<int>(size), 0);
     }
   }
 
   UNREACHABLE();
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace os
 
-#endif // __STOUT_OS_WINDOWS_WRITE_HPP__
+////////////////////////////////////////////////////////////////////////

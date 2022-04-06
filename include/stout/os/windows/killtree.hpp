@@ -10,16 +10,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_KILLTREE_HPP__
-#define __STOUT_OS_WINDOWS_KILLTREE_HPP__
+#pragma once
 
-#include <stout/os.hpp>
-#include <stout/try.hpp>
-#include <stout/windows.hpp> // For `SharedHandle` and `pid_t`.
+#include "stout/os.hpp"
+#include "stout/os/windows/jobobject.hpp"
+#include "stout/try.hpp"
+#include "stout/windows.hpp" // For `SharedHandle` and `pid_t`.
 
-#include <stout/os/windows/jobobject.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // Terminate the "process tree" rooted at the specified pid.
 // Since there is no process tree concept on Windows,
@@ -30,15 +32,14 @@ inline Try<std::list<ProcessTree>> killtree(
     pid_t pid,
     int signal,
     bool groups = false,
-    bool sessions = false)
-{
+    bool sessions = false) {
   const Try<std::wstring> name = os::name_job(pid);
   if (name.isError()) {
     return Error("Failed to determine job object name: " + name.error());
   }
 
   Try<SharedHandle> handle =
-    os::open_job(JOB_OBJECT_TERMINATE, false, name.get());
+      os::open_job(JOB_OBJECT_TERMINATE, false, name.get());
   if (handle.isError()) {
     return Error("Failed to open job object: " + handle.error());
   }
@@ -54,6 +55,8 @@ inline Try<std::list<ProcessTree>> killtree(
   return process_tree_list;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_WINDOWS_KILLTREE_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

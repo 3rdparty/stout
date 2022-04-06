@@ -10,22 +10,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_LS_HPP__
-#define __STOUT_OS_WINDOWS_LS_HPP__
+#pragma once
 
 #include <list>
 #include <string>
 
-#include <stout/error.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/internal/windows/longpath.hpp"
+#include "stout/try.hpp"
 
-#include <stout/internal/windows/longpath.hpp>
-
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline Try<std::list<std::string>> ls(const std::string& directory)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Try<std::list<std::string>> ls(const std::string& directory) {
   // Ensure the path ends with a backslash.
   std::string path = directory;
   if (!strings::endsWith(path, "\\")) {
@@ -35,7 +35,7 @@ inline Try<std::list<std::string>> ls(const std::string& directory)
   // Get first file matching pattern `X:\path\to\wherever\*`.
   WIN32_FIND_DATAW found;
   const std::wstring search_pattern =
-    ::internal::windows::longpath(path) + L"*";
+      ::internal::windows::longpath(path) + L"*";
 
   const SharedHandle search_handle(
       ::FindFirstFileW(search_pattern.data(), &found),
@@ -66,6 +66,8 @@ inline Try<std::list<std::string>> ls(const std::string& directory)
   return result;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_WINDOWS_LS_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

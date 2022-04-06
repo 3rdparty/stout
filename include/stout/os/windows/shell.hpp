@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_SHELL_HPP__
-#define __STOUT_OS_WINDOWS_SHELL_HPP__
+#pragma once
 
 #include <process.h>
 #include <stdarg.h> // For va_list, va_start, etc.
@@ -22,33 +21,37 @@
 #include <string>
 #include <vector>
 
-#include <stout/error.hpp>
-#include <stout/foreach.hpp>
-#include <stout/none.hpp>
-#include <stout/option.hpp>
-#include <stout/os.hpp>
-#include <stout/try.hpp>
-#include <stout/windows.hpp>
+#include "stout/error.hpp"
+#include "stout/foreach.hpp"
+#include "stout/internal/windows/inherit.hpp"
+#include "stout/none.hpp"
+#include "stout/option.hpp"
+#include "stout/os.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/os/pipe.hpp"
+#include "stout/try.hpp"
+#include "stout/windows.hpp"
 
-#include <stout/os/int_fd.hpp>
-#include <stout/os/pipe.hpp>
-
-#include <stout/internal/windows/inherit.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace internal {
+
+////////////////////////////////////////////////////////////////////////
+
 namespace windows {
+
+////////////////////////////////////////////////////////////////////////
 
 // Retrieves system environment in a `std::map`, ignoring
 // the current process's environment variables.
-inline Option<std::map<std::wstring, std::wstring>> get_system_env()
-{
+inline Option<std::map<std::wstring, std::wstring>> get_system_env() {
   std::map<std::wstring, std::wstring> system_env;
   wchar_t* env_entry = nullptr;
 
   // Get the system environment.
   // The third parameter (bool) tells the function *not* to inherit
   // variables from the current process.
-  if (!::CreateEnvironmentBlock((LPVOID*)&env_entry, nullptr, FALSE)) {
+  if (!::CreateEnvironmentBlock((LPVOID*) &env_entry, nullptr, FALSE)) {
     return None();
   }
 
@@ -75,7 +78,10 @@ inline Option<std::map<std::wstring, std::wstring>> get_system_env()
     // match the name provided by the scheduler in case of a collision.
     // This is safe because Windows environment variables are case insensitive.
     std::transform(
-        var_name.begin(), var_name.end(), var_name.begin(), ::towupper);
+        var_name.begin(),
+        var_name.end(),
+        var_name.begin(),
+        ::towupper);
 
     // The system environment has priority.
     system_env.insert_or_assign(var_name.data(), varVal.data());
@@ -89,6 +95,7 @@ inline Option<std::map<std::wstring, std::wstring>> get_system_env()
   return system_env;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Creates a null-terminated array of null-terminated strings that will be
 // passed to `CreateProcessW` as the `lpEnvironment` argument, as described by
@@ -101,10 +108,9 @@ inline Option<std::map<std::wstring, std::wstring>> get_system_env()
 // the returned string. These variables take precedence over the provided
 // `env` and are generally necessary in order to launch things on Windows.
 //
-// [1] https://msdn.microsoft.com/en-us/library/windows/desktop/ms682425(v=vs.85).aspx
+// [1] https://tinyurl.com/ysvhce9d
 inline Option<std::wstring> create_process_env(
-    const Option<std::map<std::string, std::string>>& env)
-{
+    const Option<std::map<std::string, std::string>>& env) {
   if (env.isNone() || (env.isSome() && env.get().size() == 0)) {
     return None();
   }
@@ -118,23 +124,23 @@ inline Option<std::wstring> create_process_env(
   std::map<std::wstring, std::wstring> combined_env;
 
   // Populate the combined environment first with the system environment.
-  foreachpair (const std::wstring& key,
-               const std::wstring& value,
-               system_env.get()) {
+  foreachpair(
+      const std::wstring& key,
+      const std::wstring& value,
+      system_env.get()) {
     combined_env[key] = value;
   }
 
   // Now override with the supplied environment.
-  foreachpair (const std::string& key,
-               const std::string& value,
-               env.get()) {
+  foreachpair(const std::string& key, const std::string& value, env.get()) {
     combined_env[wide_stringify(key)] = wide_stringify(value);
   }
 
   std::wstring env_string;
-  foreachpair (const std::wstring& key,
-               const std::wstring& value,
-               combined_env) {
+  foreachpair(
+      const std::wstring& key,
+      const std::wstring& value,
+      combined_env) {
     env_string += key + L'=' + value + L'\0';
   }
 
@@ -143,6 +149,7 @@ inline Option<std::wstring> create_process_env(
   return env_string;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Concatenates multiple command-line arguments and escapes the values.
 // NOTE: This is necessary even when using Windows APIs that "appear"
@@ -159,10 +166,9 @@ inline Option<std::wstring> create_process_env(
 // NOTE: The below algorithm is adapted from Daniel Colascione's public domain
 // algorithm for quoting command line arguments on Windows for `CreateProcess`.
 //
-// https://blogs.msdn.microsoft.com/twistylittlepassagesallalike/2011/04/23/everyone-quotes-command-line-arguments-the-wrong-way/
+// https://tinyurl.com/2p9hz5h5
 // NOLINT(whitespace/line_length)
-inline std::wstring stringify_args(const std::vector<std::string>& argv)
-{
+inline std::wstring stringify_args(const std::vector<std::string>& argv) {
   std::wstring command;
   for (auto argit = argv.cbegin(); argit != argv.cend(); ++argit) {
     std::wstring arg = wide_stringify(*argit);
@@ -209,6 +215,7 @@ inline std::wstring stringify_args(const std::vector<std::string>& argv)
   return command;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 struct ProcessData {
   SharedHandle process_handle;
@@ -216,13 +223,14 @@ struct ProcessData {
   pid_t pid;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 // Provides an interface for creating a child process on Windows.
 //
 // The `command` argument is given for compatibility, and is ignored. This is
-// because the `CreateProcess` will use `argv[0]` as the command to be executed,
-// and will perform a `PATH` lookup. If `command` were to be used instead,
-// `CreateProcess` would require an absolute path.
+// because the `CreateProcess` will use `argv[0]` as the command to be
+// executed, and will perform a `PATH` lookup. If `command` were to be used
+// instead, `CreateProcess` would require an absolute path.
 //
 // If `create_suspended` is `true`, the process will not be started, and the
 // caller must use `ResumeThread` to start the process.
@@ -243,8 +251,7 @@ inline Try<ProcessData> create_process(
     const Option<std::map<std::string, std::string>>& environment,
     const bool create_suspended = false,
     const Option<std::array<int_fd, 3>>& pipes = None(),
-    const std::vector<int_fd>& whitelist_fds = {})
-{
+    const std::vector<int_fd>& whitelist_fds = {}) {
   // TODO(andschwa): Assert that `command` and `argv[0]` are the same.
   const std::wstring arg_string = stringify_args(argv);
   std::vector<wchar_t> arg_buffer(arg_string.begin(), arg_string.end());
@@ -253,7 +260,7 @@ inline Try<ProcessData> create_process(
   // Create the process with a Unicode environment and extended
   // startup info.
   DWORD creation_flags =
-    CREATE_UNICODE_ENVIRONMENT | EXTENDED_STARTUPINFO_PRESENT;
+      CREATE_UNICODE_ENVIRONMENT | EXTENDED_STARTUPINFO_PRESENT;
   if (create_suspended) {
     creation_flags |= CREATE_SUSPENDED;
   }
@@ -296,12 +303,12 @@ inline Try<ProcessData> create_process(
     // flag to instruct the child to use them [1].
     // A more user-friendly example can be found in [2].
     //
-    // [1] https://msdn.microsoft.com/en-us/library/windows/desktop/ms686331(v=vs.85).aspx
-    // [2] https://msdn.microsoft.com/en-us/library/windows/desktop/ms682499(v=vs.85).aspx
-    startup_info_ex.StartupInfo.dwFlags   |= STARTF_USESTDHANDLES;
-    startup_info_ex.StartupInfo.hStdInput  = std::get<0>(pipes.get());
+    // [1] https://tinyurl.com/mryj76xz
+    // [2] https://tinyurl.com/bdzz44jf
+    startup_info_ex.StartupInfo.dwFlags |= STARTF_USESTDHANDLES;
+    startup_info_ex.StartupInfo.hStdInput = std::get<0>(pipes.get());
     startup_info_ex.StartupInfo.hStdOutput = std::get<1>(pipes.get());
-    startup_info_ex.StartupInfo.hStdError  = std::get<2>(pipes.get());
+    startup_info_ex.StartupInfo.hStdError = std::get<2>(pipes.get());
   }
 
   foreach (const int_fd& fd, whitelist_fds) {
@@ -313,7 +320,7 @@ inline Try<ProcessData> create_process(
   }
 
   Result<std::shared_ptr<AttributeList>> attribute_list =
-    create_attributes_list_for_handles(handles);
+      create_attributes_list_for_handles(handles);
 
   if (attribute_list.isError()) {
     return Error(attribute_list.error());
@@ -377,16 +384,29 @@ inline Try<ProcessData> create_process(
         "Failed to call `CreateProcess`: " + stringify(arg_string));
   }
 
-  return ProcessData{SharedHandle{process_info.hProcess, ::CloseHandle},
-                     SharedHandle{process_info.hThread, ::CloseHandle},
-                     static_cast<pid_t>(process_info.dwProcessId)};
+  return ProcessData{
+      SharedHandle{process_info.hProcess, ::CloseHandle},
+      SharedHandle{process_info.hThread, ::CloseHandle},
+      static_cast<pid_t>(process_info.dwProcessId)};
 }
 
-} // namespace windows {
-} // namespace internal {
+////////////////////////////////////////////////////////////////////////
+
+} // namespace windows
+
+////////////////////////////////////////////////////////////////////////
+
+} // namespace internal
+
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
+
 namespace Shell {
+
+////////////////////////////////////////////////////////////////////////
 
 // Canonical constants used as platform-dependent args to `exec` calls.
 // `name` is the command name, `arg0` is the first argument received
@@ -396,7 +416,11 @@ constexpr const char* name = "cmd.exe";
 constexpr const char* arg0 = "cmd.exe";
 constexpr const char* arg1 = "/c";
 
-} // namespace Shell {
+////////////////////////////////////////////////////////////////////////
+
+} // namespace Shell
+
+////////////////////////////////////////////////////////////////////////
 
 // Runs a shell command (with `cmd.exe`) with optional arguments.
 //
@@ -413,8 +437,7 @@ constexpr const char* arg1 = "/c";
 // exit code in case of errors, and still obtain `stderr`, as piped to
 // `stdout`.
 template <typename... T>
-Try<std::string> shell(const std::string& fmt, const T&... t)
-{
+Try<std::string> shell(const std::string& fmt, const T&... t) {
   using std::array;
   using std::string;
   using std::vector;
@@ -437,8 +460,8 @@ Try<std::string> shell(const std::string& fmt, const T&... t)
     // line. We use this because we cannot just split on whitespace.
     int argc;
     const std::unique_ptr<wchar_t*, decltype(&::LocalFree)> argv(
-      ::CommandLineToArgvW(wide_stringify(command.get()).data(), &argc),
-      &::LocalFree);
+        ::CommandLineToArgvW(wide_stringify(command.get()).data(), &argc),
+        &::LocalFree);
     if (argv == nullptr) {
       return WindowsError();
     }
@@ -468,11 +491,9 @@ Try<std::string> shell(const std::string& fmt, const T&... t)
   }
 
   // Ensure the file descriptors are closed when we leave this scope.
-  struct Closer
-  {
+  struct Closer {
     vector<int_fd> fds;
-    ~Closer()
-    {
+    ~Closer() {
       foreach (int_fd& fd, fds) {
         os::close(fd);
       }
@@ -484,7 +505,7 @@ Try<std::string> shell(const std::string& fmt, const T&... t)
   using namespace ::internal::windows;
 
   Try<ProcessData> process_data =
-    create_process(args.front(), args, None(), false, pipes);
+      create_process(args.front(), args, None(), false, pipes);
 
   if (process_data.isError()) {
     return Error(process_data.error());
@@ -506,7 +527,8 @@ Try<std::string> shell(const std::string& fmt, const T&... t)
 
   DWORD status;
   if (!::GetExitCodeProcess(
-        process_data->process_handle.get_handle(), &status)) {
+          process_data->process_handle.get_handle(),
+          &status)) {
     return Error("Failed to `GetExitCodeProcess`: " + command.get());
   }
 
@@ -515,16 +537,18 @@ Try<std::string> shell(const std::string& fmt, const T&... t)
   }
 
   return Error(
-    "Failed to execute '" + command.get() +
-    "'; the command was either "
-    "not found or exited with a non-zero exit status: " +
-    stringify(status));
+      "Failed to execute '" + command.get() +
+      "'; the command was either "
+      "not found or exited with a non-zero exit status: "
+      + stringify(status));
 }
 
+////////////////////////////////////////////////////////////////////////
 
-template<typename... T>
+template <typename... T>
 inline int execlp(const char* file, T... t) = delete;
 
+////////////////////////////////////////////////////////////////////////
 
 // Executes a command by calling "<command> <arguments...>", and
 // returns after the command has been completed. Returns the process exit
@@ -532,12 +556,11 @@ inline int execlp(const char* file, T... t) = delete;
 inline Option<int> spawn(
     const std::string& command,
     const std::vector<std::string>& arguments,
-    const Option<std::map<std::string, std::string>>& environment = None())
-{
+    const Option<std::map<std::string, std::string>>& environment = None()) {
   using namespace ::internal::windows;
 
   Try<ProcessData> process_data =
-    create_process(command, arguments, environment);
+      create_process(command, arguments, environment);
 
   if (process_data.isError()) {
     LOG(WARNING) << process_data.error();
@@ -549,7 +572,8 @@ inline Option<int> spawn(
 
   DWORD status;
   if (!::GetExitCodeProcess(
-        process_data->process_handle.get_handle(), &status)) {
+          process_data->process_handle.get_handle(),
+          &status)) {
     LOG(WARNING) << "Failed to `GetExitCodeProcess`: " << command;
     return None();
   }
@@ -558,6 +582,7 @@ inline Option<int> spawn(
   return static_cast<int>(status);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Executes a command by calling "cmd /c <command>", and returns
 // after the command has been completed. Returns the process exit
@@ -568,23 +593,23 @@ inline Option<int> spawn(
 // when using this method and use proper validation and sanitization
 // on the `command`. For this reason in general `os::spawn` is
 // preferred if a shell is not required.
-inline Option<int> system(const std::string& command)
-{
+inline Option<int> system(const std::string& command) {
   return os::spawn(Shell::name, {Shell::arg0, Shell::arg1, command});
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // In order to emulate the semantics of `execvp`, `os::spawn` waits for the new
 // process to exit, and returns its error code, which is propogated back to the
 // parent via `exit` here.
 inline int execvp(
     const std::string& command,
-    const std::vector<std::string>& argv)
-{
+    const std::vector<std::string>& argv) {
   exit(os::spawn(command, argv).getOrElse(-1));
   return -1;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // NOTE: This function can accept `Argv` and `Envp` constructs through their
 // explicit type conversions, but unlike the POSIX implementations, it cannot
@@ -592,12 +617,13 @@ inline int execvp(
 inline int execvpe(
     const std::string& command,
     const std::vector<std::string>& argv,
-    const std::map<std::string, std::string>& envp)
-{
+    const std::map<std::string, std::string>& envp) {
   exit(os::spawn(command, argv, envp).getOrElse(-1));
   return -1;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_WINDOWS_SHELL_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

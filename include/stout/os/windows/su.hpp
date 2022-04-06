@@ -14,18 +14,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_SU_HPP__
-#define __STOUT_OS_WINDOWS_SU_HPP__
+#pragma once
 
 #include <string>
 #include <vector>
 
-#include <stout/error.hpp>
-#include <stout/nothing.hpp>
-#include <stout/result.hpp>
-#include <stout/try.hpp>
-
-#include <stout/windows.hpp>
+#include "stout/error.hpp"
+#include "stout/nothing.hpp"
+#include "stout/result.hpp"
+#include "stout/try.hpp"
+#include "stout/windows.hpp"
 
 // Include for `GetUserNameEx`. `SECURITY_WIN32` or `SECURITY_KERNEL` must be
 // defined to include `SecExt.h`, which defines `GetUserNameEx` (the choice
@@ -42,8 +40,11 @@
 #undef SECURITY_WIN32
 #endif // SECURITY_WIN32 || SECURITY_KERNEL
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // NOTE: We delete these functions because they are not meaningful on Windows.
 // `su` and `user` are the most important of these functions. The POSIX code
@@ -60,19 +61,21 @@ namespace os {
 // every platform except linux. So in this case it is simply safe to return an
 // error on Windows.
 
+////////////////////////////////////////////////////////////////////////
 
 inline Result<uid_t> getuid(const Option<std::string>& user = None()) = delete;
 
+////////////////////////////////////////////////////////////////////////
 
 inline Result<gid_t> getgid(const Option<std::string>& user = None()) = delete;
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns the SAM account name for the current user. This username is
 // unprocessed, meaning it contains punctuation, possibly including '\'.
 // NOTE: The `uid` parameter is unsupported on Windows, and will result in an
 // error.
-inline Result<std::string> user(Option<uid_t> uid = None())
-{
+inline Result<std::string> user(Option<uid_t> uid = None()) {
   if (uid.isSome()) {
     return Error(
         "os::user: Retrieving user information via uid "
@@ -97,9 +100,12 @@ inline Result<std::string> user(Option<uid_t> uid = None())
   return stringify(std::wstring(user_name.data()));
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline Try<Nothing> su(const std::string& user) = delete;
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_WINDOWS_SU_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

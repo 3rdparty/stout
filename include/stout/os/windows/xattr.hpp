@@ -10,10 +10,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_XATTR_HPP__
-#define __STOUT_OS_WINDOWS_XATTR_HPP__
+#pragma once
+
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // NOTE: These functions are deleted because Windows does
 // not support POSIX extended attribute semantics.
@@ -23,16 +26,20 @@ inline Try<Nothing> setxattr(
     const std::string& value,
     int flags) = delete;
 
+////////////////////////////////////////////////////////////////////////
 
 inline Try<std::string> getxattr(
     const std::string& path,
     const std::string& name) = delete;
 
+////////////////////////////////////////////////////////////////////////
 
 inline Try<std::string> removexattr(
     const std::string& path,
     const std::string& name) = delete;
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif /* __STOUT_OS_WINDOWS_XATTR_HPP__  */
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

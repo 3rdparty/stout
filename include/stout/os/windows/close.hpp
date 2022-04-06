@@ -10,21 +10,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_CLOSE_HPP__
-#define __STOUT_OS_WINDOWS_CLOSE_HPP__
+#pragma once
 
-#include <stout/error.hpp>
-#include <stout/nothing.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/nothing.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/os/windows/socket.hpp"
+#include "stout/try.hpp"
 
-#include <stout/os/int_fd.hpp>
-
-#include <stout/os/windows/socket.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline Try<Nothing> close(const int_fd& fd)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Try<Nothing> close(const int_fd& fd) {
   switch (fd.type()) {
     case WindowsFD::Type::HANDLE: {
       if (!fd.is_valid()) {
@@ -44,8 +44,8 @@ inline Try<Nothing> close(const int_fd& fd)
     case WindowsFD::Type::SOCKET: {
       // NOTE: Since closing an unconnected socket is not an error in POSIX,
       // we simply ignore it here.
-      if (::shutdown(fd, SD_BOTH) == SOCKET_ERROR &&
-          WSAGetLastError() != WSAENOTCONN) {
+      if (::shutdown(fd, SD_BOTH) == SOCKET_ERROR
+          && WSAGetLastError() != WSAENOTCONN) {
         return WindowsSocketError("Failed to shutdown a socket");
       }
 
@@ -60,6 +60,8 @@ inline Try<Nothing> close(const int_fd& fd)
   UNREACHABLE();
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_WINDOWS_CLOSE_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

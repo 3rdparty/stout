@@ -10,26 +10,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_RMDIR_HPP__
-#define __STOUT_OS_WINDOWS_RMDIR_HPP__
-
-#include <string>
+#pragma once
 
 #include <glog/logging.h>
 
-#include <stout/error.hpp>
-#include <stout/nothing.hpp>
-#include <stout/strings.hpp>
-#include <stout/try.hpp>
-#include <stout/windows.hpp>
+#include <string>
 
-#include <stout/os/rm.hpp>
-#include <stout/os/stat.hpp>
+#include "stout/error.hpp"
+#include "stout/internal/windows/longpath.hpp"
+#include "stout/nothing.hpp"
+#include "stout/os/rm.hpp"
+#include "stout/os/stat.hpp"
+#include "stout/strings.hpp"
+#include "stout/try.hpp"
+#include "stout/windows.hpp"
 
-#include <stout/internal/windows/longpath.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
+
 namespace internal {
+
+////////////////////////////////////////////////////////////////////////
 
 // Recursive version of `RemoveDirectory`. Two things are notable about this
 // implementation:
@@ -41,8 +45,9 @@ namespace internal {
 //    if `path` points at a file, this function will delete it, while a call to
 //    `rmdir` will not.
 inline Try<Nothing> recursive_remove_directory(
-    const std::string& path, bool removeRoot, bool continueOnError)
-{
+    const std::string& path,
+    bool removeRoot,
+    bool continueOnError) {
   // Base recursion case to delete a symlink or file.
   //
   // We explicitly delete symlinks here to handle hanging symlinks. Note that
@@ -57,19 +62,20 @@ inline Try<Nothing> recursive_remove_directory(
   // path join logic later, because (unlike Unix) Windows doesn't like double
   // slashes in paths.
   const std::string current_path =
-    strings::endsWith(path, "\\") ? path : path + "\\";
+      strings::endsWith(path, "\\") ? path : path + "\\";
 
   const std::wstring long_current_path =
-    ::internal::windows::longpath(current_path);
+      ::internal::windows::longpath(current_path);
 
-  // Scope the `search_handle` so that it is closed before we delete the current
-  // directory.
+  // Scope the `search_handle` so that it is closed before we delete the
+  // current directory.
   {
     // Get first file matching pattern `X:\path\to\wherever\*`.
     WIN32_FIND_DATAW found;
     const std::wstring search_pattern = long_current_path + L"*";
     const SharedHandle search_handle(
-        ::FindFirstFileW(search_pattern.data(), &found), ::FindClose);
+        ::FindFirstFileW(search_pattern.data(), &found),
+        ::FindClose);
 
     if (search_handle.get() == INVALID_HANDLE_VALUE) {
       return WindowsError(
@@ -77,8 +83,8 @@ inline Try<Nothing> recursive_remove_directory(
     }
 
     do {
-      // NOTE: do-while is appropriate here because folder is guaranteed to have
-      // at least a file called `.` (and probably also one called `..`).
+      // NOTE: do-while is appropriate here because folder is guaranteed to
+      // have at least a file called `.` (and probably also one called `..`).
       const std::wstring current_file(found.cFileName);
 
       const bool is_current_directory = current_file.compare(L".") == 0;
@@ -91,11 +97,13 @@ inline Try<Nothing> recursive_remove_directory(
 
       // Path to remove, note that recursion will call `longpath`.
       const std::wstring current_absolute_path =
-        long_current_path + current_file;
+          long_current_path + current_file;
 
       // Depth-first search, deleting files and directories.
       Try<Nothing> removed = recursive_remove_directory(
-          stringify(current_absolute_path), true, continueOnError);
+          stringify(current_absolute_path),
+          true,
+          continueOnError);
 
       if (removed.isError()) {
         if (continueOnError) {
@@ -117,8 +125,9 @@ inline Try<Nothing> recursive_remove_directory(
 
   // Finally, remove current directory unless `removeRoot` is disabled.
   if (removeRoot) {
-    if (!os::stat::isdir(current_path,
-                         os::stat::FollowSymlink::DO_NOT_FOLLOW_SYMLINK)) {
+    if (!os::stat::isdir(
+            current_path,
+            os::stat::FollowSymlink::DO_NOT_FOLLOW_SYMLINK)) {
       return Error("Refusing to rmdir non-directory " + current_path);
     } else {
       return os::rm(current_path);
@@ -128,8 +137,11 @@ inline Try<Nothing> recursive_remove_directory(
   return Nothing();
 }
 
-} // namespace internal {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace internal
+
+////////////////////////////////////////////////////////////////////////
 
 // By default, recursively deletes a directory akin to: 'rm -r'. If
 // `recursive` is false, it deletes a directory akin to: 'rmdir'. In
@@ -146,8 +158,7 @@ inline Try<Nothing> rmdir(
     const std::string& directory,
     bool recursive = true,
     bool removeRoot = true,
-    bool continueOnError = false)
-{
+    bool continueOnError = false) {
   // The API of this function also deletes files symlinks according
   // to the tests.
   if (!os::exists(directory)) {
@@ -156,10 +167,13 @@ inline Try<Nothing> rmdir(
 
   if (recursive) {
     return os::internal::recursive_remove_directory(
-        directory, removeRoot, continueOnError);
+        directory,
+        removeRoot,
+        continueOnError);
   } else {
-    if (!os::stat::isdir(directory,
-                         os::stat::FollowSymlink::DO_NOT_FOLLOW_SYMLINK)) {
+    if (!os::stat::isdir(
+            directory,
+            os::stat::FollowSymlink::DO_NOT_FOLLOW_SYMLINK)) {
       return Error("Refusing to rmdir non-directory " + directory);
     } else {
       return os::rm(directory);
@@ -167,7 +181,8 @@ inline Try<Nothing> rmdir(
   }
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace os
 
-#endif // __STOUT_OS_WINDOWS_RMDIR_HPP__
+////////////////////////////////////////////////////////////////////////

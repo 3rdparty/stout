@@ -10,21 +10,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_PAGESIZE_HPP__
-#define __STOUT_OS_WINDOWS_PAGESIZE_HPP__
+#pragma once
 
-#include <stout/windows.hpp>
+#include "stout/windows.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline size_t pagesize()
-{
+////////////////////////////////////////////////////////////////////////
+
+inline size_t pagesize() {
   SYSTEM_INFO info;
   ::GetSystemInfo(&info);
   return static_cast<size_t>(info.dwPageSize);
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_WINDOWS_PAGESIZE_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////
