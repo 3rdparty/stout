@@ -14,24 +14,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_TESTS_ENVIRONMENT_HPP__
-#define __STOUT_TESTS_ENVIRONMENT_HPP__
+#pragma once
+
+#include <gtest/gtest.h>
 
 #include <memory>
 #include <string>
 #include <vector>
 
-#include <gtest/gtest.h>
+#include "stout/strings.hpp"
 
-#include <stout/strings.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace stout {
+
+////////////////////////////////////////////////////////////////////////
+
 namespace internal {
+
+////////////////////////////////////////////////////////////////////////
+
 namespace tests {
 
-class TestFilter
-{
-public:
+////////////////////////////////////////////////////////////////////////
+
+class TestFilter {
+ public:
   TestFilter() = default;
   virtual ~TestFilter() = default;
 
@@ -41,20 +49,19 @@ public:
   // Returns whether the test name or parameterization matches the pattern.
   static bool matches(
       const ::testing::TestInfo* test,
-      const std::string& pattern)
-  {
-    if (strings::contains(test->test_case_name(), pattern) ||
-        strings::contains(test->name(), pattern)) {
+      const std::string& pattern) {
+    if (strings::contains(test->test_case_name(), pattern)
+        || strings::contains(test->name(), pattern)) {
       return true;
     }
 
-    if (test->type_param() != nullptr &&
-        strings::contains(test->type_param(), pattern)) {
+    if (test->type_param() != nullptr
+        && strings::contains(test->type_param(), pattern)) {
       return true;
     }
 
-    if (test->value_param() != nullptr &&
-        strings::contains(test->value_param(), pattern)) {
+    if (test->value_param() != nullptr
+        && strings::contains(test->value_param(), pattern)) {
       return true;
     }
 
@@ -62,12 +69,12 @@ public:
   }
 };
 
+////////////////////////////////////////////////////////////////////////
 
 // Return list of disabled tests based on test name based filters.
 static std::vector<std::string> disabled(
     const ::testing::UnitTest* unitTest,
-    const std::vector<std::shared_ptr<TestFilter>>& filters)
-{
+    const std::vector<std::shared_ptr<TestFilter>>& filters) {
   std::vector<std::string> disabled;
 
   for (int i = 0; i < unitTest->total_test_case_count(); i++) {
@@ -89,19 +96,18 @@ static std::vector<std::string> disabled(
   return disabled;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Used to set up and manage the test environment.
-class Environment : public ::testing::Environment
-{
-public:
+class Environment : public ::testing::Environment {
+ public:
   // We use the constructor to setup specific tests by updating the
   // gtest filter. We do this so that we can selectively run tests that
   // require root or specific OS support (e.g., cgroups). Note that this
   // should not effect any other filters that have been put in place
   // either on the command line or via an environment variable.
   // NOTE: This should be done before invoking `RUN_ALL_TESTS`.
-  Environment(const std::vector<std::shared_ptr<TestFilter>>& filters)
-  {
+  Environment(const std::vector<std::shared_ptr<TestFilter>>& filters) {
     // First we split the current filter into enabled and disabled tests
     // (which are separated by a '-').
     const std::string& filtered_tests = ::testing::GTEST_FLAG(filter);
@@ -142,8 +148,15 @@ public:
   }
 };
 
-} // namespace tests {
-} // namespace internal {
-} // namespace stout {
+////////////////////////////////////////////////////////////////////////
+} // namespace tests
 
-#endif // __STOUT_TESTS_ENVIRONMENT_HPP__
+////////////////////////////////////////////////////////////////////////
+
+} // namespace internal
+
+////////////////////////////////////////////////////////////////////////
+
+} // namespace stout
+
+////////////////////////////////////////////////////////////////////////
