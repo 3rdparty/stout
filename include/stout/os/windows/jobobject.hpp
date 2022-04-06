@@ -88,12 +88,14 @@ inline Try<SharedHandle> open_job(
 
 // `create_job` function creates a named job object using `name`.
 inline Try<SharedHandle> create_job(const std::wstring& name) {
+  /* clang-format off */
   SharedHandle job_handle(
       ::CreateJobObjectW(
           nullptr, // Use a default security descriptor, and
                    // the created handle cannot be inherited.
           name.data()), // The name of the job.
       ::CloseHandle);
+  /* clang-format on */
 
   if (job_handle.get_handle() == nullptr) {
     return WindowsError(

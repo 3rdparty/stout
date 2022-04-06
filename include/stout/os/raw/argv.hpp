@@ -10,18 +10,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_RAW_ARGV_HPP__
-#define __STOUT_OS_RAW_ARGV_HPP__
+#pragma once
 
 #include <string.h>
 
 #include <string>
 #include <vector>
 
-#include <stout/foreach.hpp>
+#include "stout/foreach.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
+
 namespace raw {
+
+////////////////////////////////////////////////////////////////////////
 
 /**
  * Represent the argument list expected by `execv` routines. The
@@ -33,15 +39,13 @@ namespace raw {
  *   os::raw::Argv argv(args);
  *   execvp("my_binary", argv);
  */
-class Argv
-{
-public:
+class Argv {
+ public:
   Argv(const Argv&) = delete;
   Argv& operator=(const Argv&) = delete;
 
   template <typename Iterable>
-  explicit Argv(const Iterable& iterable)
-  {
+  explicit Argv(const Iterable& iterable) {
     foreach (const std::string& arg, iterable) {
       args.emplace_back(arg);
     }
@@ -54,29 +58,31 @@ public:
     argv[args.size()] = nullptr;
   }
 
-  ~Argv()
-  {
+  ~Argv() {
     delete[] argv;
   }
 
-  operator char**() const
-  {
+  operator char**() const {
     return argv;
   }
 
-  operator std::vector<std::string>() const
-  {
+  operator std::vector<std::string>() const {
     return args;
   }
 
-private:
+ private:
   std::vector<std::string> args;
 
   // NOTE: This points to strings in the vector `args`.
   char** argv;
 };
 
-} // namespace raw {
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_RAW_ARGV_HPP__
+} // namespace raw
+
+////////////////////////////////////////////////////////////////////////
+
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

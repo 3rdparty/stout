@@ -10,19 +10,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_SUBCOMMAND_HPP__
-#define __STOUT_SUBCOMMAND_HPP__
+#pragma once
 
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
 
-#include <stout/flags.hpp>
-#include <stout/foreach.hpp>
-#include <stout/hashset.hpp>
-#include <stout/option.hpp>
-#include <stout/preprocessor.hpp>
+#include "stout/flags.hpp"
+#include "stout/foreach.hpp"
+#include "stout/hashset.hpp"
+#include "stout/option.hpp"
+#include "stout/preprocessor.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 // Subcommand is an abstraction for creating command binaries that
 // encompass many subcommands. For example:
@@ -38,9 +39,8 @@
 // we provide a 'dispatch' function which will look at argv[1] to
 // decide which subcommand to execute (based on its name) and then
 // parse the command line flags for you.
-class Subcommand
-{
-public:
+class Subcommand {
+ public:
   // This function is supposed to be called by the main function of
   // the command binary. A user needs to register at least one
   // subcommand. Here is a typical example of the main function of the
@@ -56,29 +56,31 @@ public:
   //     new Subcommand2(),
   //     new Subcommand3());
   // }
-#define INSERT(z, N, _) subcommands.push_back( c ## N );
-#define TEMPLATE(Z, N, DATA)                            \
-  static int dispatch(                                  \
-      const Option<std::string>& prefix,                \
-      int argc,                                         \
-      char** argv,                                      \
-      ENUM_PARAMS(N, Subcommand* c))                    \
-  {                                                     \
-    std::vector<Subcommand*> subcommands;               \
-    REPEAT_FROM_TO(0, N, INSERT, _)                     \
-    return dispatch(prefix, argc, argv, subcommands);   \
+#define INSERT(z, N, _) subcommands.push_back(c##N);
+#define TEMPLATE(Z, N, DATA)                          \
+  static int dispatch(                                \
+      const Option<std::string>& prefix,              \
+      int argc,                                       \
+      char** argv,                                    \
+      ENUM_PARAMS(N, Subcommand* c)) {                \
+    std::vector<Subcommand*> subcommands;             \
+    REPEAT_FROM_TO(0, N, INSERT, _)                   \
+    return dispatch(prefix, argc, argv, subcommands); \
   }
 
   REPEAT_FROM_TO(1, 11, TEMPLATE, _) // Args C1 -> C11.
 #undef TEMPLATE
 #undef INSERT
 
-  explicit Subcommand(const std::string& _name) : name_(_name) {}
+  explicit Subcommand(const std::string& _name)
+    : name_(_name) {}
   virtual ~Subcommand() {}
 
-  std::string name() const { return name_; }
+  std::string name() const {
+    return name_;
+  }
 
-protected:
+ protected:
   // Defines the main function of this subcommand. The return value
   // will be used as the exit code.
   // TODO(jieyu): Consider passing in argc and argv as some users
@@ -88,9 +90,11 @@ protected:
   // Returns the pointer to the flags that will be used for this
   // subcommand. If the user does not provide an override, the default
   // empty flags will be used.
-  virtual flags::FlagsBase* getFlags() { return &flags_; }
+  virtual flags::FlagsBase* getFlags() {
+    return &flags_;
+  }
 
-private:
+ private:
   // Returns the usage by listing all the registered subcommands.
   static std::string usage(
       const std::string& argv0,
@@ -109,11 +113,11 @@ private:
   flags::FlagsBase flags_;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 inline std::string Subcommand::usage(
     const std::string& argv0,
-    const std::vector<Subcommand*>& subcommands)
-{
+    const std::vector<Subcommand*>& subcommands) {
   std::ostringstream stream;
 
   stream << "Usage: " << argv0 << " <subcommand> [OPTIONS]\n\n"
@@ -128,13 +132,13 @@ inline std::string Subcommand::usage(
   return stream.str();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline int Subcommand::dispatch(
     const Option<std::string>& prefix,
     int argc,
     char** argv,
-    const std::vector<Subcommand*>& subcommands)
-{
+    const std::vector<Subcommand*>& subcommands) {
   if (subcommands.empty()) {
     std::cerr << "No subcommand is found" << std::endl;
     return 1;
@@ -173,7 +177,8 @@ inline int Subcommand::dispatch(
 
       Try<flags::Warnings> load = flags->load(prefix, argc - 1, argv + 1);
       if (load.isError()) {
-        std::cerr << "Failed to parse the flags: " << load.error() << std::endl;
+        std::cerr << "Failed to parse the flags: "
+                  << load.error() << std::endl;
         return 1;
       }
 
@@ -186,4 +191,4 @@ inline int Subcommand::dispatch(
   return 1;
 }
 
-#endif // __STOUT_SUBCOMMAND_HPP__
+////////////////////////////////////////////////////////////////////////

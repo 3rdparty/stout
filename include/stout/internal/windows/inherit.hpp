@@ -43,14 +43,26 @@ create_attributes_list_for_handles(const std::vector<HANDLE>& handles) {
   }
 
   SIZE_T size = 0;
-  BOOL result = ::InitializeProcThreadAttributeList(
-      nullptr, // Pointer to _PROC_THREAD_ATTRIBUTE_LIST. This
-               // parameter can be `nullptr` to determine the buffer
-               // size required to support the specified number of
-               // attributes.
-      1, // Count of attributes to be added to the list.
-      0, // Reserved and must be zero.
-      &size); // Size in bytes required for the attribute list.
+
+  // BOOL InitializeProcThreadAttributeList(
+  //    [out, optional] LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList,
+  //    [in]            DWORD                        dwAttributeCount,
+  //                    DWORD                        dwFlags,
+  //    [in, out]       PSIZE_T                      lpSize
+  // );
+  //
+  // [out, optional] lpAttributeList -
+  //    Pointer to _PROC_THREAD_ATTRIBUTE_LIST. This
+  //    parameter can be `nullptr` to determine the buffer
+  //    size required to support the specified number of
+  //    attributes.
+  // [in] dwAttributeCount -
+  //    Count of attributes to be added to the list.
+  // dwFlags -
+  //    This parameter is reserved and must be zero.
+  // [in, out] lpSize -
+  //    Size in bytes required for the attribute list.
+  BOOL result = ::InitializeProcThreadAttributeList(nullptr, 1, 0, &size);
 
   if (result == FALSE) {
     if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
@@ -80,15 +92,42 @@ create_attributes_list_for_handles(const std::vector<HANDLE>& handles) {
     return WindowsError();
   }
 
+  // BOOL UpdateProcThreadAttribute(
+  //  [in, out]       LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList,
+  //  [in]            DWORD                        dwFlags,
+  //  [in]            DWORD_PTR                    Attribute,
+  //  [in]            PVOID                        lpValue,
+  //  [in]            SIZE_T                       cbSize,
+  //  [out, optional] PVOID                        lpPreviousValue,
+  //  [in, optional]  PSIZE_T                      lpReturnSize
+  // );
+  //
+  //  [in, out]  LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList -
+  //      A pointer to an attribute list created by the
+  //      InitializeProcThreadAttributeList function.
+  //  [in] dwFlags -
+  //      This parameter is reserved and must be zero.
+  //  [in] Attribute -
+  //      The attribute key to update in the attribute list.
+  //  [in] lpValue -
+  //      A pointer to the attribute value. This value must persist
+  //      until the attribute list is destroyed using the
+  //      DeleteProcThreadAttributeList function.
+  //  [in] cbSize -
+  //      The size of the attribute value specified by the lpValue
+  //      parameter.
+  //  [out, optional] lpPreviousValue -
+  //      This parameter is reserved and must be `nullptr`.
+  //  [in, optional] lpReturnSize -
+  //      This parameter is reserved and must be `nullptr`.
   result = ::UpdateProcThreadAttribute(
-      attribute_list.get(), // Pointer to list structure.
-      0, // Reserved and must be 0.
-      PROC_THREAD_ATTRIBUTE_HANDLE_LIST, // The attribute key to update in the
-                                         // attribute list.
-      const_cast<PVOID*>(handles.data()), // Pointer to the attribute value.
-      handles.size() * sizeof(HANDLE), // Size of the attribute value.
-      nullptr, // Reserved and must be `nullptr`.
-      nullptr); // Reserved and must be `nullptr`.
+      attribute_list.get(),
+      0,
+      PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
+      const_cast<PVOID*>(handles.data()),
+      handles.size() * sizeof(HANDLE),
+      nullptr,
+      nullptr);
 
   if (result == FALSE) {
     return WindowsError();

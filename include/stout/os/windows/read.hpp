@@ -10,17 +10,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_READ_HPP__
-#define __STOUT_OS_WINDOWS_READ_HPP__
+#pragma once
 
-#include <stout/internal/windows/overlapped.hpp>
-#include <stout/os/int_fd.hpp>
-#include <stout/os/socket.hpp>
-#include <stout/result.hpp>
-#include <stout/unreachable.hpp>
-#include <stout/windows.hpp>
+#include "stout/internal/windows/overlapped.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/os/socket.hpp"
+#include "stout/result.hpp"
+#include "stout/unreachable.hpp"
+#include "stout/windows.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // Asynchronous read on a overlapped int_fd. Returns `Error` on fatal errors,
 // `None()` on a successful pending IO operation or number of bytes read on a
@@ -42,7 +45,10 @@ inline Result<size_t> read_async(
       //   1) ERROR_BROKEN_PIPE: The write end is closed and there is no data.
       //   2) ERROR_HANDLE_EOF: We hit the EOF for an asynchronous file handle.
       const DWORD errorCode = ::GetLastError();
-      if (success == FALSE && (errorCode == ERROR_BROKEN_PIPE || errorCode == ERROR_HANDLE_EOF)) {
+      if (
+          success == FALSE
+          && (errorCode == ERROR_BROKEN_PIPE
+              || errorCode == ERROR_HANDLE_EOF)) {
         return 0;
       }
 
@@ -72,6 +78,7 @@ inline Result<size_t> read_async(
   UNREACHABLE();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Synchronous reads on any int_fd. Returns -1 on error and
 // number of bytes read on success.
@@ -146,6 +153,8 @@ inline ssize_t read(const int_fd& fd, void* data, size_t size) {
   UNREACHABLE();
 }
 
+////////////////////////////////////////////////////////////////////////
+
 } // namespace os
 
-#endif // __STOUT_OS_WINDOWS_READ_HPP__
+////////////////////////////////////////////////////////////////////////
