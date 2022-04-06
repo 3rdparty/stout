@@ -1,4 +1,4 @@
-# Workflow for building and testing flags on macOS, Ubuntu and Windows.  
+# Workflow for building and testing flags on macOS, Ubuntu and Windows.
 name: Build and Run all tests
 
 # We use action's triggers 'push' and 'pull_request'.
@@ -10,12 +10,10 @@ on:
   push:
     branches:
       - "main"
-    paths-ignore:
-      - "**.md"
   pull_request:
-    paths-ignore:
-      - "**.md"   
-  
+    branches:
+      - "**"
+
 jobs:
   build-and-test:
     name: Build and Test
@@ -39,10 +37,10 @@ jobs:
             --spawn_strategy=local \
             -c dbg \
             --strip="never" \
-            :stout       
+            :stout
 
       - name: Test
-        run: | 
+        run: |
           bazel test \
             --spawn_strategy=local \
             -c dbg \
