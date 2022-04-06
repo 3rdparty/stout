@@ -10,23 +10,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_POSIX_NET_HPP__
-#define __STOUT_POSIX_NET_HPP__
+#pragma once
 
 #include <unistd.h>
 
 #include <set>
 #include <string>
 
-#include <stout/error.hpp>
-#include <stout/nothing.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/nothing.hpp"
+#include "stout/try.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 namespace net {
 
-inline struct addrinfo createAddrInfo(int socktype, int family, int flags)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline struct addrinfo createAddrInfo(int socktype, int family, int flags) {
   struct addrinfo addr;
   memset(&addr, 0, sizeof(addr));
   addr.ai_socktype = socktype;
@@ -36,14 +37,14 @@ inline struct addrinfo createAddrInfo(int socktype, int family, int flags)
   return addr;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns a Try of the hostname for the provided IP. If the hostname
 // cannot be resolved, then a string version of the IP address is
 // returned.
 //
 // TODO(benh): Merge with `net::hostname`.
-inline Try<std::string> getHostname(const IP& ip)
-{
+inline Try<std::string> getHostname(const IP& ip) {
   struct sockaddr_storage storage;
   memset(&storage, 0, sizeof(storage));
 
@@ -100,11 +101,11 @@ inline Try<std::string> getHostname(const IP& ip)
   return std::string(hostname);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns a Try of the IP for the provided hostname or an error if no IP is
 // obtained.
-inline Try<IP> getIP(const std::string& hostname, int family = AF_UNSPEC)
-{
+inline Try<IP> getIP(const std::string& hostname, int family = AF_UNSPEC) {
   struct addrinfo hints = createAddrInfo(SOCK_STREAM, family, 0);
   struct addrinfo* result = nullptr;
 
@@ -130,10 +131,10 @@ inline Try<IP> getIP(const std::string& hostname, int family = AF_UNSPEC)
   return ip.get();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns the names of all the link devices in the system.
-inline Try<std::set<std::string>> links()
-{
+inline Try<std::set<std::string>> links() {
   struct ifaddrs* ifaddr = nullptr;
   if (getifaddrs(&ifaddr) == -1) {
     return ErrnoError();
@@ -150,9 +151,9 @@ inline Try<std::set<std::string>> links()
   return names;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<std::string> hostname()
-{
+inline Try<std::string> hostname() {
   char host[512];
 
   if (gethostname(host, sizeof(host)) < 0) {
@@ -174,10 +175,10 @@ inline Try<std::string> hostname()
   return hostname;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns a `Try` of the result of attempting to set the `hostname`.
-inline Try<Nothing> setHostname(const std::string& hostname)
-{
+inline Try<Nothing> setHostname(const std::string& hostname) {
   if (sethostname(hostname.c_str(), hostname.size()) != 0) {
     return ErrnoError();
   }
@@ -185,6 +186,8 @@ inline Try<Nothing> setHostname(const std::string& hostname)
   return Nothing();
 }
 
-} // namespace net {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_POSIX_NET_HPP__
+} // namespace net
+
+////////////////////////////////////////////////////////////////////////

@@ -10,25 +10,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_POSIX_DYNAMICLIBRARY_HPP__
-#define __STOUT_POSIX_DYNAMICLIBRARY_HPP__
+#pragma once
 
 #include <dlfcn.h>
 
 #include <string>
 
-#include <stout/nothing.hpp>
-#include <stout/option.hpp>
-#include <stout/try.hpp>
+#include "stout/nothing.hpp"
+#include "stout/option.hpp"
+#include "stout/try.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 /**
  * DynamicLibrary is a very simple wrapper around the programming interface
  * to the dynamic linking loader.
  */
-class DynamicLibrary
-{
-public:
-  DynamicLibrary() : handle_(nullptr) { }
+class DynamicLibrary {
+ public:
+  DynamicLibrary()
+    : handle_(nullptr) {}
 
   // Since this class manages a naked handle it cannot be copy- or
   // move-constructed.
@@ -36,15 +37,13 @@ public:
   DynamicLibrary(const DynamicLibrary&) = delete;
   DynamicLibrary(DynamicLibrary&&) = delete;
 
-  virtual ~DynamicLibrary()
-  {
+  virtual ~DynamicLibrary() {
     if (handle_ != nullptr) {
       close();
     }
   }
 
-  Try<Nothing> open(const std::string& path)
-  {
+  Try<Nothing> open(const std::string& path) {
     // Check if we've already opened a library.
     if (handle_ != nullptr) {
       return Error("Library already opened");
@@ -61,16 +60,15 @@ public:
     return Nothing();
   }
 
-  Try<Nothing> close()
-  {
+  Try<Nothing> close() {
     if (handle_ == nullptr) {
       return Error("Could not close library; handle was already `nullptr`");
     }
 
     if (dlclose(handle_) != 0) {
       return Error(
-          "Could not close library '" +
-          (path_.isSome() ? path_.get() : "") + "': " + dlerror());
+          "Could not close library '" + (path_.isSome() ? path_.get() : "")
+          + "': " + dlerror());
     }
 
     handle_ = nullptr;
@@ -79,8 +77,7 @@ public:
     return Nothing();
   }
 
-  Try<void*> loadSymbol(const std::string& name)
-  {
+  Try<void*> loadSymbol(const std::string& name) {
     if (handle_ == nullptr) {
       return Error(
           "Could not get symbol '" + name + "'; library handle was `nullptr`");
@@ -90,16 +87,16 @@ public:
 
     if (symbol == nullptr) {
       return Error(
-          "Error looking up symbol '" + name + "' in '" +
-          (path_.isSome() ? path_.get() : "") + "' : " + dlerror());
+          "Error looking up symbol '" + name + "' in '"
+          + (path_.isSome() ? path_.get() : "") + "' : " + dlerror());
     }
 
     return symbol;
   }
 
-private:
+ private:
   void* handle_;
   Option<std::string> path_;
 };
 
-#endif // __STOUT_POSIX_DYNAMICLIBRARY_HPP__
+////////////////////////////////////////////////////////////////////////

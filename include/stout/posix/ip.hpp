@@ -10,27 +10,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_POSIX_IP_HPP__
-#define __STOUT_POSIX_IP_HPP__
+#pragma once
 
 #include <ifaddrs.h>
-
 #include <sys/types.h>
 
 #include <string>
 
-#include <stout/error.hpp>
-#include <stout/none.hpp>
-#include <stout/result.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/none.hpp"
+#include "stout/result.hpp"
+#include "stout/try.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 namespace net {
 
+////////////////////////////////////////////////////////////////////////
+
 inline Result<IP::Network> IP::Network::fromLinkDevice(
     const std::string& name,
-    int family)
-{
+    int family) {
   if (family != AF_INET && family != AF_INET6) {
     return Error("Unsupported family type: " + stringify(family));
   }
@@ -50,8 +50,8 @@ inline Result<IP::Network> IP::Network::fromLinkDevice(
       if (ifa->ifa_addr != nullptr && ifa->ifa_addr->sa_family == family) {
         IP address = IP::create(*ifa->ifa_addr).get();
 
-        if (ifa->ifa_netmask != nullptr &&
-            ifa->ifa_netmask->sa_family == family) {
+        if (ifa->ifa_netmask != nullptr
+            && ifa->ifa_netmask->sa_family == family) {
           IP netmask = IP::create(*ifa->ifa_netmask).get();
 
           freeifaddrs(ifaddr);
@@ -90,6 +90,8 @@ inline Result<IP::Network> IP::Network::fromLinkDevice(
   return None();
 }
 
-} // namespace net {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_POSIX_IP_HPP__
+} // namespace net
+
+////////////////////////////////////////////////////////////////////////
