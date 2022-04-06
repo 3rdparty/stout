@@ -10,28 +10,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_INTERNAL_WINDOWS_SYMLINK_HPP__
-#define __STOUT_INTERNAL_WINDOWS_SYMLINK_HPP__
+#pragma once
 
 #include <string>
 
-#include <stout/try.hpp>
-#include <stout/windows.hpp>
+#include "stout/internal/windows/longpath.hpp"
+#include "stout/internal/windows/reparsepoint.hpp"
+#include "stout/try.hpp"
+#include "stout/windows.hpp"
 
-#include <stout/internal/windows/longpath.hpp>
-#include <stout/internal/windows/reparsepoint.hpp>
-
+////////////////////////////////////////////////////////////////////////
 
 namespace internal {
+
+////////////////////////////////////////////////////////////////////////
+
 namespace windows {
+
+////////////////////////////////////////////////////////////////////////
 
 // Get the full / absolute path. Does not check for existence, and does not
 // resolve symlinks.
-inline Result<std::string> fullpath(const std::string& path)
-{
+inline Result<std::string> fullpath(const std::string& path) {
   // First query for the buffer size required.
   const DWORD length =
-    ::GetFullPathNameW(longpath(path).data(), 0, nullptr, nullptr);
+      ::GetFullPathNameW(longpath(path).data(), 0, nullptr, nullptr);
 
   if (length == 0) {
     return WindowsError("Failed to retrieve fullpath buffer size");
@@ -41,7 +44,11 @@ inline Result<std::string> fullpath(const std::string& path)
   buffer.reserve(static_cast<size_t>(length));
 
   const DWORD result =
-    ::GetFullPathNameW(longpath(path).data(), length, buffer.data(), nullptr);
+      ::GetFullPathNameW(
+          longpath(path).data(),
+          length,
+          buffer.data(),
+          nullptr);
 
   if (result == 0) {
     return WindowsError("Failed to determine fullpath");
@@ -53,6 +60,7 @@ inline Result<std::string> fullpath(const std::string& path)
       strings::Mode::PREFIX);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Gets symlink data for a given path, if it exists.
 //
@@ -76,8 +84,7 @@ inline Result<std::string> fullpath(const std::string& path)
 // NOTE: it may be helpful to consult the documentation for each of these
 // functions, as they give you sources that justify the arguments to the
 // obscure APIs we call to get this all working.
-inline Try<SymbolicLink> query_symbolic_link_data(const std::string& path)
-{
+inline Try<SymbolicLink> query_symbolic_link_data(const std::string& path) {
   // Convert to absolute path because Windows APIs expect it.
   const Result<std::string> absolute_path = fullpath(path);
   if (!absolute_path.isSome()) {
@@ -94,12 +101,12 @@ inline Try<SymbolicLink> query_symbolic_link_data(const std::string& path)
     return Error(is_reparse_point.error());
   } else if (!is_reparse_point.get()) {
     return Error(
-        "Reparse point attribute is not set for path '" + absolute_path.get() +
-        "', and therefore it is not a symbolic link");
+        "Reparse point attribute is not set for path '"
+        + absolute_path.get() + "', and therefore it is not a symbolic link");
   }
 
   const Try<SharedHandle> symlink_handle =
-    get_handle_no_follow(absolute_path.get());
+      get_handle_no_follow(absolute_path.get());
 
   if (symlink_handle.isError()) {
     return Error(symlink_handle.error());
@@ -109,7 +116,12 @@ inline Try<SymbolicLink> query_symbolic_link_data(const std::string& path)
   return get_symbolic_link_data(symlink_handle.get().get_handle());
 }
 
-} // namespace windows {
-} // namespace internal {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_INTERNAL_WINDOWS_SYMLINK_HPP__
+} // namespace windows
+
+////////////////////////////////////////////////////////////////////////
+
+} // namespace internal
+
+////////////////////////////////////////////////////////////////////////

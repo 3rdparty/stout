@@ -14,23 +14,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_INTERNAL_WINDOWS_GRP_HPP__
-#define __STOUT_INTERNAL_WINDOWS_GRP_HPP__
+#pragma once
 
 #include <sys/types.h>
 
-#include <stout/windows.hpp>
+#include "stout/windows.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 // Dummy struct for POSIX compliance.
-struct group
-{
+struct group {
   char* gr_name; // The name of the group.
-  gid_t gr_gid;  // Numerical group ID.
+  gid_t gr_gid; // Numerical group ID.
   char** gr_mem; // Pointer to a null-terminated array of character pointers to
                  // member names.
 };
 
+////////////////////////////////////////////////////////////////////////
 
 // Dummy implementation of `getgrgid` for POSIX compliance. Per the POSIX
 // specification[1], we are to return `nullptr` if an entry matching the GID is
@@ -39,10 +39,9 @@ struct group
 // the function is not implemented.
 //
 // [1] http://pubs.opengroup.org/onlinepubs/009695399/functions/getgrgid.html
-inline struct group* getgrgid(gid_t)
-{
+inline struct group* getgrgid(gid_t) {
   errno = ENOSYS;
   return nullptr;
 }
 
-#endif // __STOUT_INTERNAL_WINDOWS_GRP_HPP__
+////////////////////////////////////////////////////////////////////////

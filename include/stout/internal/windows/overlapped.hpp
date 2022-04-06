@@ -10,25 +10,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_INTERNAL_WINDOWS_OVERLAPPED_HPP__
-#define __STOUT_INTERNAL_WINDOWS_OVERLAPPED_HPP__
+#pragma once
 
 #include <climits>
 #include <type_traits>
 
-#include <stout/result.hpp>
-#include <stout/windows.hpp>
+#include "stout/os/int_fd.hpp"
+#include "stout/result.hpp"
+#include "stout/windows.hpp"
 
-#include <stout/os/int_fd.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace internal {
 
+////////////////////////////////////////////////////////////////////////
+
 namespace windows {
+
+////////////////////////////////////////////////////////////////////////
 
 // Helper function that creates an overlapped object that can be used
 // safely for synchronous IO.
-inline Try<OVERLAPPED> init_overlapped_for_sync_io()
-{
+inline Try<OVERLAPPED> init_overlapped_for_sync_io() {
   OVERLAPPED overlapped = {};
 
   // Creating the event is a defensive measure in the case where multiple
@@ -36,7 +39,7 @@ inline Try<OVERLAPPED> init_overlapped_for_sync_io()
   // If there is no event, then any IO completion on the file can signal
   // the overlapped object, instead of just the requested IO event.
   // For more details, see
-  // https://msdn.microsoft.com/en-us/library/windows/desktop/ms686358(v=vs.85).aspx // NOLINT(whitespace/line_length)
+  // https://tinyurl.com/5dhsne9k // NOLINT(whitespace/line_length)
   //
   // The parameters to `::CreateEventW` will create a non-inheritable,
   // auto-resetting, non-signaled, unamed event.
@@ -50,13 +53,14 @@ inline Try<OVERLAPPED> init_overlapped_for_sync_io()
   // This is another defensive measure to prevent memory corruption if this
   // function is called when the fd is associated with a completion port.
   //
-  // [1] https://msdn.microsoft.com/en-us/library/windows/desktop/aa364986(v=vs.85).aspx // NOLINT(whitespace/line_length)
+  // [1] https://tinyurl.com/2p8jwxku // NOLINT(whitespace/line_length)
   overlapped.hEvent = reinterpret_cast<HANDLE>(
       reinterpret_cast<uintptr_t>(overlapped.hEvent) | 1);
 
   return overlapped;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Windows uses a combination of the return code and the Win32 error code to
 // determine that status of the overlapped IO functions (success, failure,
@@ -69,8 +73,8 @@ inline Try<OVERLAPPED> init_overlapped_for_sync_io()
 //   - `Error`: The error code of the failed asynchronous function.
 //   - `None`:  None if the asynchronous function was scheduled and is pending.
 inline Result<size_t> process_async_io_result(
-    bool successful_return_code, size_t bytes_transfered)
-{
+    bool successful_return_code,
+    size_t bytes_transfered) {
   // IO is already complete, so the result is already in `bytes_transfered`.
   if (successful_return_code) {
     return bytes_transfered;
@@ -86,8 +90,12 @@ inline Result<size_t> process_async_io_result(
   return error;
 }
 
-} // namespace windows {
+////////////////////////////////////////////////////////////////////////
 
-} // namespace internal {
+} // namespace windows
 
-#endif // __STOUT_INTERNAL_WINDOWS_OVERLAPPED_HPP__
+////////////////////////////////////////////////////////////////////////
+
+} // namespace internal
+
+////////////////////////////////////////////////////////////////////////

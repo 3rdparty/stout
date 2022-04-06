@@ -10,27 +10,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_INTERNAL_WINDOWS_INHERIT_HPP__
-#define __STOUT_INTERNAL_WINDOWS_INHERIT_HPP__
-
-#include <stout/error.hpp>
-#include <stout/nothing.hpp>
-#include <stout/try.hpp>
-#include <stout/windows.hpp>
-
-#include <stout/os/int_fd.hpp>
+#pragma once
 
 #include <processthreadsapi.h>
 
+#include "stout/error.hpp"
+#include "stout/nothing.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/try.hpp"
+#include "stout/windows.hpp"
+
+////////////////////////////////////////////////////////////////////////
+
 namespace internal {
+
+////////////////////////////////////////////////////////////////////////
+
 namespace windows {
+
+////////////////////////////////////////////////////////////////////////
 
 // This function creates `LPPROC_THREAD_ATTRIBUTE_LIST`, which is used
 // to whitelist handles sent to a child process.
 typedef _PROC_THREAD_ATTRIBUTE_LIST AttributeList;
+
+////////////////////////////////////////////////////////////////////////
+
 inline Result<std::shared_ptr<AttributeList>>
-create_attributes_list_for_handles(const std::vector<HANDLE>& handles)
-{
+create_attributes_list_for_handles(const std::vector<HANDLE>& handles) {
   if (handles.empty()) {
     return None();
   }
@@ -41,9 +48,9 @@ create_attributes_list_for_handles(const std::vector<HANDLE>& handles)
                // parameter can be `nullptr` to determine the buffer
                // size required to support the specified number of
                // attributes.
-      1,       // Count of attributes to be added to the list.
-      0,       // Reserved and must be zero.
-      &size);  // Size in bytes required for the attribute list.
+      1, // Count of attributes to be added to the list.
+      0, // Reserved and must be zero.
+      &size); // Size in bytes required for the attribute list.
 
   if (result == FALSE) {
     if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
@@ -67,21 +74,21 @@ create_attributes_list_for_handles(const std::vector<HANDLE>& handles)
   }
 
   result =
-    ::InitializeProcThreadAttributeList(attribute_list.get(), 1, 0, &size);
+      ::InitializeProcThreadAttributeList(attribute_list.get(), 1, 0, &size);
 
   if (result == FALSE) {
     return WindowsError();
   }
 
   result = ::UpdateProcThreadAttribute(
-      attribute_list.get(),               // Pointer to list structure.
-      0,                                  // Reserved and must be 0.
-      PROC_THREAD_ATTRIBUTE_HANDLE_LIST,  // The attribute key to update in the
-                                          // attribute list.
+      attribute_list.get(), // Pointer to list structure.
+      0, // Reserved and must be 0.
+      PROC_THREAD_ATTRIBUTE_HANDLE_LIST, // The attribute key to update in the
+                                         // attribute list.
       const_cast<PVOID*>(handles.data()), // Pointer to the attribute value.
-      handles.size() * sizeof(HANDLE),    // Size of the attribute value.
-      nullptr,                            // Reserved and must be `nullptr`.
-      nullptr);                           // Reserved and must be `nullptr`.
+      handles.size() * sizeof(HANDLE), // Size of the attribute value.
+      nullptr, // Reserved and must be `nullptr`.
+      nullptr); // Reserved and must be `nullptr`.
 
   if (result == FALSE) {
     return WindowsError();
@@ -90,15 +97,18 @@ create_attributes_list_for_handles(const std::vector<HANDLE>& handles)
   return attribute_list;
 }
 
+////////////////////////////////////////////////////////////////////////
+
 // This function enables or disables inheritance for a Windows file handle.
 //
 // NOTE: By default, handles on Windows are not inheritable, so this is
-// primarily used to enable inheritance when passing handles to child processes,
-// and subsequently disable inheritance.
-inline Try<Nothing> set_inherit(const int_fd& fd, const bool inherit)
-{
+// primarily used to enable inheritance when passing handles to child
+// processes, and subsequently disable inheritance.
+inline Try<Nothing> set_inherit(const int_fd& fd, const bool inherit) {
   const BOOL result = ::SetHandleInformation(
-      fd, HANDLE_FLAG_INHERIT, inherit ? HANDLE_FLAG_INHERIT : 0);
+      fd,
+      HANDLE_FLAG_INHERIT,
+      inherit ? HANDLE_FLAG_INHERIT : 0);
 
   if (result == FALSE) {
     return WindowsError();
@@ -107,7 +117,12 @@ inline Try<Nothing> set_inherit(const int_fd& fd, const bool inherit)
   return Nothing();
 }
 
-} // namespace windows {
-} // namespace internal {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_INTERNAL_WINDOWS_INHERIT_HPP__
+} // namespace windows
+
+////////////////////////////////////////////////////////////////////////
+
+} // namespace internal
+
+////////////////////////////////////////////////////////////////////////
