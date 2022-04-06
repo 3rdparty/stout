@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_FREEBSD_HPP__
-#define __STOUT_OS_FREEBSD_HPP__
+#pragma once
 
 // This file contains FreeBSD-only OS utilities.
 #ifndef __FreeBSD__
@@ -22,49 +21,53 @@
 #include <sys/user.h>
 #include <unistd.h>
 
-#include <stout/os/pagesize.hpp>
-#include <stout/os/sysctl.hpp>
+#include "stout/os/pagesize.hpp"
+#include "stout/os/sysctl.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline Result<Process> process(pid_t pid)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Result<Process> process(pid_t pid) {
   // KERN_PROC_PID fails for zombies, so we fetch the whole process table and
   // find our process manually.
 
   const Try<std::vector<kinfo_proc>> kinfos =
-    os::sysctl(CTL_KERN, KERN_PROC, KERN_PROC_ALL).table();
+      os::sysctl(CTL_KERN, KERN_PROC, KERN_PROC_ALL).table();
 
   if (kinfos.isError()) {
-    return Error("Failed to retrieve process table via sysctl: " +
-                 kinfos.error());
+    return Error(
+        "Failed to retrieve process table via sysctl: " + kinfos.error());
   }
 
   foreach (const kinfo_proc& kinfo, kinfos.get()) {
     if (kinfo.ki_pid == pid) {
       size_t pagesize = os::pagesize();
-      return Process(kinfo.ki_pid,
-                     kinfo.ki_ppid,
-                     kinfo.ki_pgid,
-                     kinfo.ki_sid,
-                     kinfo.ki_rssize * pagesize,
-                     kinfo.ki_rusage.ru_utime,
-                     kinfo.ki_rusage.ru_stime,
-                     kinfo.ki_comm,
-                     kinfo.ki_stat == SZOMB);
+      return Process(
+          kinfo.ki_pid,
+          kinfo.ki_ppid,
+          kinfo.ki_pgid,
+          kinfo.ki_sid,
+          kinfo.ki_rssize * pagesize,
+          kinfo.ki_rusage.ru_utime,
+          kinfo.ki_rusage.ru_stime,
+          kinfo.ki_comm,
+          kinfo.ki_stat == SZOMB);
     }
   }
 
   return None();
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<std::set<pid_t>> pids()
-{
+inline Try<std::set<pid_t>> pids() {
   std::set<pid_t> result;
 
   const Try<std::vector<kinfo_proc>> kinfos =
-    os::sysctl(CTL_KERN, KERN_PROC, KERN_PROC_ALL).table();
+      os::sysctl(CTL_KERN, KERN_PROC, KERN_PROC_ALL).table();
 
   foreach (const kinfo_proc& kinfo, kinfos.get()) {
     result.insert(kinfo.ki_pid);
@@ -73,10 +76,10 @@ inline Try<std::set<pid_t>> pids()
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns the total size of main and free memory.
-inline Try<Memory> memory()
-{
+inline Try<Memory> memory() {
   Memory memory;
 
   const Try<int64_t> physicalMemory = os::sysctl(CTL_HW, HW_PHYSMEM).integer();
@@ -91,11 +94,12 @@ inline Try<Memory> memory()
   size_t length = sizeof(freeCount);
 
   if (sysctlbyname(
-      "vm.stats.v_free_count",
-      &freeCount,
-      &length,
-      nullptr,
-      0) != 0) {
+          "vm.stats.v_free_count",
+          &freeCount,
+          &length,
+          nullptr,
+          0)
+      != 0) {
     return ErrnoError();
   }
   memory.free = Bytes(freeCount * pageSize);
@@ -106,23 +110,23 @@ inline Try<Memory> memory()
   int mib[3];
   size_t mibSize = 2;
   if (::sysctlnametomib("vm.swap_info", mib, &mibSize) != 0) {
-      return ErrnoError();
+    return ErrnoError();
   }
 
   // FreeBSD supports multiple swap devices. Here we sum across all of them.
   struct xswdev xswd;
   size_t xswdSize = sizeof(xswd);
   int* mibDevice = &(mib[mibSize + 1]);
-  for (*mibDevice = 0; ; (*mibDevice)++) {
-      if (::sysctl(mib, 3, &xswd, &xswdSize, nullptr, 0) != 0) {
-          if (errno == ENOENT) {
-              break;
-          }
-          return ErrnoError();
+  for (*mibDevice = 0;; (*mibDevice)++) {
+    if (::sysctl(mib, 3, &xswd, &xswdSize, nullptr, 0) != 0) {
+      if (errno == ENOENT) {
+        break;
       }
+      return ErrnoError();
+    }
 
-      totalBlocks += xswd.xsw_nblks;
-      usedBlocks += xswd.xsw_used;
+    totalBlocks += xswd.xsw_nblks;
+    usedBlocks += xswd.xsw_used;
   }
 
   memory.totalSwap = Bytes(totalBlocks * pageSize);
@@ -131,6 +135,8 @@ inline Try<Memory> memory()
   return memory;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

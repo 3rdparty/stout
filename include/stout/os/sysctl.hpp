@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_SYSCTL_HPP__
-#define __STOUT_OS_SYSCTL_HPP__
+#pragma once
 
 // Only provide sysctl support for OS X and FreeBSD.
 #if !defined(__APPLE__) && !defined(__FreeBSD__)
@@ -25,13 +24,17 @@
 #include <string>
 #include <vector>
 
-#include <stout/error.hpp>
-#include <stout/none.hpp>
-#include <stout/option.hpp>
-#include <stout/strings.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp>
+#include "stout/none.hpp>
+#include "stout/option.hpp>
+#include "stout/strings.hpp>
+#include "stout/try.hpp>
+
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // Provides an abstraction for getting system information via the
 // underlying 'sysctl' system call. You describe the sysctl
@@ -56,8 +59,7 @@ namespace os {
 //
 // TODO(benh): Provide an 'integer(i)', 'string(s)', and 'table(t)' to
 // enable setting system information.
-struct sysctl
-{
+struct sysctl {
   // Note that we create a constructor for each number of levels
   // because we can't pick a suitable default for unused levels (in
   // order to distinguish no value from some value) and while Option
@@ -71,8 +73,9 @@ struct sysctl
   ~sysctl();
 
   // Get system information as an integer.
-private: struct Integer; // Forward declaration.
-public:
+ private:
+  struct Integer; // Forward declaration.
+ public:
   Integer integer() const;
 
   // Get system information as a string.
@@ -90,13 +93,13 @@ public:
   //     Try<std::vector<kinfo_proc>> processes =
   //       os::sysctl(CTL_KERN, KERN_PROC, KERN_PROC_ALL).table(10);
   //
-private: struct Table; // Forward declaration.
-public:
+ private:
+  struct Table; // Forward declaration.
+ public:
   Table table(const Option<size_t>& length = None()) const;
 
-private:
-  struct Integer
-  {
+ private:
+  struct Integer {
     Integer(int _levels, int* _name);
 
     template <typename T>
@@ -106,8 +109,7 @@ private:
     int* name;
   };
 
-  struct Table
-  {
+  struct Table {
     Table(int _levels, int* _name, const Option<size_t>& _length);
 
     template <typename T>
@@ -122,40 +124,45 @@ private:
   int* name;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 inline sysctl::sysctl(int level1)
-  : levels(1), name(new int[levels])
-{
+  : levels(1),
+    name(new int[levels]) {
   name[0] = level1;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline sysctl::sysctl(int level1, int level2)
-  : levels(2), name(new int[levels])
-{
+  : levels(2),
+    name(new int[levels]) {
   name[0] = level1;
   name[1] = level2;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline sysctl::sysctl(int level1, int level2, int level3)
-  : levels(3), name(new int[levels])
-{
+  : levels(3),
+    name(new int[levels]) {
   name[0] = level1;
   name[1] = level2;
   name[2] = level3;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline sysctl::sysctl(int level1, int level2, int level3, int level4)
-  : levels(4), name(new int[levels])
-{
+  : levels(4),
+    name(new int[levels]) {
   name[0] = level1;
   name[1] = level2;
   name[2] = level3;
   name[3] = level4;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline sysctl::sysctl(
     int level1,
@@ -163,8 +170,8 @@ inline sysctl::sysctl(
     int level3,
     int level4,
     int level5)
-  : levels(5), name(new int[levels])
-{
+  : levels(5),
+    name(new int[levels]) {
   name[0] = level1;
   name[1] = level2;
   name[2] = level3;
@@ -172,21 +179,21 @@ inline sysctl::sysctl(
   name[4] = level5;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline sysctl::~sysctl()
-{
+inline sysctl::~sysctl() {
   delete[] name;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline sysctl::Integer sysctl::integer() const
-{
+inline sysctl::Integer sysctl::integer() const {
   return Integer(levels, name);
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<std::string> sysctl::string() const
-{
+inline Try<std::string> sysctl::string() const {
   // First determine the size of the string.
   size_t size = 0;
   if (::sysctl(name, levels, nullptr, &size, nullptr, 0) == -1) {
@@ -214,9 +221,9 @@ inline Try<std::string> sysctl::string() const
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<timeval> sysctl::time() const
-{
+inline Try<timeval> sysctl::time() const {
   timeval result;
   size_t size = sizeof(result);
   if (::sysctl(name, levels, &result, &size, nullptr, 0) == -1) {
@@ -225,24 +232,24 @@ inline Try<timeval> sysctl::time() const
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline sysctl::Table sysctl::table(const Option<size_t>& length) const
-{
+inline sysctl::Table sysctl::table(const Option<size_t>& length) const {
   return Table(levels, name, length);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline sysctl::Integer::Integer(
     int _levels,
     int* _name)
   : levels(_levels),
-    name(_name)
-{}
+    name(_name) {}
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-sysctl::Integer::operator Try<T>()
-{
+sysctl::Integer::operator Try<T>() {
   T i;
   size_t size = sizeof(i);
   if (::sysctl(name, levels, &i, &size, nullptr, 0) == -1) {
@@ -251,6 +258,7 @@ sysctl::Integer::operator Try<T>()
   return i;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline sysctl::Table::Table(
     int _levels,
@@ -258,22 +266,22 @@ inline sysctl::Table::Table(
     const Option<size_t>& _length)
   : levels(_levels),
     name(_name),
-    length(_length)
-{}
+    length(_length) {}
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-sysctl::Table::operator Try<std::vector<T>>()
-{
+sysctl::Table::operator Try<std::vector<T>>() {
   size_t size = 0;
   if (length.isNone()) {
     if (::sysctl(name, levels, nullptr, &size, nullptr, 0) == -1) {
       return ErrnoError();
     }
     if (size % sizeof(T) != 0) {
-      return Error("Failed to determine the length of result, "
-                   "amount of available data is not a multiple "
-                   "of the table type");
+      return Error(
+          "Failed to determine the length of result, "
+          "amount of available data is not a multiple "
+          "of the table type");
     }
     length = Option<size_t>(size / sizeof(T));
   }
@@ -301,6 +309,8 @@ sysctl::Table::operator Try<std::vector<T>>()
   return results;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_SYSCTL_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

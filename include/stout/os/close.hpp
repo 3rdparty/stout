@@ -10,14 +10,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_CLOSE_HPP__
-#define __STOUT_OS_CLOSE_HPP__
+#pragma once
 
-
-#ifdef __WINDOWS__
-#include <stout/os/windows/close.hpp>
+#ifdef _WIN32
+#include "stout/os/windows/close.hpp"
 #else
-#include <stout/os/posix/close.hpp>
-#endif // __WINDOWS__
+#include "stout/os/posix/close.hpp"
+#endif // _WIN32
 
-#endif // __STOUT_OS_CLOSE_HPP__
+////////////////////////////////////////////////////////////////////////

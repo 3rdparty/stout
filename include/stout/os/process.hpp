@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_PROCESS_HPP__
-#define __STOUT_OS_PROCESS_HPP__
+#pragma once
 
 #include <sys/types.h> // For pid_t.
 
@@ -20,26 +19,29 @@
 #include <sstream>
 #include <string>
 
-#include <stout/bytes.hpp>
-#include <stout/duration.hpp>
-#include <stout/none.hpp>
-#include <stout/option.hpp>
-#include <stout/strings.hpp>
+#include "stout/bytes.hpp"
+#include "stout/duration.hpp"
+#include "stout/none.hpp"
+#include "stout/option.hpp"
+#include "stout/strings.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-struct Process
-{
-  Process(pid_t _pid,
-          pid_t _parent,
-          pid_t _group,
-          const Option<pid_t>& _session,
-          const Option<Bytes>& _rss,
-          const Option<Duration>& _utime,
-          const Option<Duration>& _stime,
-          const std::string& _command,
-          bool _zombie)
+////////////////////////////////////////////////////////////////////////
+
+struct Process {
+  Process(
+      pid_t _pid,
+      pid_t _parent,
+      pid_t _group,
+      const Option<pid_t>& _session,
+      const Option<Bytes>& _rss,
+      const Option<Duration>& _utime,
+      const Option<Duration>& _stime,
+      const std::string& _command,
+      bool _zombie)
     : pid(_pid),
       parent(_parent),
       group(_group),
@@ -62,22 +64,33 @@ struct Process
 
   // TODO(bmahler): Add additional data as needed.
 
-  bool operator<(const Process& p) const { return pid < p.pid; }
-  bool operator<=(const Process& p) const { return pid <= p.pid; }
-  bool operator>(const Process& p) const { return pid > p.pid; }
-  bool operator>=(const Process& p) const { return pid >= p.pid; }
-  bool operator==(const Process& p) const { return pid == p.pid; }
-  bool operator!=(const Process& p) const { return pid != p.pid; }
+  bool operator<(const Process& p) const {
+    return pid < p.pid;
+  }
+  bool operator<=(const Process& p) const {
+    return pid <= p.pid;
+  }
+  bool operator>(const Process& p) const {
+    return pid > p.pid;
+  }
+  bool operator>=(const Process& p) const {
+    return pid >= p.pid;
+  }
+  bool operator==(const Process& p) const {
+    return pid == p.pid;
+  }
+  bool operator!=(const Process& p) const {
+    return pid != p.pid;
+  }
 };
 
+////////////////////////////////////////////////////////////////////////
 
-class ProcessTree
-{
-public:
+class ProcessTree {
+ public:
   // Returns a process subtree rooted at the specified PID, or none if
   // the specified pid could not be found in this process tree.
-  Option<ProcessTree> find(pid_t pid) const
-  {
+  Option<ProcessTree> find(pid_t pid) const {
     if (process.pid == pid) {
       return *this;
     }
@@ -93,25 +106,22 @@ public:
   }
 
   // Checks if the specified pid is contained in this process tree.
-  bool contains(pid_t pid) const
-  {
+  bool contains(pid_t pid) const {
     return find(pid).isSome();
   }
 
-  operator Process() const
-  {
+  operator Process() const {
     return process;
   }
 
-  operator pid_t() const
-  {
+  operator pid_t() const {
     return process.pid;
   }
 
   const Process process;
   const std::list<ProcessTree> children;
 
-private:
+ private:
   friend struct Fork;
   friend Try<ProcessTree> pstree(pid_t, const std::list<Process>&);
 
@@ -122,9 +132,11 @@ private:
       children(_children) {}
 };
 
+////////////////////////////////////////////////////////////////////////
 
-inline std::ostream& operator<<(std::ostream& stream, const ProcessTree& tree)
-{
+inline std::ostream& operator<<(
+    std::ostream& stream,
+    const ProcessTree& tree) {
   if (tree.children.empty()) {
     stream << "--- " << tree.process.pid << " ";
     if (tree.process.zombie) {
@@ -154,24 +166,28 @@ inline std::ostream& operator<<(std::ostream& stream, const ProcessTree& tree)
   return stream;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////
 
 // An overload of stringify for printing a list of process trees
 // (since printing a process tree is rather particular).
-inline std::string stringify(const std::list<os::ProcessTree>& list)
-{
+inline std::string stringify(const std::list<os::ProcessTree>& list) {
   std::ostringstream out;
   out << "[ " << std::endl;
   std::list<os::ProcessTree>::const_iterator iterator = list.begin();
   while (iterator != list.end()) {
     out << stringify(*iterator);
     if (++iterator != list.end()) {
-      out << std::endl << std::endl;
+      out << std::endl
+          << std::endl;
     }
   }
-  out << std::endl << "]";
+  out << std::endl
+      << "]";
   return out.str();
 }
 
-#endif // __STOUT_OS_PROCESS_HPP__
+////////////////////////////////////////////////////////////////////////

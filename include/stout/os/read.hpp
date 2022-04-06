@@ -45,8 +45,11 @@
 #include "stout/os/posix/read.hpp"
 #endif // _WIN32
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // Reads 'size' bytes from a file from its current offset.
 // If EOF is encountered before reading 'size' bytes then the result
@@ -96,6 +99,7 @@ inline Result<std::string> read(int_fd fd, size_t size) {
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns the contents of the file.
 // NOTE: getline is not available on Solaris so we use STL.
@@ -110,6 +114,9 @@ inline Try<std::string> read(const std::string& path) {
       (std::istreambuf_iterator<char>(file)),
       (std::istreambuf_iterator<char>()));
 }
+
+////////////////////////////////////////////////////////////////////////
+
 // NOTE: Windows needs Unicode long path support.
 #elif defined(_WIN32)
 inline Try<std::string> read(const std::string& path) {
@@ -128,6 +135,9 @@ inline Try<std::string> read(const std::string& path) {
       (std::istreambuf_iterator<char>(file)),
       (std::istreambuf_iterator<char>()));
 }
+
+////////////////////////////////////////////////////////////////////////
+
 #else
 inline Try<std::string> read(const std::string& path) {
   FILE* file = ::fopen(path.c_str(), "r");
@@ -170,4 +180,8 @@ inline Try<std::string> read(const std::string& path) {
 }
 #endif // __sun || _WIN32
 
+////////////////////////////////////////////////////////////////////////
+
 } // namespace os
+
+////////////////////////////////////////////////////////////////////////

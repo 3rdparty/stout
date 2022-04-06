@@ -21,6 +21,8 @@
 #include "stout/windows.hpp"
 #endif // _WIN32
 
+////////////////////////////////////////////////////////////////////////
+
 namespace os {
 
 /**
@@ -29,7 +31,9 @@ namespace os {
 inline std::string strerror(int errno_) {
   // There are two versions of strerror_r that need to be handled
   // based on the feature test macros below.
-#if !defined(__GLIBC__) || ((_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && !defined(_GNU_SOURCE))
+#if !defined(__GLIBC__)                                      \
+    || ((_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) \
+        && !defined(_GNU_SOURCE))
   // (1) We have the XSI-compliant version which returns an error code.
   size_t size = 1024;
   char* buffer = new char[size];
@@ -59,4 +63,8 @@ inline std::string strerror(int errno_) {
 #endif
 }
 
+////////////////////////////////////////////////////////////////////////
+
 } // namespace os
+
+////////////////////////////////////////////////////////////////////////

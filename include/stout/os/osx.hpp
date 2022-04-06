@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_OSX_HPP__
-#define __STOUT_OS_OSX_HPP__
+#pragma once
 
 // This file contains OSX-only OS utilities.
 #ifndef __APPLE__
@@ -19,7 +18,6 @@
 #endif
 
 #include <libproc.h>
-
 #include <sys/sysctl.h>
 #include <sys/types.h> // For pid_t.
 
@@ -28,21 +26,23 @@
 #include <string>
 #include <vector>
 
-#include <stout/error.hpp>
-#include <stout/none.hpp>
-#include <stout/strings.hpp>
+#include "stout/error.hpp"
+#include "stout/none.hpp"
+#include "stout/os/os.hpp"
+#include "stout/os/pagesize.hpp"
+#include "stout/os/process.hpp"
+#include "stout/os/sysctl.hpp"
+#include "stout/strings.hpp"
 
-#include <stout/os/os.hpp>
-#include <stout/os/pagesize.hpp>
-#include <stout/os/process.hpp>
-#include <stout/os/sysctl.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline Result<Process> process(pid_t pid)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Result<Process> process(pid_t pid) {
   const Try<std::vector<kinfo_proc>> processes =
-    os::sysctl(CTL_KERN, KERN_PROC, KERN_PROC_PID, pid).table(1);
+      os::sysctl(CTL_KERN, KERN_PROC, KERN_PROC_PID, pid).table(1);
 
   if (processes.isError()) {
     return Error("Failed to get process via sysctl: " + processes.error());
@@ -64,12 +64,12 @@ inline Result<Process> process(pid_t pid)
   Option<std::string> command = None();
 
   // Alternative implemenations using KERN_PROCARGS2:
-  // https://bitbucket.org/flub/psi-win32/src/d38f288de3b8/src/arch/macosx/macosx_process.c#cl-552
+  // https://tinyurl.com/mwpmzknt
   // https://gist.github.com/nonowarn/770696
 
 #ifdef KERN_PROCARGS2
   // Looking at the source code of XNU (the Darwin kernel for OS X:
-  // www.opensource.apple.com/source/xnu/xnu-1699.24.23/bsd/kern/kern_sysctl.c),
+  // https://tinyurl.com/2p88wmu5),
   // it appears as though KERN_PROCARGS2 writes 'argc' as the first
   // word of the returned bytes.
   Try<std::string> args = os::sysctl(CTL_KERN, KERN_PROCARGS2, pid).string();
@@ -92,7 +92,7 @@ inline Result<Process> process(pid_t pid)
 
         // Tokenize the args by the null byte ('\0').
         std::vector<std::string> tokens =
-          strings::tokenize(args.get(), std::string(1, '\0'));
+            strings::tokenize(args.get(), std::string(1, '\0'));
 
         if (!tokens.empty()) {
           if (argc == 1) {
@@ -144,31 +144,33 @@ inline Result<Process> process(pid_t pid)
   int session = getsid(pid);
 
   if (size != sizeof(task)) {
-    return Process(process.kp_proc.p_pid,
-                   process.kp_eproc.e_ppid,
-                   process.kp_eproc.e_pgid,
-                   session > 0 ? session : Option<pid_t>::none(),
-                   None(),
-                   None(),
-                   None(),
-                   command.getOrElse(std::string(process.kp_proc.p_comm)),
-                   process.kp_proc.p_stat & SZOMB);
+    return Process(
+        process.kp_proc.p_pid,
+        process.kp_eproc.e_ppid,
+        process.kp_eproc.e_pgid,
+        session > 0 ? session : Option<pid_t>::none(),
+        None(),
+        None(),
+        None(),
+        command.getOrElse(std::string(process.kp_proc.p_comm)),
+        process.kp_proc.p_stat & SZOMB);
   } else {
-    return Process(process.kp_proc.p_pid,
-                   process.kp_eproc.e_ppid,
-                   process.kp_eproc.e_pgid,
-                   session > 0 ? session : Option<pid_t>::none(),
-                   Bytes(task.pti_resident_size),
-                   Nanoseconds(task.pti_total_user),
-                   Nanoseconds(task.pti_total_system),
-                   command.getOrElse(std::string(process.kp_proc.p_comm)),
-                   process.kp_proc.p_stat & SZOMB);
+    return Process(
+        process.kp_proc.p_pid,
+        process.kp_eproc.e_ppid,
+        process.kp_eproc.e_pgid,
+        session > 0 ? session : Option<pid_t>::none(),
+        Bytes(task.pti_resident_size),
+        Nanoseconds(task.pti_total_user),
+        Nanoseconds(task.pti_total_system),
+        command.getOrElse(std::string(process.kp_proc.p_comm)),
+        process.kp_proc.p_stat & SZOMB);
   }
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<std::set<pid_t>> pids()
-{
+inline Try<std::set<pid_t>> pids() {
   const Try<int> maxproc = os::sysctl(CTL_KERN, KERN_MAXPROC).integer();
 
   if (maxproc.isError()) {
@@ -176,7 +178,7 @@ inline Try<std::set<pid_t>> pids()
   }
 
   const Try<std::vector<kinfo_proc>> processes =
-    os::sysctl(CTL_KERN, KERN_PROC, KERN_PROC_ALL).table(maxproc.get());
+      os::sysctl(CTL_KERN, KERN_PROC, KERN_PROC_ALL).table(maxproc.get());
 
   if (processes.isError()) {
     return Error(processes.error());
@@ -189,10 +191,10 @@ inline Try<std::set<pid_t>> pids()
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns the total size of main and free memory.
-inline Try<Memory> memory()
-{
+inline Try<Memory> memory() {
   Memory memory;
 
   const Try<int64_t> totalMemory = os::sysctl(CTL_HW, HW_MEMSIZE).integer();
@@ -210,11 +212,12 @@ inline Try<Memory> memory()
   size_t length = sizeof(freeCount);
 
   if (sysctlbyname(
-      "vm.page_free_count",
-      &freeCount,
-      &length,
-      nullptr,
-      0) != 0) {
+          "vm.page_free_count",
+          &freeCount,
+          &length,
+          nullptr,
+          0)
+      != 0) {
     return ErrnoError();
   }
   memory.free = Bytes(freeCount * pageSize);
@@ -222,11 +225,12 @@ inline Try<Memory> memory()
   struct xsw_usage usage;
   length = sizeof(struct xsw_usage);
   if (sysctlbyname(
-        "vm.swapusage",
-        &usage,
-        &length,
-        nullptr,
-        0) != 0) {
+          "vm.swapusage",
+          &usage,
+          &length,
+          nullptr,
+          0)
+      != 0) {
     return ErrnoError();
   }
   memory.totalSwap = Bytes(usage.xsu_total * pageSize);
@@ -235,6 +239,8 @@ inline Try<Memory> memory()
   return memory;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_OSX_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

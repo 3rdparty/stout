@@ -10,15 +10,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_OS_HPP__
-#define __STOUT_OS_OS_HPP__
+#pragma once
 
 #include <string>
 
-#include <stout/bytes.hpp>
+#include "stout/bytes.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // Structure returned by loadavg(). Encodes system load average
 // for the last 1, 5 and 15 minutes.
@@ -28,29 +30,30 @@ struct Load {
   double fifteen;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 // Structure returned by memory() containing the total size of main
 // and free memory.
-struct Memory
-{
+struct Memory {
   Bytes total;
   Bytes free;
   Bytes totalSwap;
   Bytes freeSwap;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 // The structure returned by uname describing the currently running system.
-struct UTSInfo
-{
-  std::string sysname;    // Operating system name (e.g. Linux).
-  std::string nodename;   // Network name of this machine.
-  std::string release;    // Release level of the operating system.
-  std::string version;    // Version level of the operating system.
-  std::string machine;    // Machine hardware platform.
+struct UTSInfo {
+  std::string sysname; // Operating system name (e.g. Linux).
+  std::string nodename; // Network name of this machine.
+  std::string release; // Release level of the operating system.
+  std::string version; // Version level of the operating system.
+  std::string machine; // Machine hardware platform.
 };
 
+////////////////////////////////////////////////////////////////////////
 
-} // namespace os {
+} // namespace os
 
-#endif // __STOUT_OS_OS_HPP__
+////////////////////////////////////////////////////////////////////////

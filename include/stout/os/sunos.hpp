@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_SUNOS_HPP__
-#define __STOUT_OS_SUNOS_HPP__
+#pragma once
 
 // This file contains Solaris-only OS utilities.
 #ifndef __sun
@@ -26,20 +25,22 @@
 #include <set>
 #include <string>
 
-#include <stout/error.hpp>
-#include <stout/foreach.hpp>
-#include <stout/option.hpp>
-#include <stout/result.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/foreach.hpp"
+#include "stout/option.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/os/open.hpp"
+#include "stout/os/process.hpp"
+#include "stout/result.hpp"
+#include "stout/try.hpp"
 
-#include <stout/os/int_fd.hpp>
-#include <stout/os/open.hpp>
-#include <stout/os/process.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline Result<Process> process(pid_t pid)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Result<Process> process(pid_t pid) {
   std::string fn = "/proc/" + stringify(pid) + "/status";
   struct pstatus pstatus;
 
@@ -69,26 +70,27 @@ inline Result<Process> process(pid_t pid)
   os::close(fd.get());
 
   Try<Duration> utime =
-    Seconds(pstatus.pr_utime.tv_sec) + Nanoseconds(pstatus.pr_utime.tv_nsec);
+      Seconds(pstatus.pr_utime.tv_sec) + Nanoseconds(pstatus.pr_utime.tv_nsec);
   Try<Duration> stime =
-    Seconds(pstatus.pr_stime.tv_sec) + Nanoseconds(pstatus.pr_stime.tv_nsec);
+      Seconds(pstatus.pr_stime.tv_sec) + Nanoseconds(pstatus.pr_stime.tv_nsec);
 
-  return Process(pstatus.pr_pid,
-                 pstatus.pr_ppid,
-                 pstatus.pr_ppid,
-                 pstatus.pr_sid,
-                 None(),
-                 utime.isSome() ? utime.get() : Option<Duration>::none(),
-                 stime.isSome() ? stime.get() : Option<Duration>::none(),
-                 psinfo.pr_fname,
-                 (psinfo.pr_nzomb == 0) &&
-                  (psinfo.pr_nlwp == 0) &&
-                  (psinfo.pr_lwp.pr_lwpid == 0));
+  return Process(
+      pstatus.pr_pid,
+      pstatus.pr_ppid,
+      pstatus.pr_ppid,
+      pstatus.pr_sid,
+      None(),
+      utime.isSome() ? utime.get() : Option<Duration>::none(),
+      stime.isSome() ? stime.get() : Option<Duration>::none(),
+      psinfo.pr_fname,
+      (psinfo.pr_nzomb == 0)
+          && (psinfo.pr_nlwp == 0) && (psinfo.pr_lwp.pr_lwpid == 0));
 }
 
+////////////////////////////////////////////////////////////////////////
+
 // Reads from /proc and returns a list of all running processes.
-inline Try<std::set<pid_t>> pids()
-{
+inline Try<std::set<pid_t>> pids() {
   std::set<pid_t> pids;
 
   Try<std::list<std::string>> entries = os::ls("/proc");
@@ -110,13 +112,15 @@ inline Try<std::set<pid_t>> pids()
   return Error("Failed to determine pids from /proc");
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns the total size of main and free memory.
-inline Try<Memory> memory()
-{
+inline Try<Memory> memory() {
   return Error("Cannot determine the size of total and free memory");
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_SUNOS_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

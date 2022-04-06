@@ -10,28 +10,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WAIT_HPP__
-#define __STOUT_OS_WAIT_HPP__
+#pragma once
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
 // TODO(klueska): Move all `WAIT` related functions out of
 // `windows.hpp` and into this file.
-#include <stout/windows.hpp>
+#include "stout/windows.hpp"
 #else
 #include <sys/wait.h>
-#endif // __WINDOWS__
+#endif // _WIN32
 
+////////////////////////////////////////////////////////////////////////
 
 #ifndef W_EXITCODE
-#define W_EXITCODE(ret, sig)  ((ret) << 8 | (sig))
+#define W_EXITCODE(ret, sig) ((ret) << 8 | (sig))
 #endif
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // TODO(klueska): Add helper functions for common wait related
 // operations in this header file.
 
-} // namespace os {
+} // namespace os
 
-#endif // __STOUT_OS_WAIT_HPP__
+////////////////////////////////////////////////////////////////////////

@@ -10,26 +10,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_ACCESS_HPP__
-#define __STOUT_OS_ACCESS_HPP__
+#pragma once
 
 #include <string>
 
-#include <stout/error.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/try.hpp"
 
-#ifdef __WINDOWS__
-#include <stout/windows.hpp>
-#include <stout/internal/windows/longpath.hpp>
-#endif // __WINDOWS__
+#ifdef _WIN32
+#include "stout/internal/windows/longpath.hpp"
+#include "stout/windows.hpp"
+#endif // _WIN32
+
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline Try<bool> access(const std::string& path, int how)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Try<bool> access(const std::string& path, int how) {
   int result;
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
   std::wstring longpath = ::internal::windows::longpath(path);
   result = ::_waccess(longpath.data(), how);
 #else
@@ -47,6 +49,8 @@ inline Try<bool> access(const std::string& path, int how)
   return true;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_ACCESS_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

@@ -14,13 +14,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_XATTR_HPP__
-#define __STOUT_OS_XATTR_HPP__
+#pragma once
 
-#ifdef __WINDOWS__
-#include <stout/os/windows/xattr.hpp>
+#ifdef _WIN32
+#include "stout/os/windows/xattr.hpp"
 #else
-#include <stout/os/posix/xattr.hpp>
-#endif // __WINDOWS__
+#include "stout/os/posix/xattr.hpp"
+#endif // _WIN32
 
-#endif // __STOUT_OS_XATTR_HPP__
+////////////////////////////////////////////////////////////////////////

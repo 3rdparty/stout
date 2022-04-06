@@ -10,27 +10,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_TOUCH_HPP__
-#define __STOUT_OS_TOUCH_HPP__
+#pragma once
 
-#include <stout/nothing.hpp>
-#include <stout/try.hpp>
+#include "stout/nothing.hpp"
+#include "stout/os/close.hpp"
+#include "stout/os/exists.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/os/open.hpp"
+#include "stout/os/utime.hpp"
+#include "stout/try.hpp"
 
-#include <stout/os/close.hpp>
-#include <stout/os/exists.hpp>
-#include <stout/os/int_fd.hpp>
-#include <stout/os/open.hpp>
-#include <stout/os/utime.hpp>
+#ifdef _WIN32
+#include "stout/windows.hpp"
+#endif // _WIN32
 
-#ifdef __WINDOWS__
-#include <stout/windows.hpp>
-#endif // __WINDOWS__
-
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline Try<Nothing> touch(const std::string& path)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Try<Nothing> touch(const std::string& path) {
   if (!os::exists(path)) {
     Try<int_fd> fd = os::open(
         path,
@@ -48,7 +48,8 @@ inline Try<Nothing> touch(const std::string& path)
   return os::utime(path);
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace os
 
-#endif // __STOUT_OS_TOUCH_HPP__
+////////////////////////////////////////////////////////////////////////

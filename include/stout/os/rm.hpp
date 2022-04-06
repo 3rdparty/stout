@@ -12,7 +12,6 @@
 
 #pragma once
 
-
 // For readability, we minimize the number of #ifdef blocks in the code by
 // splitting platform specific system calls into separate directories.
 #ifdef _WIN32
@@ -20,3 +19,5 @@
 #else
 #include "stout/os/posix/rm.hpp"
 #endif // _WIN32
+
+////////////////////////////////////////////////////////////////////////
