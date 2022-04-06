@@ -10,23 +10,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_PERMISSIONS_HPP__
-#define __STOUT_OS_PERMISSIONS_HPP__
+#pragma once
 
 #include <sys/stat.h>
 
 #include <string>
 
-#include <stout/error.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/try.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-struct Permissions
-{
-  explicit Permissions(mode_t mode)
-  {
+////////////////////////////////////////////////////////////////////////
+
+struct Permissions {
+  explicit Permissions(mode_t mode) {
     owner.r = (mode & S_IRUSR) != 0;
     owner.w = (mode & S_IWUSR) != 0;
     owner.x = (mode & S_IXUSR) != 0;
@@ -57,10 +57,10 @@ struct Permissions
   bool sticky;
 };
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<Permissions> permissions(const std::string& path)
-{
-#ifdef __WINDOWS__
+inline Try<Permissions> permissions(const std::string& path) {
+#ifdef _WIN32
   VLOG(2) << "`os::permissions` has been called, but is a stub on Windows";
   return Permissions(0);
 #else
@@ -70,11 +70,11 @@ inline Try<Permissions> permissions(const std::string& path)
   }
 
   return Permissions(status.st_mode);
-#endif // __WINDOWS__
+#endif // _WIN32
 }
 
+////////////////////////////////////////////////////////////////////////
 
-} // namespace os {
+} // namespace os
 
-
-#endif // __STOUT_OS_PERMISSIONS_HPP__
+////////////////////////////////////////////////////////////////////////

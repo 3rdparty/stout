@@ -10,34 +10,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_PSTREE_HPP__
-#define __STOUT_OS_PSTREE_HPP__
+#pragma once
 
 #include <list>
 #include <set>
 
-#include <stout/error.hpp>
-#include <stout/foreach.hpp>
-#include <stout/none.hpp>
-#include <stout/option.hpp>
-#include <stout/stringify.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/foreach.hpp"
+#include "stout/none.hpp"
+#include "stout/option.hpp"
+#include "stout/os/process.hpp"
+#include "stout/stringify.hpp"
+#include "stout/try.hpp"
 
-#include <stout/os/process.hpp>
-
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // Forward declaration.
 inline Try<std::list<Process>> processes();
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns a process tree rooted at the specified pid using the
 // specified list of processes (or an error if one occurs).
 inline Try<ProcessTree> pstree(
     pid_t pid,
-    const std::list<Process>& processes)
-{
+    const std::list<Process>& processes) {
   std::list<ProcessTree> children;
   foreach (const Process& process, processes) {
     if (process.parent == pid) {
@@ -58,11 +59,11 @@ inline Try<ProcessTree> pstree(
   return Error("No process found at " + stringify(pid));
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns a process tree for the specified pid (or all processes if
 // pid is none or the current process if pid is 0).
-inline Try<ProcessTree> pstree(Option<pid_t> pid = None())
-{
+inline Try<ProcessTree> pstree(Option<pid_t> pid = None()) {
   if (pid.isNone()) {
     pid = 1;
   } else if (pid.get() == 0) {
@@ -78,13 +79,13 @@ inline Try<ProcessTree> pstree(Option<pid_t> pid = None())
   return pstree(pid.get(), processes.get());
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns the minimum list of process trees that include all of the
 // specified pids using the specified list of processes.
 inline Try<std::list<ProcessTree>> pstrees(
     const std::set<pid_t>& pids,
-    const std::list<Process>& processes)
-{
+    const std::list<Process>& processes) {
   std::list<ProcessTree> trees;
 
   foreach (pid_t pid, pids) {
@@ -126,6 +127,8 @@ inline Try<std::list<ProcessTree>> pstrees(
   return trees;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_PSTREE_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

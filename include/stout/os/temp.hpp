@@ -12,9 +12,10 @@
 
 #pragma once
 
-
 #ifdef _WIN32
 #include "stout/os/windows/temp.hpp"
 #else
 #include "stout/os/posix/temp.hpp"
 #endif // _WIN32
+
+////////////////////////////////////////////////////////////////////////

@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_LINUX_HPP__
-#define __STOUT_OS_LINUX_HPP__
+#pragma once
 
 // This file contains Linux-only OS utilities.
 #ifndef __linux__
@@ -26,41 +25,41 @@
 #include <set>
 #include <string>
 
-#include <stout/error.hpp>
-#include <stout/foreach.hpp>
-#include <stout/lambda.hpp>
-#include <stout/option.hpp>
-#include <stout/proc.hpp>
-#include <stout/result.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/foreach.hpp"
+#include "stout/lambda.hpp"
+#include "stout/option.hpp"
+#include "stout/os/process.hpp"
+#include "stout/proc.hpp"
+#include "stout/result.hpp"
+#include "stout/try.hpp"
 
-#include <stout/os/process.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
+////////////////////////////////////////////////////////////////////////
 
 // Helper for clone() which expects an int(void*).
-static int childMain(void* _func)
-{
+static int childMain(void* _func) {
   const lambda::function<int()>* func =
-    static_cast<const lambda::function<int()>*> (_func);
+      static_cast<const lambda::function<int()>*>(_func);
 
   return (*func)();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Helper that captures information about a stack to be used when
 // invoking clone.
-class Stack
-{
-public:
+class Stack {
+ public:
   // 8 MiB is the default for "ulimit -s" on OSX and Linux.
   static constexpr size_t DEFAULT_SIZE = 8 * 1024 * 1024;
 
   // Allocate a stack. Note that this is NOT async signal safe, nor
   // safe to call between fork and exec.
-  static Try<Stack> create(size_t size)
-  {
+  static Try<Stack> create(size_t size) {
     Stack stack(size);
 
     if (!stack.allocate()) {
@@ -70,13 +69,13 @@ public:
     return stack;
   }
 
-  explicit Stack(size_t size_) : size(size_) {}
+  explicit Stack(size_t size_)
+    : size(size_) {}
 
   // Allocate the stack using mmap. We avoid malloc because we want
   // this to be safe to use between fork and exec where malloc might
   // deadlock. Returns false and sets `errno` on failure.
-  bool allocate()
-  {
+  bool allocate() {
     int flags = MAP_PRIVATE | MAP_ANONYMOUS;
 
 #if defined(MAP_STACK)
@@ -93,44 +92,45 @@ public:
 
   // Explicitly free the stack.
   // The destructor won't free the allocated stack.
-  void deallocate()
-  {
+  void deallocate() {
     PCHECK(::munmap(address, size) == 0);
     address = MAP_FAILED;
   }
 
   // Stack grows down, return the first usable address.
-  char* start() const
-  {
+  char* start() const {
     return address == MAP_FAILED
-      ? nullptr
-      : (static_cast<char*>(address) + size);
+        ? nullptr
+        : (static_cast<char*>(address) + size);
   }
 
-private:
+ private:
   size_t size;
   void* address = MAP_FAILED;
 };
 
+////////////////////////////////////////////////////////////////////////
 
 namespace signal_safe {
 
+////////////////////////////////////////////////////////////////////////
 
 inline pid_t clone(
     const Stack& stack,
     int flags,
-    const lambda::function<int()>& func)
-{
+    const lambda::function<int()>& func) {
   return ::clone(childMain, stack.start(), flags, (void*) &func);
 }
 
-} // namespace signal_safe {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace signal_safe
+
+////////////////////////////////////////////////////////////////////////
 
 inline pid_t clone(
     const lambda::function<int()>& func,
-    int flags)
-{
+    int flags) {
   // Stack for the child.
   //
   // NOTE: We need to allocate the stack dynamically. This is because
@@ -168,9 +168,9 @@ inline pid_t clone(
   return pid;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Result<Process> process(pid_t pid)
-{
+inline Result<Process> process(pid_t pid) {
   // Page size, used for memory accounting.
   static const size_t pageSize = os::pagesize();
 
@@ -199,8 +199,8 @@ inline Result<Process> process(pid_t pid)
   // These are similar reports:
   // http://lkml.indiana.edu/hypermail/linux/kernel/1207.1/01388.html
   // https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1023214
-  Try<Duration> utime = Duration::create(status->utime / (double)ticks);
-  Try<Duration> stime = Duration::create(status->stime / (double)ticks);
+  Try<Duration> utime = Duration::create(status->utime / (double) ticks);
+  Try<Duration> stime = Duration::create(status->stime / (double) ticks);
 
   // The command line from 'status->comm' is only "arg0" from "argv"
   // (i.e., the canonical executable name). To get the entire command
@@ -219,16 +219,16 @@ inline Result<Process> process(pid_t pid)
       status->state == 'Z');
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<std::set<pid_t>> pids()
-{
+inline Try<std::set<pid_t>> pids() {
   return proc::pids();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns the total size of main and free memory.
-inline Try<Memory> memory()
-{
+inline Try<Memory> memory() {
   Memory memory;
 
   struct sysinfo info;
@@ -236,21 +236,23 @@ inline Try<Memory> memory()
     return ErrnoError();
   }
 
-# if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 3, 23)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 3, 23)
   memory.total = Bytes(info.totalram * info.mem_unit);
   memory.free = Bytes(info.freeram * info.mem_unit);
   memory.totalSwap = Bytes(info.totalswap * info.mem_unit);
   memory.freeSwap = Bytes(info.freeswap * info.mem_unit);
-# else
+#else
   memory.total = Bytes(info.totalram);
   memory.free = Bytes(info.freeram);
   memory.totalSwap = Bytes(info.totalswap);
   memory.freeSwap = Bytes(info.freeswap);
-# endif
+#endif
 
   return memory;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_LINUX_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

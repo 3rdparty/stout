@@ -14,13 +14,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_SU_HPP__
-#define __STOUT_OS_SU_HPP__
+#pragma once
 
-#ifdef __WINDOWS__
-#include <stout/os/windows/su.hpp>
+#ifdef _WIN32
+#include "stout/os/windows/su.hpp"
 #else
-#include <stout/os/posix/su.hpp>
-#endif // __WINDOWS__
+#include "stout/os/posix/su.hpp"
+#endif // _WIN32
 
-#endif // __STOUT_OS_SU_HPP__
+////////////////////////////////////////////////////////////////////////

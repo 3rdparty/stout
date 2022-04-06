@@ -10,22 +10,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_FIND_HPP__
-#define __STOUT_OS_FIND_HPP__
+#pragma once
 
-#include <stout/foreach.hpp>
 #include <list>
 #include <string>
 
-#include <stout/error.hpp>
-#include <stout/path.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/foreach.hpp"
+#include "stout/os/ls.hpp"
+#include "stout/os/stat.hpp"
+#include "stout/path.hpp"
+#include "stout/try.hpp"
 
-#include <stout/os/ls.hpp>
-#include <stout/os/stat.hpp>
-
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // Return the list of file paths that match the given pattern by recursively
 // searching the given directory. A match is successful if the pattern is a
@@ -36,8 +37,7 @@ namespace os {
 // TODO(vinod): Consider using ftw or a non-recursive approach.
 inline Try<std::list<std::string>> find(
     const std::string& directory,
-    const std::string& pattern)
-{
+    const std::string& pattern) {
   std::list<std::string> results;
 
   if (!stat::isdir(directory)) {
@@ -68,6 +68,8 @@ inline Try<std::list<std::string>> find(
   return results;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_FIND_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

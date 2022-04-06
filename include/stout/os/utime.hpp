@@ -10,27 +10,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_UTIME_HPP__
-#define __STOUT_OS_UTIME_HPP__
+#pragma once
 
 #include <string>
 
-#ifdef __WINDOWS__
+#ifdef _WIN32
 #include <sys/utime.h>
 #else
 #include <utime.h>
-#endif // __WINDOWS__
+#endif // _WIN32
 
-#include <stout/error.hpp>
-#include <stout/nothing.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/nothing.hpp"
+#include "stout/try.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
+////////////////////////////////////////////////////////////////////////
+
 // Sets the access and modification times of 'path' to the current time.
-inline Try<Nothing> utime(const std::string& path)
-{
+inline Try<Nothing> utime(const std::string& path) {
   // NOTE: on Windows, this correctly dispatches to `_utime`, so there is no
   // need to create a function alias in `stout/windows.hpp` as we have done for
   // `stout/os/mkdir.hpp` and friends.
@@ -41,7 +42,8 @@ inline Try<Nothing> utime(const std::string& path)
   return Nothing();
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace os
 
-#endif // __STOUT_OS_UTIME_HPP__
+////////////////////////////////////////////////////////////////////////

@@ -10,17 +10,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_KILL_HPP__
-#define __STOUT_OS_KILL_HPP__
-
+#pragma once
 
 // For readability, we minimize the number of #ifdef blocks in the code by
 // splitting platform specific system calls into separate directories.
-#ifdef __WINDOWS__
-#include <stout/os/windows/kill.hpp>
+#ifdef _WIN32
+#include "stout/os/windows/kill.hpp"
 #else
-#include <stout/os/posix/kill.hpp>
-#endif // __WINDOWS__
+#include "stout/os/posix/kill.hpp"
+#endif // _WIN32
 
-
-#endif // __STOUT_OS_KILL_HPP__
+////////////////////////////////////////////////////////////////////////

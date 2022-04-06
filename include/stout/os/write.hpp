@@ -10,40 +10,43 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WRITE_HPP__
-#define __STOUT_OS_WRITE_HPP__
+#pragma once
 
 #include <cstring>
 
-#include <stout/error.hpp>
-#include <stout/nothing.hpp>
-#include <stout/try.hpp>
+#include "stout/error.hpp"
+#include "stout/nothing.hpp"
+#include "stout/os/close.hpp"
+#include "stout/os/fsync.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/os/open.hpp"
+#include "stout/os/socket.hpp"
+#include "stout/try.hpp"
 
-#include <stout/os/close.hpp>
-#include <stout/os/fsync.hpp>
-#include <stout/os/int_fd.hpp>
-#include <stout/os/open.hpp>
-#include <stout/os/socket.hpp>
-
-#ifdef __WINDOWS__
-#include <stout/os/windows/write.hpp>
+#ifdef _WIN32
+#include "stout/os/windows/write.hpp"
 #else
-#include <stout/os/posix/write.hpp>
-#endif // __WINDOWS__
+#include "stout/os/posix/write.hpp"
+#endif // _WIN32
+
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
+////////////////////////////////////////////////////////////////////////
+
 namespace signal_safe {
 
-inline ssize_t write_impl(int_fd fd, const char* buffer, size_t count)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline ssize_t write_impl(int_fd fd, const char* buffer, size_t count) {
   size_t offset = 0;
 
   while (offset < count) {
     ssize_t length = os::write(fd, buffer + offset, count - offset);
 
     if (length < 0) {
-#ifdef __WINDOWS__
+#ifdef _WIN32
       // NOTE: There is no actual difference between `WSAGetLastError` and
       // `GetLastError`, the former is an alias for the latter. So we can
       // simply use the former here for both `HANDLE` and `SOCKET` types of
@@ -51,7 +54,7 @@ inline ssize_t write_impl(int_fd fd, const char* buffer, size_t count)
       int error = ::GetLastError();
 #else
       int error = errno;
-#endif // __WINDOWS__
+#endif // _WIN32
 
       // TODO(benh): Handle a non-blocking fd? (EAGAIN, EWOULDBLOCK).
       if (net::is_restartable_error(error)) {
@@ -66,23 +69,23 @@ inline ssize_t write_impl(int_fd fd, const char* buffer, size_t count)
   return offset;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline ssize_t write(int_fd fd, const char* message)
-{
+inline ssize_t write(int_fd fd, const char* message) {
   // `strlen` declared as async-signal safe in POSIX.1-2016 standard.
   return write_impl(fd, message, std::strlen(message));
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline ssize_t write(int_fd fd, const std::string& message)
-{
+inline ssize_t write(int_fd fd, const std::string& message) {
   return write_impl(fd, message.data(), message.length());
 }
 
+////////////////////////////////////////////////////////////////////////
 
 template <typename T, typename... Args>
-inline ssize_t write(int_fd fd, const T& message, Args... args)
-{
+inline ssize_t write(int_fd fd, const T& message, Args... args) {
   ssize_t result = write(fd, message);
   if (result < 0) {
     return result;
@@ -91,32 +94,35 @@ inline ssize_t write(int_fd fd, const T& message, Args... args)
   return write(fd, args...);
 }
 
-} // namespace signal_safe {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace signal_safe
+
+////////////////////////////////////////////////////////////////////////
 
 // Write out the string to the file at the current fd position.
-inline Try<Nothing> write(int_fd fd, const std::string& message)
-{
+inline Try<Nothing> write(int_fd fd, const std::string& message) {
   ssize_t result = signal_safe::write(fd, message);
   if (result < 0) {
-#ifdef __WINDOWS__
+#ifdef _WIN32
     return WindowsError();
 #else
     return ErrnoError();
-#endif // __WINDOWS__
+#endif // _WIN32
   }
 
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
-// A wrapper function for the above `write()` with opening and closing the file.
-// If `sync` is set to true, an `fsync()` will be called before `close()`.
+// A wrapper function for the above `write()` with opening and closing the
+// file. If `sync` is set to true, an `fsync()` will be called before
+// `close()`.
 inline Try<Nothing> write(
     const std::string& path,
     const std::string& message,
-    bool sync = false)
-{
+    bool sync = false) {
   Try<int_fd> fd = os::open(
       path,
       O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC,
@@ -140,24 +146,26 @@ inline Try<Nothing> write(
   // We propagate `close` failures if `write` on the file was successful.
   if (write.isSome() && close.isError()) {
     write =
-      Error("Failed to close '" + stringify(fd.get()) + "':" + close.error());
+        Error(
+            "Failed to close '" + stringify(fd.get()) + "':" + close.error());
   }
 
   return write;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // NOTE: This overload is necessary to disambiguate between arguments
 // of type `HANDLE` (`typedef void*`) and `char*` on Windows.
 inline Try<Nothing> write(
     const char* path,
     const std::string& message,
-    bool sync = false)
-{
+    bool sync = false) {
   return write(std::string(path), message, sync);
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace os
 
-#endif // __STOUT_OS_WRITE_HPP__
+////////////////////////////////////////////////////////////////////////

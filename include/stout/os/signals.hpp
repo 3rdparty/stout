@@ -10,9 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_SIGNALS_HPP__
-#define __STOUT_OS_SIGNALS_HPP__
-
+#pragma once
 
 // For readability, we minimize the number of #ifdef blocks in the code by
 // splitting platform specific system calls into separate directories.
@@ -21,13 +19,12 @@
 // implemented on Windows. We do not throw an error error here so that
 // the inclusion of this header does not need to guarded; however,
 // uses of `os::signals` will need to be guarded.
-#ifndef __WINDOWS__
-#include <stout/os/posix/signals.hpp>
+#ifndef _WIN32
+#include "stout/os/posix/signals.hpp"
 
-#define SUPPRESS(signal) \
-  if (os::signals::internal::Suppressor suppressor ## signal = \
-      os::signals::internal::Suppressor(signal))
-#endif // __WINDOWS__
+#define SUPPRESS(signal)                                     \
+  if (os::signals::internal::Suppressor suppressor##signal = \
+          os::signals::internal::Suppressor(signal))
+#endif // _WIN32
 
-
-#endif // __STOUT_OS_SIGNALS_HPP__
+////////////////////////////////////////////////////////////////////////

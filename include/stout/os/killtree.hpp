@@ -10,17 +10,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_KILLTREE_HPP__
-#define __STOUT_OS_KILLTREE_HPP__
-
+#pragma once
 
 // For readability, we minimize the number of #ifdef blocks in the code by
 // splitting platform specific system calls into separate directories.
-#ifdef __WINDOWS__
-#include <stout/os/windows/killtree.hpp>
+#ifdef _WIN32
+#include "stout/os/windows/killtree.hpp"
 #else
-#include <stout/os/posix/killtree.hpp>
-#endif // __WINDOWS__
+#include "stout/os/posix/killtree.hpp"
+#endif // _WIN32
 
-
-#endif // __STOUT_OS_KILLTREE_HPP__
+////////////////////////////////////////////////////////////////////////
