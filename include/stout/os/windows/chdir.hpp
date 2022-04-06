@@ -10,23 +10,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_CHDIR_HPP__
-#define __STOUT_OS_WINDOWS_CHDIR_HPP__
+#pragma once
 
 #include <string>
 
-#include <stout/error.hpp>
-#include <stout/nothing.hpp>
-#include <stout/try.hpp>
-#include <stout/windows.hpp>
+#include "stout/error.hpp"
+#include "stout/internal/windows/longpath.hpp"
+#include "stout/nothing.hpp"
+#include "stout/try.hpp"
+#include "stout/windows.hpp"
 
-#include <stout/internal/windows/longpath.hpp>
-
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline Try<Nothing> chdir(const std::string& directory)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Try<Nothing> chdir(const std::string& directory) {
   std::wstring longpath = ::internal::windows::longpath(directory);
   if (::SetCurrentDirectoryW(longpath.data()) == 0) {
     return WindowsError();
@@ -35,7 +35,8 @@ inline Try<Nothing> chdir(const std::string& directory)
   return Nothing();
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace os
 
-#endif // __STOUT_OS_WINDOWS_CHDIR_HPP__
+////////////////////////////////////////////////////////////////////////

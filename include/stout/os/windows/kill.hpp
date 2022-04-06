@@ -10,23 +10,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_KILL_HPP__
-#define __STOUT_OS_WINDOWS_KILL_HPP__
+#pragma once
 
 #include <glog/logging.h>
 
-#include <stout/os.hpp>
-#include <stout/windows.hpp>
+#include "stout/os.hpp"
+#include "stout/windows.hpp"
+
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 const int KILL_PASS = 0; // Success return for `kill` function.
 const int KILL_FAIL = -1; // Error return for `kill` function.
 
+////////////////////////////////////////////////////////////////////////
+
 namespace internal {
 
-inline int kill_process(pid_t pid)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline int kill_process(pid_t pid) {
   HANDLE process_handle = ::OpenProcess(PROCESS_TERMINATE, FALSE, pid);
   if (process_handle == nullptr) {
     LOG(ERROR) << "os::kill_process(): Failed call to OpenProcess";
@@ -45,11 +51,13 @@ inline int kill_process(pid_t pid)
   return KILL_PASS;
 }
 
-} // namespace internal {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace internal
 
-inline int kill(pid_t pid, int sig)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline int kill(pid_t pid, int sig) {
   // SIGCONT and SIGSTOP are not supported.
   // SIGKILL calls TerminateProcess.
   // SIGTERM has the same behaviour as SIGKILL.
@@ -66,6 +74,8 @@ inline int kill(pid_t pid, int sig)
   return KILL_FAIL;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_WINDOWS_KILL_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

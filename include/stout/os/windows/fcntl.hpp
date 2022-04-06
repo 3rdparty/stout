@@ -10,40 +10,41 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_FCNTL_HPP__
-#define __STOUT_OS_WINDOWS_FCNTL_HPP__
+#pragma once
 
 #include <glog/logging.h>
 
-#include <stout/nothing.hpp>
-#include <stout/try.hpp>
-#include <stout/windows.hpp>
+#include "stout/nothing.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/os/socket.hpp"
+#include "stout/try.hpp"
+#include "stout/windows.hpp"
 
-#include <stout/os/int_fd.hpp>
-#include <stout/os/socket.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline Try<Nothing> cloexec(const int_fd& fd)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Try<Nothing> cloexec(const int_fd& fd) {
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<Nothing> unsetCloexec(const int_fd& fd)
-{
+inline Try<Nothing> unsetCloexec(const int_fd& fd) {
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<bool> isCloexec(const int_fd& fd)
-{
+inline Try<bool> isCloexec(const int_fd& fd) {
   return true;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<Nothing> nonblock(const int_fd& fd)
-{
+inline Try<Nothing> nonblock(const int_fd& fd) {
   switch (fd.type()) {
     case WindowsFD::Type::HANDLE: {
       /* Do nothing. */
@@ -64,14 +65,16 @@ inline Try<Nothing> nonblock(const int_fd& fd)
   UNREACHABLE();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // NOTE: This is not supported on Windows.
-inline Try<bool> isNonblock(const int_fd& fd)
-{
+inline Try<bool> isNonblock(const int_fd& fd) {
   VLOG(2) << "`os::isNonblock` has been called, but is a stub on Windows";
   return true;
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_WINDOWS_FCNTL_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

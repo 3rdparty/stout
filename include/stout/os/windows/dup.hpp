@@ -10,30 +10,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_DUP_HPP__
-#define __STOUT_OS_WINDOWS_DUP_HPP__
+#pragma once
 
-#include <stout/error.hpp>
-#include <stout/try.hpp>
-#include <stout/unreachable.hpp>
-#include <stout/windows.hpp> // For `WinSock2.h`.
+#include "stout/error.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/try.hpp"
+#include "stout/unreachable.hpp"
+#include "stout/windows.hpp" // For `WinSock2.h`.
 
-#include <stout/os/int_fd.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline Try<int_fd> dup(const int_fd& fd)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Try<int_fd> dup(const int_fd& fd) {
   switch (fd.type()) {
     case WindowsFD::Type::HANDLE: {
       HANDLE duplicate = INVALID_HANDLE_VALUE;
       const BOOL result = ::DuplicateHandle(
-          ::GetCurrentProcess(),  // Source process == current.
-          fd,                     // Handle to duplicate.
-          ::GetCurrentProcess(),  // Target process == current.
+          ::GetCurrentProcess(), // Source process == current.
+          fd, // Handle to duplicate.
+          ::GetCurrentProcess(), // Target process == current.
           &duplicate,
-          0,                      // Ignored (DUPLICATE_SAME_ACCESS).
-          FALSE,                  // Non-inheritable handle.
+          0, // Ignored (DUPLICATE_SAME_ACCESS).
+          FALSE, // Non-inheritable handle.
           DUPLICATE_SAME_ACCESS); // Same access level as source.
 
       if (result == FALSE) {
@@ -47,7 +48,7 @@ inline Try<int_fd> dup(const int_fd& fd)
     case WindowsFD::Type::SOCKET: {
       WSAPROTOCOL_INFOW info;
       const int result =
-        ::WSADuplicateSocketW(fd, ::GetCurrentProcessId(), &info);
+          ::WSADuplicateSocketW(fd, ::GetCurrentProcessId(), &info);
       if (result != 0) {
         return SocketError();
       }
@@ -66,6 +67,8 @@ inline Try<int_fd> dup(const int_fd& fd)
   UNREACHABLE();
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_WINDOWS_DUP_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

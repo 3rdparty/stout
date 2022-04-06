@@ -10,25 +10,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_RENAME_HPP__
-#define __STOUT_OS_WINDOWS_RENAME_HPP__
+#pragma once
 
 #include <string>
 
-#include <stout/error.hpp>
-#include <stout/nothing.hpp>
-#include <stout/try.hpp>
-#include <stout/windows.hpp>
+#include "stout/error.hpp"
+#include "stout/internal/windows/longpath.hpp"
+#include "stout/nothing.hpp"
+#include "stout/try.hpp"
+#include "stout/windows.hpp"
 
-#include <stout/internal/windows/longpath.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 inline Try<Nothing> rename(
     const std::string& from,
     const std::string& to,
-    bool sync = false)
-{
+    bool sync = false) {
   // Use `MoveFile` to perform the file move. The MSVCRT implementation of
   // `::rename` fails if the `to` file already exists[1], while some UNIX
   // implementations allow that[2].
@@ -39,13 +40,12 @@ inline Try<Nothing> rename(
   //
   // [1] https://msdn.microsoft.com/en-us/library/zw5t957f.aspx
   // [2] http://man7.org/linux/man-pages/man2/rename.2.html
-  // [3] https://msdn.microsoft.com/en-us/library/windows/desktop/aa365240(v=vs.85).aspx
+  // [3] https://tinyurl.com/2p8dvxk8
   const BOOL result = ::MoveFileExW(
       ::internal::windows::longpath(from).data(),
       ::internal::windows::longpath(to).data(),
-      MOVEFILE_COPY_ALLOWED |
-        MOVEFILE_REPLACE_EXISTING |
-        (sync ? MOVEFILE_WRITE_THROUGH : 0));
+      MOVEFILE_COPY_ALLOWED
+          | MOVEFILE_REPLACE_EXISTING | (sync ? MOVEFILE_WRITE_THROUGH : 0));
 
   if (!result) {
     return WindowsError(
@@ -55,6 +55,8 @@ inline Try<Nothing> rename(
   return Nothing();
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_WINDOWS_RENAME_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

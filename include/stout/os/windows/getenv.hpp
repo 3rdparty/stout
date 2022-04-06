@@ -10,25 +10,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_GETENV_HPP__
-#define __STOUT_OS_WINDOWS_GETENV_HPP__
+#pragma once
 
 #include <memory>
 #include <string>
 
-#include <stout/none.hpp>
-#include <stout/option.hpp>
-#include <stout/stringify.hpp>
-#include <stout/windows.hpp>
+#include "stout/none.hpp"
+#include "stout/option.hpp"
+#include "stout/stringify.hpp"
+#include "stout/windows.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // Looks in the environment variables for the specified key and
 // returns a string representation of its value. If no environment
 // variable matching key is found, None() is returned.
-inline Option<std::string> getenv(const std::string& key)
-{
+inline Option<std::string> getenv(const std::string& key) {
   std::wstring wide_key = wide_stringify(key);
 
   // NOTE: The double-call to `::GetEnvironmentVariable` here uses the first
@@ -37,7 +38,7 @@ inline Option<std::string> getenv(const std::string& key)
   // allocate the space for this, but we explicitly do it this way to avoid
   // that.
   const DWORD buffer_size =
-    ::GetEnvironmentVariableW(wide_key.data(), nullptr, 0);
+      ::GetEnvironmentVariableW(wide_key.data(), nullptr, 0);
   if (buffer_size == 0) {
     if (::GetLastError() == ERROR_ENVVAR_NOT_FOUND) {
       return None();
@@ -50,7 +51,10 @@ inline Option<std::string> getenv(const std::string& key)
   environment.reserve(static_cast<size_t>(buffer_size));
 
   DWORD value_size =
-    ::GetEnvironmentVariableW(wide_key.data(), environment.data(), buffer_size);
+      ::GetEnvironmentVariableW(
+          wide_key.data(),
+          environment.data(),
+          buffer_size);
 
   if (value_size == 0) {
     // If `value_size == 0` here, that probably means the environment variable
@@ -65,6 +69,8 @@ inline Option<std::string> getenv(const std::string& key)
   return stringify(std::wstring(environment.data()));
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_WINDOWS_GETENV_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

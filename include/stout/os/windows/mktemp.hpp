@@ -10,35 +10,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_MKTEMP_HPP__
-#define __STOUT_OS_WINDOWS_MKTEMP_HPP__
+#pragma once
 
 #include <string>
 #include <vector>
 
-#include <stout/error.hpp>
-#include <stout/path.hpp>
-#include <stout/stringify.hpp>
-#include <stout/try.hpp>
-#include <stout/windows.hpp>
+#include "stout/error.hpp"
+#include "stout/internal/windows/longpath.hpp"
+#include "stout/os/close.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/os/open.hpp"
+#include "stout/os/temp.hpp"
+#include "stout/path.hpp"
+#include "stout/stringify.hpp"
+#include "stout/try.hpp"
+#include "stout/windows.hpp"
 
-#include <stout/os/close.hpp>
-#include <stout/os/int_fd.hpp>
-#include <stout/os/open.hpp>
-#include <stout/os/temp.hpp>
-
-#include <stout/internal/windows/longpath.hpp>
-
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // Creates a temporary file using the specified path template. The
 // template may be any path with _6_ `Xs' appended to it, for example
 // /tmp/temp.XXXXXX. The trailing `Xs' are replaced with a unique
 // alphanumeric combination.
 inline Try<std::string> mktemp(
-    const std::string& path = path::join(os::temp(), "XXXXXX"))
-{
+    const std::string& path = path::join(os::temp(), "XXXXXX")) {
   const std::wstring longpath = ::internal::windows::longpath(path);
   std::vector<wchar_t> buffer(longpath.begin(), longpath.end());
 
@@ -62,7 +61,7 @@ inline Try<std::string> mktemp(
   // `_S_IWRITE` here instead of the POSIX equivalents. On Windows the file is
   // is not present, we use `_O_CREAT` option when opening the file.
   Try<int_fd> fd =
-    os::open(temp_file, O_RDWR | O_CREAT | O_EXCL, _S_IREAD | _S_IWRITE);
+      os::open(temp_file, O_RDWR | O_CREAT | O_EXCL, _S_IREAD | _S_IWRITE);
   if (fd.isError()) {
     return Error(fd.error());
   }
@@ -72,9 +71,14 @@ inline Try<std::string> mktemp(
   // mkstemp(). Also an unsuccessful close() doesn't affect the file.
   os::close(fd.get());
 
-  return strings::remove(temp_file, os::LONGPATH_PREFIX, strings::Mode::PREFIX);
+  return strings::remove(
+      temp_file,
+      os::LONGPATH_PREFIX,
+      strings::Mode::PREFIX);
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_WINDOWS_MKTEMP_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

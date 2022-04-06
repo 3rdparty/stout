@@ -10,22 +10,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_EXISTS_HPP__
-#define __STOUT_OS_WINDOWS_EXISTS_HPP__
+#pragma once
 
 #include <string>
 
-#include <stout/error.hpp>
-#include <stout/windows.hpp>
+#include "stout/error.hpp"
+#include "stout/internal/windows/longpath.hpp"
+#include "stout/windows.hpp"
 
-#include <stout/internal/windows/longpath.hpp>
-
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
+////////////////////////////////////////////////////////////////////////
 
-inline bool exists(const std::string& path)
-{
+inline bool exists(const std::string& path) {
   // NOTE: `GetFileAttributes` returns `INVALID_FILE_ATTRIBUTES` if the file
   // could not be opened for any reason. Checking for one of two 'not found'
   // error codes (`ERROR_FILE_NOT_FOUND` or `ERROR_PATH_NOT_FOUND`) is a
@@ -49,20 +48,21 @@ inline bool exists(const std::string& path)
   return true;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Determine if the process identified by pid exists.
 // NOTE: Zombie processes have a pid and therefore exist. See
 // os::process(pid) to get details of a process.
-inline bool exists(pid_t pid)
-{
+inline bool exists(pid_t pid) {
   SharedHandle handle(
-    ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid),
-    ::CloseHandle);
+      ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid),
+      ::CloseHandle);
 
   return handle.get_handle() != nullptr;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-} // namespace os {
+} // namespace os
 
-#endif // __STOUT_OS_WINDOWS_EXISTS_HPP__
+////////////////////////////////////////////////////////////////////////

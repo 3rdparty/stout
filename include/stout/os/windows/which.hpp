@@ -10,22 +10,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_WHICH_HPP__
-#define __STOUT_OS_WINDOWS_WHICH_HPP__
+#pragma once
 
 #include <string>
 #include <vector>
 
-#include <stout/none.hpp>
-#include <stout/option.hpp>
-#include <stout/os.hpp>
-#include <stout/path.hpp>
-#include <stout/strings.hpp>
+#include "stout/none.hpp"
+#include "stout/option.hpp"
+#include "stout/os.hpp"
+#include "stout/os/exists.hpp"
+#include "stout/path.hpp"
+#include "stout/strings.hpp"
 
-#include <stout/os/exists.hpp>
-
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // This behaves "like the user expects" of POSIX `which`, but on Windows. That
 // is, if a path is not specified, we search through the `PATH` environment
@@ -40,8 +41,7 @@ namespace os {
 // "executable" extensions.
 inline Option<std::string> which(
     const std::string& command,
-    const Option<std::string>& _path = None())
-{
+    const Option<std::string>& _path = None()) {
   Option<std::string> path = _path;
 
   if (path.isNone()) {
@@ -84,7 +84,8 @@ inline Option<std::string> which(
   return None();
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace os
 
-#endif // __STOUT_OS_WINDOWS_WHICH_HPP__
+////////////////////////////////////////////////////////////////////////

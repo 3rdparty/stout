@@ -10,38 +10,41 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_SENDFILE_HPP__
-#define __STOUT_OS_WINDOWS_SENDFILE_HPP__
+#pragma once
 
-#include <stout/error.hpp>
-#include <stout/result.hpp>
-#include <stout/try.hpp>
-#include <stout/windows.hpp> // For `winioctl.h`.
+#include "stout/error.hpp"
+#include "stout/internal/windows/overlapped.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/result.hpp"
+#include "stout/try.hpp"
+#include "stout/windows.hpp" // For `winioctl.h`.
 
-#include <stout/internal/windows/overlapped.hpp>
-
-#include <stout/os/int_fd.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
+////////////////////////////////////////////////////////////////////////
+
 inline Result<size_t> sendfile_async(
-    const int_fd& s, const int_fd& fd, size_t length, OVERLAPPED* overlapped)
-{
+    const int_fd& s,
+    const int_fd& fd,
+    size_t length,
+    OVERLAPPED* overlapped) {
   // `::TransmitFile` can only send `INT_MAX - 1` bytes.
   CHECK_LE(length, INT_MAX - 1);
 
   const BOOL result = ::TransmitFile(
-      s,                          // Sending socket.
-      fd,                         // File to be sent.
+      s, // Sending socket.
+      fd, // File to be sent.
       static_cast<DWORD>(length), // Number of bytes to be sent from the file.
-      0,                          // Bytes per send. 0 chooses system default.
-      overlapped,                 // Overlapped object with file offset.
-      nullptr,                    // Data before and after file send.
-      0);                         // Flags.
+      0, // Bytes per send. 0 chooses system default.
+      overlapped, // Overlapped object with file offset.
+      nullptr, // Data before and after file send.
+      0); // Flags.
 
   const WindowsError error;
-  if (result == FALSE &&
-      (error.code == WSA_IO_PENDING || error.code == ERROR_IO_PENDING)) {
+  if (result == FALSE
+      && (error.code == WSA_IO_PENDING || error.code == ERROR_IO_PENDING)) {
     return None();
   }
 
@@ -52,12 +55,16 @@ inline Result<size_t> sendfile_async(
   return length;
 }
 
+////////////////////////////////////////////////////////////////////////
+
 // Returns the amount of bytes written from the input file
 // descriptor to the output socket.
 // On error, `Try<ssize_t, SocketError>` contains the error.
 inline Try<ssize_t, SocketError> sendfile(
-    const int_fd& s, const int_fd& fd, off_t offset, size_t length)
-{
+    const int_fd& s,
+    const int_fd& fd,
+    off_t offset,
+    size_t length) {
   if (offset < 0) {
     return SocketError(WSAEINVAL);
   }
@@ -67,7 +74,7 @@ inline Try<ssize_t, SocketError> sendfile(
   const uint64_t offset_ = offset;
 
   const Try<OVERLAPPED> from_ =
-    ::internal::windows::init_overlapped_for_sync_io();
+      ::internal::windows::init_overlapped_for_sync_io();
 
   if (from_.isError()) {
     return SocketError(from_.error());
@@ -95,6 +102,8 @@ inline Try<ssize_t, SocketError> sendfile(
   return SocketError();
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_WINDOWS_SENDFILE_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

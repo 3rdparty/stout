@@ -10,22 +10,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_FSYNC_HPP__
-#define __STOUT_OS_WINDOWS_FSYNC_HPP__
+#pragma once
 
 #include <io.h>
 
-#include <stout/error.hpp>
-#include <stout/nothing.hpp>
-#include <stout/try.hpp>
-#include <stout/windows.hpp>
+#include "stout/error.hpp"
+#include "stout/nothing.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/try.hpp"
+#include "stout/windows.hpp"
 
-#include <stout/os/int_fd.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline Try<Nothing> fsync(const int_fd& fd)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Try<Nothing> fsync(const int_fd& fd) {
   if (!::FlushFileBuffers(fd)) {
     return WindowsError(
         "os::fsync: Could not flush file buffers for given file descriptor");
@@ -34,6 +35,8 @@ inline Try<Nothing> fsync(const int_fd& fd)
   return Nothing();
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_WINDOWS_FSYNC_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

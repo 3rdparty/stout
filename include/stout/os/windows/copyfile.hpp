@@ -10,34 +10,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_COPYFILE_HPP__
-#define __STOUT_OS_WINDOWS_COPYFILE_HPP__
+#pragma once
 
 #include <string>
 
-#include <stout/error.hpp>
-#include <stout/nothing.hpp>
-#include <stout/path.hpp>
-#include <stout/try.hpp>
-#include <stout/windows.hpp>
+#include "stout/error.hpp"
+#include "stout/internal/windows/longpath.hpp"
+#include "stout/nothing.hpp"
+#include "stout/path.hpp"
+#include "stout/try.hpp"
+#include "stout/windows.hpp"
 
-#include <stout/internal/windows/longpath.hpp>
-
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // Uses the `CopyFile` Windows API to perform a file copy.
 // Unlike the POSIX implementation, we do not need to check if the
 // source or destination are directories, because `CopyFile` only
 // works on files.
 //
-// https://msdn.microsoft.com/en-us/library/windows/desktop/aa363851(v=vs.85).aspx
+// https://tinyurl.com/mrxcxzeb
 //
 // NOLINT(whitespace/line_length)
-
 inline Try<Nothing> copyfile(
-    const std::string& source, const std::string& destination)
-{
+    const std::string& source,
+    const std::string& destination) {
   if (!path::absolute(source)) {
     return Error("`source` was a relative path");
   }
@@ -59,6 +59,8 @@ inline Try<Nothing> copyfile(
   return Nothing();
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_WINDOWS_COPYFILE_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

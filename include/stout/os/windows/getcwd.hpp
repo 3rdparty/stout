@@ -10,24 +10,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_GETCWD_HPP__
-#define __STOUT_OS_WINDOWS_GETCWD_HPP__
+#pragma once
 
-#include <stout/check.hpp>
-#include <stout/error.hpp>
-#include <stout/stringify.hpp>
-#include <stout/try.hpp>
-#include <stout/windows.hpp>
+#include "stout/check.hpp"
+#include "stout/error.hpp"
+#include "stout/internal/windows/longpath.hpp"
+#include "stout/stringify.hpp"
+#include "stout/try.hpp"
+#include "stout/windows.hpp"
 
-#include <stout/internal/windows/longpath.hpp>
-
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
+////////////////////////////////////////////////////////////////////////
+
 // TODO(josephw): Consider changing the return type to a `Try<std::string>`
 // so that we do not CHECK-fail upon error.
-inline std::string getcwd()
-{
+inline std::string getcwd() {
   // First query for the buffer size required.
   const DWORD length = ::GetCurrentDirectoryW(0, nullptr);
   CHECK(length != 0) << "Failed to retrieve current directory buffer size";
@@ -44,7 +44,8 @@ inline std::string getcwd()
       strings::Mode::PREFIX);
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
+} // namespace os
 
-#endif // __STOUT_OS_WINDOWS_GETCWD_HPP__
+////////////////////////////////////////////////////////////////////////

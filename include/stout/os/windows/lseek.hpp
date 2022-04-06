@@ -10,19 +10,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_LSEEK_HPP__
-#define __STOUT_OS_WINDOWS_LSEEK_HPP__
+#pragma once
 
-#include <stout/error.hpp>
-#include <stout/try.hpp>
-#include <stout/windows.hpp>
+#include "stout/error.hpp"
+#include "stout/os/int_fd.hpp"
+#include "stout/try.hpp"
+#include "stout/windows.hpp"
 
-#include <stout/os/int_fd.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
 
-inline Try<off_t> lseek(int_fd fd, off_t offset, int whence)
-{
+////////////////////////////////////////////////////////////////////////
+
+inline Try<off_t> lseek(int_fd fd, off_t offset, int whence) {
   // NOTE: The values for `SEEK_SET`, `SEEK_CUR`, and `SEEK_END` are
   // 0, 1, 2, the same as `FILE_BEGIN`, `FILE_CURRENT`, and
   // `FILE_END`. Thus we don't need to map them, and they can be
@@ -36,7 +37,7 @@ inline Try<off_t> lseek(int_fd fd, off_t offset, int whence)
   // TODO(andschwa): This may need to be synchronized if users aren't
   // careful about sharing their file handles among threads.
   const BOOL result =
-    ::SetFilePointerEx(fd, offset_, &new_offset, static_cast<DWORD>(whence));
+      ::SetFilePointerEx(fd, offset_, &new_offset, static_cast<DWORD>(whence));
 
   if (result == FALSE) {
     return WindowsError();
@@ -45,6 +46,8 @@ inline Try<off_t> lseek(int_fd fd, off_t offset, int whence)
   return static_cast<off_t>(new_offset.QuadPart);
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_WINDOWS_LSEEK_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////

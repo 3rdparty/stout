@@ -10,25 +10,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_OS_WINDOWS_TEMP_HPP__
-#define __STOUT_OS_WINDOWS_TEMP_HPP__
+#pragma once
 
 #include <string>
 #include <vector>
 
-#include <stout/stringify.hpp>
-#include <stout/windows.hpp>
+#include "stout/stringify.hpp"
+#include "stout/windows.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // Attempts to resolve the system-designated temporary directory before
 // falling back to a sensible default. On Windows, this involves checking
 // (in this order) environment variables for `TMP`, `TEMP`, and `USERPROFILE`
 // followed by the Windows directory (`::GetTimePath`).  In the unlikely event
 // where none of these are found, this function returns the current directory.
-inline std::string temp()
-{
+inline std::string temp() {
   const size_t size = static_cast<size_t>(MAX_PATH) + 2;
   std::vector<wchar_t> buffer;
   buffer.reserve(size);
@@ -43,6 +44,8 @@ inline std::string temp()
   return stringify(std::wstring(buffer.data()));
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_OS_WINDOWS_TEMP_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////
