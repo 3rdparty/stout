@@ -10,28 +10,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_POSIX_MAC_HPP__
-#define __STOUT_POSIX_MAC_HPP__
+#pragma once
 
 #include <ifaddrs.h>
-
 #include <sys/types.h>
 
-#include <stout/error.hpp>
-#include <stout/none.hpp>
-#include <stout/result.hpp>
-#include <stout/stringify.hpp>
+#include "stout/error.hpp"
+#include "stout/none.hpp"
+#include "stout/result.hpp"
+#include "stout/stringify.hpp"
 
+////////////////////////////////////////////////////////////////////////
 
 // Network utilities.
 namespace net {
+
+////////////////////////////////////////////////////////////////////////
 
 // Returns the MAC address of a given link device. The link device is
 // specified using its name (e.g., eth0). Returns error if the link
 // device is not found. Returns none if the link device is found, but
 // does not have a MAC address (e.g., loopback).
-inline Result<MAC> mac(const std::string& name)
-{
+inline Result<MAC> mac(const std::string& name) {
   struct ifaddrs* ifaddr = nullptr;
   if (getifaddrs(&ifaddr) == -1) {
     return ErrnoError();
@@ -44,7 +44,7 @@ inline Result<MAC> mac(const std::string& name)
     if (ifa->ifa_name != nullptr && !strcmp(ifa->ifa_name, name.c_str())) {
       found = true;
 
-# if defined(__linux__)
+#if defined(__linux__)
       if (ifa->ifa_addr != nullptr && ifa->ifa_addr->sa_family == AF_PACKET) {
         struct sockaddr_ll* link = (struct sockaddr_ll*) ifa->ifa_addr;
 
@@ -62,7 +62,7 @@ inline Result<MAC> mac(const std::string& name)
           return mac;
         }
       }
-# elif defined(__APPLE__)
+#elif defined(__APPLE__)
       if (ifa->ifa_addr != nullptr && ifa->ifa_addr->sa_family == AF_LINK) {
         struct sockaddr_dl* link = (struct sockaddr_dl*) ifa->ifa_addr;
 
@@ -74,7 +74,7 @@ inline Result<MAC> mac(const std::string& name)
           return mac;
         }
       }
-# endif
+#endif
     }
   }
 
@@ -87,6 +87,8 @@ inline Result<MAC> mac(const std::string& name)
   return None();
 }
 
-} // namespace net {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_POSIX_MAC_HPP__
+} // namespace net
+
+////////////////////////////////////////////////////////////////////////

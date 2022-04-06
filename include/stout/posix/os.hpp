@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __STOUT_POSIX_OS_HPP__
-#define __STOUT_POSIX_OS_HPP__
+#pragma once
 
 #include <errno.h>
 #ifdef __sun
@@ -32,10 +31,9 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 #include <utime.h>
-
-#include <sys/ioctl.h>
 
 #ifdef __linux__
 #include <linux/version.h>
@@ -53,44 +51,46 @@
 #include <string>
 #include <vector>
 
-#include <stout/synchronized.hpp>
-
-#include <stout/os/close.hpp>
-#include <stout/os/environment.hpp>
-#include <stout/os/fcntl.hpp>
-#include <stout/os/find.hpp>
-#include <stout/os/fork.hpp>
-#include <stout/os/getcwd.hpp>
-#include <stout/os/killtree.hpp>
-#include <stout/os/os.hpp>
-#include <stout/os/permissions.hpp>
-#include <stout/os/read.hpp>
-#include <stout/os/rename.hpp>
-#include <stout/os/sendfile.hpp>
-#include <stout/os/signals.hpp>
-#include <stout/os/strerror.hpp>
-#include <stout/os/write.hpp>
+#include "stout/os/close.hpp"
+#include "stout/os/environment.hpp"
+#include "stout/os/fcntl.hpp"
+#include "stout/os/find.hpp"
+#include "stout/os/fork.hpp"
+#include "stout/os/getcwd.hpp"
+#include "stout/os/killtree.hpp"
+#include "stout/os/os.hpp"
+#include "stout/os/permissions.hpp"
+#include "stout/os/read.hpp"
+#include "stout/os/rename.hpp"
+#include "stout/os/sendfile.hpp"
+#include "stout/os/signals.hpp"
+#include "stout/os/strerror.hpp"
+#include "stout/os/write.hpp"
+#include "stout/synchronized.hpp"
 
 #ifdef __FreeBSD__
-#include <stout/os/freebsd.hpp>
+#include "stout/os/freebsd.hpp"
 #endif
 #ifdef __linux__
-#include <stout/os/linux.hpp>
+#include "stout/os/linux.hpp"
 #endif // __linux__
-#include <stout/os/open.hpp>
+#include "stout/os/open.hpp"
 #ifdef __APPLE__
-#include <stout/os/osx.hpp>
+#include "stout/os/osx.hpp"
 #endif // __APPLE__
 #ifdef __sun
-#include <stout/os/sunos.hpp>
+#include "stout/os/sunos.hpp"
 #endif // __sun
 
-#include <stout/os/posix/chown.hpp>
-#include <stout/os/raw/environment.hpp>
+#include "stout/os/posix/chown.hpp"
+#include "stout/os/raw/environment.hpp"
+#include "stout/os/shell.hpp"
 
-#include <stout/os/shell.hpp>
+////////////////////////////////////////////////////////////////////////
 
 namespace os {
+
+////////////////////////////////////////////////////////////////////////
 
 // Import `::gmtime_r` into `os::` namespace.
 using ::gmtime_r;
@@ -105,6 +105,7 @@ using ::random;
 inline Try<Nothing> utime(const std::string&);
 inline Try<std::list<Process>> processes();
 
+////////////////////////////////////////////////////////////////////////
 
 // Suspends execution of the calling process until a child specified by `pid`
 // has changed state. Unlike the POSIX standard function `::waitpid`, this
@@ -138,8 +139,7 @@ inline Try<std::list<Process>> processes();
 //         implicitly convert from `unsigned long` to `long`, we will "wrap
 //         around" to negative values. And since we've disabled the negative
 //         `pid` in the Windows implementation, we should error out.
-inline Result<pid_t> waitpid(pid_t pid, int* status, int options)
-{
+inline Result<pid_t> waitpid(pid_t pid, int* status, int options) {
   const pid_t child_pid = ::waitpid(pid, status, options);
 
   if (child_pid == 0) {
@@ -151,21 +151,22 @@ inline Result<pid_t> waitpid(pid_t pid, int* status, int options)
   }
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Sets the value associated with the specified key in the set of
 // environment variables.
-inline void setenv(const std::string& key,
-                   const std::string& value,
-                   bool overwrite = true)
-{
+inline void setenv(
+    const std::string& key,
+    const std::string& value,
+    bool overwrite = true) {
   ::setenv(key.c_str(), value.c_str(), overwrite ? 1 : 0);
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Unsets the value associated with the specified key in the set of
 // environment variables.
-inline void unsetenv(const std::string& key)
-{
+inline void unsetenv(const std::string& key) {
   // NOTE: This function explicitly does not clear from
   // `/proc/$pid/environ` because that is defined to be the initial
   // environment that was set when the process was started, so don't
@@ -173,13 +174,13 @@ inline void unsetenv(const std::string& key)
   ::unsetenv(key.c_str());
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Erases the value associated with the specified key from the set of
 // environment variables. By erase, we even clear it from
 // `/proc/$pid/environ` so that sensitive information conveyed via
 // environment variables (such as secrets) can be cleaned up.
-inline void eraseenv(const std::string& key)
-{
+inline void eraseenv(const std::string& key) {
   char* value = ::getenv(key.c_str());
 
   // Erase the old value so that on Linux it can't be inspected
@@ -191,6 +192,7 @@ inline void eraseenv(const std::string& key)
   ::unsetenv(key.c_str());
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // This function is a portable version of execvpe ('p' means searching
 // executable from PATH and 'e' means setting environments). We add
@@ -199,8 +201,7 @@ inline void eraseenv(const std::string& key)
 // NOTE: This function is not thread safe. It is supposed to be used
 // only after fork (when there is only one thread). This function is
 // async signal safe.
-inline int execvpe(const char* file, char** argv, char** envp)
-{
+inline int execvpe(const char* file, char** argv, char** envp) {
   char** saved = os::raw::environment();
 
   *os::raw::environmentp() = envp;
@@ -212,9 +213,9 @@ inline int execvpe(const char* file, char** argv, char** envp)
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<Nothing> chmod(const std::string& path, int mode)
-{
+inline Try<Nothing> chmod(const std::string& path, int mode) {
   if (::chmod(path.c_str(), mode) < 0) {
     return ErrnoError();
   }
@@ -222,12 +223,12 @@ inline Try<Nothing> chmod(const std::string& path, int mode)
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 inline Try<Nothing> mknod(
     const std::string& path,
     mode_t mode,
-    dev_t dev)
-{
+    dev_t dev) {
   if (::mknod(path.c_str(), mode, dev) < 0) {
     return ErrnoError();
   }
@@ -235,14 +236,14 @@ inline Try<Nothing> mknod(
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Suspends execution for the given duration.
-inline Try<Nothing> sleep(const Duration& duration)
-{
+inline Try<Nothing> sleep(const Duration& duration) {
   timespec remaining;
   remaining.tv_sec = static_cast<long>(duration.secs());
   remaining.tv_nsec =
-    static_cast<long>((duration - Seconds(remaining.tv_sec)).ns());
+      static_cast<long>((duration - Seconds(remaining.tv_sec)).ns());
 
   while (nanosleep(&remaining, &remaining) == -1) {
     if (errno == EINTR) {
@@ -255,10 +256,10 @@ inline Try<Nothing> sleep(const Duration& duration)
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns the list of files that match the given (shell) pattern.
-inline Try<std::list<std::string>> glob(const std::string& pattern)
-{
+inline Try<std::list<std::string>> glob(const std::string& pattern) {
   glob_t g;
   int status = ::glob(pattern.c_str(), GLOB_NOSORT, nullptr, &g);
 
@@ -281,10 +282,10 @@ inline Try<std::list<std::string>> glob(const std::string& pattern)
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns the total number of cpus (cores).
-inline Try<long> cpus()
-{
+inline Try<long> cpus() {
   long cpus = sysconf(_SC_NPROCESSORS_ONLN);
 
   if (cpus < 0) {
@@ -293,13 +294,13 @@ inline Try<long> cpus()
   return cpus;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns load struct with average system loads for the last
 // 1, 5 and 15 minutes respectively.
 // Load values should be interpreted as usual average loads from
 // uptime(1).
-inline Try<Load> loadavg()
-{
+inline Try<Load> loadavg() {
   double loadArray[3];
   if (getloadavg(loadArray, 3) == -1) {
     return ErrnoError("Failed to determine system load averages");
@@ -313,10 +314,10 @@ inline Try<Load> loadavg()
   return load;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Return the system information.
-inline Try<UTSInfo> uname()
-{
+inline Try<UTSInfo> uname() {
   struct utsname name;
 
   if (::uname(&name) < 0) {
@@ -332,12 +333,12 @@ inline Try<UTSInfo> uname()
   return info;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Overload of os::pids for filtering by groups and sessions.
 // A group / session id of 0 will fitler on the group / session ID
 // of the calling process.
-inline Try<std::set<pid_t>> pids(Option<pid_t> group, Option<pid_t> session)
-{
+inline Try<std::set<pid_t>> pids(Option<pid_t> group, Option<pid_t> session) {
   if (group.isNone() && session.isNone()) {
     return os::pids();
   } else if (group.isSome() && group.get() < 0) {
@@ -364,15 +365,16 @@ inline Try<std::set<pid_t>> pids(Option<pid_t> group, Option<pid_t> session)
   foreach (const Process& process, processes.get()) {
     // Group AND Session (intersection).
     if (group.isSome() && session.isSome()) {
-      if (group.get() == process.group &&
-          process.session.isSome() &&
-          session.get() == process.session.get()) {
+      if (group.get() == process.group
+          && process.session.isSome()
+          && session.get() == process.session.get()) {
         result.insert(process.pid);
       }
     } else if (group.isSome() && group.get() == process.group) {
       result.insert(process.pid);
-    } else if (session.isSome() && process.session.isSome() &&
-               session.get() == process.session.get()) {
+    } else if (
+        session.isSome() && process.session.isSome()
+        && session.get() == process.session.get()) {
       result.insert(process.pid);
     }
   }
@@ -380,12 +382,12 @@ inline Try<std::set<pid_t>> pids(Option<pid_t> group, Option<pid_t> session)
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Creates a tar 'archive' with gzip compression, of the given 'path'.
-inline Try<Nothing> tar(const std::string& path, const std::string& archive)
-{
+inline Try<Nothing> tar(const std::string& path, const std::string& archive) {
   Try<std::string> tarOut =
-    os::shell("tar %s %s %s", "-czf", archive.c_str(), path.c_str());
+      os::shell("tar %s %s %s", "-czf", archive.c_str(), path.c_str());
 
   if (tarOut.isError()) {
     return Error("Failed to archive " + path + ": " + tarOut.error());
@@ -394,10 +396,10 @@ inline Try<Nothing> tar(const std::string& path, const std::string& archive)
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Return the OS release numbers.
-inline Try<Version> release()
-{
+inline Try<Version> release() {
   Try<UTSInfo> info = uname();
   if (info.isError()) {
     return Error(info.error());
@@ -412,7 +414,8 @@ inline Try<Version> release()
           "%d.%d.%d",
           &major,
           &minor,
-          &patch) != 3) {
+          &patch)
+      != 3) {
     return Error("Failed to parse: " + info->release);
   }
 #else
@@ -424,15 +427,15 @@ inline Try<Version> release()
   return Version(major, minor, patch);
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<std::string> var()
-{
+inline Try<std::string> var() {
   return "/var";
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<Nothing> dup2(int oldFd, int newFd)
-{
+inline Try<Nothing> dup2(int oldFd, int newFd) {
   while (::dup2(oldFd, newFd) == -1) {
     if (errno == EINTR) {
       continue;
@@ -443,15 +446,15 @@ inline Try<Nothing> dup2(int oldFd, int newFd)
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<std::string> ptsname(int master)
-{
+inline Try<std::string> ptsname(int master) {
   // 'ptsname' is not thread safe. Therefore, we use mutex here to
   // make this method thread safe.
   // TODO(jieyu): Consider using ptsname_r for linux.
   static std::mutex* mutex = new std::mutex;
 
-  synchronized (mutex) {
+  synchronized(mutex) {
     const char* slavePath = ::ptsname(master);
     if (slavePath == nullptr) {
       return ErrnoError();
@@ -460,9 +463,9 @@ inline Try<std::string> ptsname(int master)
   }
 }
 
+////////////////////////////////////////////////////////////////////////
 
-inline Try<Nothing> setctty(int fd)
-{
+inline Try<Nothing> setctty(int fd) {
   if (ioctl(fd, TIOCSCTTY, nullptr) == -1) {
     return ErrnoError();
   }
@@ -470,14 +473,14 @@ inline Try<Nothing> setctty(int fd)
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Update the window size for
 // the terminal represented by fd.
 inline Try<Nothing> setWindowSize(
     int fd,
     unsigned short rows,
-    unsigned short columns)
-{
+    unsigned short columns) {
   struct winsize winsize;
   winsize.ws_row = rows;
   winsize.ws_col = columns;
@@ -489,14 +492,16 @@ inline Try<Nothing> setWindowSize(
   return Nothing();
 }
 
+////////////////////////////////////////////////////////////////////////
 
 // Returns a host-specific default for the `PATH` environment variable, based
 // on the configuration of the host.
-inline std::string host_default_path()
-{
+inline std::string host_default_path() {
   return "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
 }
 
-} // namespace os {
+////////////////////////////////////////////////////////////////////////
 
-#endif // __STOUT_POSIX_OS_HPP__
+} // namespace os
+
+////////////////////////////////////////////////////////////////////////
