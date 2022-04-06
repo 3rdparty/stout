@@ -9,11 +9,9 @@ on:
   push:
     branches:
       - "main"
-    paths-ignore:
-      - "**.md"
   pull_request:
-    paths-ignore:
-      - "**.md"
+    branches:
+      - "**"
 
 jobs:
   check_code_style:
