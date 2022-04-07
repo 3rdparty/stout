@@ -1,4 +1,4 @@
-# Workflow for building and testing flags on macOS, Ubuntu and Windows.  
+# Workflow for building and testing flags on macOS, Ubuntu and Windows.
 name: Build and Run all tests
 
 # We use action's triggers 'push' and 'pull_request'.
@@ -14,8 +14,19 @@ on:
       - "**.md"
   pull_request:
     paths-ignore:
-      - "**.md"   
-  
+      - "**.md"
+  workflow_dispatch:
+    inputs:
+      # Live debug failures using tmate by toggling input parameter
+      # 'debug_enabled':
+      # https://github.com/mxschmitt/action-tmate#manually-triggered-debug
+      # When manually running this workflow:
+      # https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow
+      debug_enabled:
+        description: 'Enable tmate debugging'
+        type: boolean
+        default: false
+
 jobs:
   build-and-test:
     name: Build and Test
@@ -39,10 +50,10 @@ jobs:
             --spawn_strategy=local \
             -c dbg \
             --strip="never" \
-            :stout       
+            :stout
 
       - name: Test
-        run: | 
+        run: |
           bazel test \
             --spawn_strategy=local \
             -c dbg \
@@ -53,5 +64,8 @@ jobs:
             --test_arg=--gtest_repeat=100
 
       - name: Debug using tmate (if failure)
-        if: ${{ failure() }}
         uses: mxschmitt/action-tmate@v3
+        # Optionally enable tmate debugging if the workflow was manually-triggered
+        # with `debug_enabled` set to `true`.
+        # https://github.com/mxschmitt/action-tmate#manually-triggered-debug
+        if: ${{ failure() && github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
