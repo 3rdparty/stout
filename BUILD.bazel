@@ -2,28 +2,28 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
 
 cc_library(
     name = "stout",
-    visibility = ["//visibility:public"],
     hdrs = glob([
         "include/stout/*.hpp",
         "include/stout/**/*.hpp",
     ]),
-    includes = ["include"],
     defines = [
         # Windows build fails without this define.
         "GLOG_NO_ABBREVIATED_SEVERITIES",
     ],
+    includes = ["include"],
+    visibility = ["//visibility:public"],
     deps = [
-         "@boost//:functional",
-         "@boost//:get_pointer",
-         "@boost//:lexical_cast",
-         "@boost//:variant",
-         "@com_github_google_glog//:glog",
-         "@com_github_kazuho_picojson//:picojson",
-         "@com_github_tencent_rapidjson//:rapidjson",
-         "@com_github_3rdparty_stout_atomic_backoff//:atomic-backoff",
-         "@com_github_3rdparty_stout_borrowed_ptr//:borrowed_ptr",
-         "@com_github_3rdparty_stout_flags//:flags",
-         "@com_github_3rdparty_stout_notification//:notification",
-         "@com_github_3rdparty_stout_stateful_tally//:stateful-tally",  
+        "@boost//:functional",
+        "@boost//:get_pointer",
+        "@boost//:lexical_cast",
+        "@boost//:variant",
+        "@com_github_3rdparty_stout_atomic_backoff//:atomic-backoff",
+        "@com_github_3rdparty_stout_borrowed_ptr//:borrowed_ptr",
+        "@com_github_3rdparty_stout_flags//:flags",
+        "@com_github_3rdparty_stout_notification//:notification",
+        "@com_github_3rdparty_stout_stateful_tally//:stateful-tally",
+        "@com_github_google_glog//:glog",
+        "@com_github_kazuho_picojson//:picojson",
+        "@com_github_tencent_rapidjson//:rapidjson",
     ],
 )
