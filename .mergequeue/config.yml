@@ -28,8 +28,6 @@ merge_rules:
     max_runs_for_update: 0
   merge_commit:
     use_title_and_body: false
-    cut_body_before: ''
-    cut_body_after: ''
   merge_strategy:
     name: squash
     override_labels:
