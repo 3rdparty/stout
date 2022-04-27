@@ -61,9 +61,9 @@ def repos(external = True, repo_mapping = {}):
     if "com_github_nelhage_rules_boost" not in native.existing_rules():
         git_repository(
             name = "com_github_nelhage_rules_boost",
-            commit = "1e3a69bf2d5cd10c34b74f066054cd335d033d71",
+            commit = "32164a62e2472077320f48f52b8077207cd0c9c8",
             remote = "https://github.com/nelhage/rules_boost",
-            shallow_since = "1591047380 -0700",
+            shallow_since = "1650381330 -0700",
         )
 
     if "com_github_gflags_gflags" not in native.existing_rules():
