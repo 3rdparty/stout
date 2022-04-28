@@ -10,11 +10,9 @@ on:
   push:
     branches:
       - "main"
-    paths-ignore:
-      - "**.md"
   pull_request:
-    paths-ignore:
-      - "**.md"
+    branches:
+      - "**"
   workflow_dispatch:
     inputs:
       # Live debug failures using tmate by toggling input parameter
