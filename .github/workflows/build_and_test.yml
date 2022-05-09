@@ -48,7 +48,7 @@ jobs:
             --spawn_strategy=local \
             -c dbg \
             --strip="never" \
-            :stout
+            ...
 
       - name: Test
         run: |
@@ -57,7 +57,7 @@ jobs:
             -c dbg \
             --strip="never" \
             --test_output=errors \
-            tests:stout \
+            tests/... \
             --test_arg=--gtest_shuffle \
             --test_arg=--gtest_repeat=100
 
