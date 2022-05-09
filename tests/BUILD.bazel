@@ -1,6 +1,42 @@
 load("@rules_cc//cc:defs.bzl", "cc_test")
 
 cc_test(
+    name = "atomic-backoff",
+    srcs = ["atomic-backoff.cpp"],
+    deps = [
+        "//:atomic-backoff",
+        "@gtest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "borrowed_ptr",
+    srcs = ["borrowed_ptr.cpp"],
+    deps = [
+        "//:borrowed-ptr",
+        "@gtest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "notification",
+    srcs = ["notification.cpp"],
+    deps = [
+        "//:notification",
+        "@gtest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "stateful-tally",
+    srcs = ["stateful-tally.cpp"],
+    deps = [
+        "//:stateful-tally",
+        "@gtest//:gtest_main",
+    ],
+)
+
+cc_test(
     name = "stout",
     srcs = [
         "stringify_tests.cpp",
@@ -8,6 +44,6 @@ cc_test(
     ],
     deps = [
         "//:stout",
-        "@com_github_google_googletest//:gtest_main",
+        "@gtest//:gtest_main",
     ],
 )

@@ -1,30 +1,5 @@
 workspace(name = "stout")
 
-local_repository(
-    name = "com_github_3rdparty_stout_atomic_backoff",
-    path = "stout-atomic-backoff",
-)
-
-local_repository(
-    name = "com_github_3rdparty_stout_borrowed_ptr",
-    path = "stout-borrowed-ptr",
-)
-
-local_repository(
-    name = "com_github_3rdparty_stout_flags",
-    path = "stout-flags",
-)
-
-local_repository(
-    name = "com_github_3rdparty_stout_notification",
-    path = "stout-notification",
-)
-
-local_repository(
-    name = "com_github_3rdparty_stout_stateful_tally",
-    path = "stout-stateful-tally",
-)
-
 load("//bazel:repos.bzl", "repos")
 
 repos(external = False)

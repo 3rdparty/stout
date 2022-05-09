@@ -1,10 +1,77 @@
 load("@rules_cc//cc:defs.bzl", "cc_library")
 
 cc_library(
+    name = "atomic-backoff",
+    hdrs = [
+        "include/stout/atomic-backoff.hpp",
+        "include/stout/thread.hpp",
+    ],
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "stateful-tally",
+    hdrs = ["include/stout/stateful-tally.hpp"],
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":atomic-backoff",
+        "@com_github_google_glog//:glog",
+    ],
+)
+
+cc_library(
+    name = "borrowed-ptr",
+    hdrs = [
+        "include/stout/borrowable.hpp",
+        "include/stout/borrowed_ptr.hpp",
+    ],
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":stateful-tally",
+    ],
+)
+
+cc_library(
+    name = "flags",
+    srcs = [
+        "include/stout/flags/flags.cpp",
+    ],
+    hdrs = [
+        "include/stout/flags/flags.hpp",
+    ],
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//include/stout/flags/v1:flag",
+        "@com_github_google_glog//:glog",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/time",
+    ],
+)
+
+cc_library(
+    name = "notification",
+    hdrs = ["include/stout/notification.hpp"],
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
     name = "stout",
     hdrs = glob([
         "include/stout/*.hpp",
         "include/stout/**/*.hpp",
+    ], [
+        "include/stout/flags/*.hpp",
+        "atomic-backoff.hpp",
+        "borrowable.hpp",
+        "borrowed_ptr.hpp",
+        "notification.hpp",
+        "stateful-tally.hpp",
+        "thread.hpp",
     ]),
     defines = [
         # Windows build fails without this define.
@@ -17,13 +84,13 @@ cc_library(
         "@boost//:get_pointer",
         "@boost//:lexical_cast",
         "@boost//:variant",
-        "@com_github_3rdparty_stout_atomic_backoff//:atomic-backoff",
-        "@com_github_3rdparty_stout_borrowed_ptr//:borrowed_ptr",
-        "@com_github_3rdparty_stout_flags//:flags",
-        "@com_github_3rdparty_stout_notification//:notification",
-        "@com_github_3rdparty_stout_stateful_tally//:stateful-tally",
         "@com_github_google_glog//:glog",
         "@com_github_kazuho_picojson//:picojson",
         "@com_github_tencent_rapidjson//:rapidjson",
+        "//:atomic-backoff",
+        "//:borrowed-ptr",
+        "//:flags",
+        "//:notification",
+        "//:stateful-tally",
     ],
 )
