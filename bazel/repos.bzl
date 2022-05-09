@@ -11,15 +11,9 @@
 
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("//3rdparty/bazel-rules-picojson:repos.bzl", picojson_repos = "repos")
 load("//3rdparty/bazel-rules-rapidjson:repos.bzl", rapidjson_repos = "repos")
-
-# buildifier: disable=out-of-order-load
-load("@com_github_3rdparty_stout_atomic_backoff//bazel:repos.bzl", stout_atomic_backoff_repos = "repos")
-load("@com_github_3rdparty_stout_borrowed_ptr//bazel:repos.bzl", stout_borrowed_ptr_repos = "repos")
-load("@com_github_3rdparty_stout_flags//bazel:repos.bzl", stout_flags_repos = "repos")
-load("@com_github_3rdparty_stout_notification//bazel:repos.bzl", stout_notification_repos = "repos")
-load("@com_github_3rdparty_stout_stateful_tally//bazel:repos.bzl", stout_stateful_tally_repos = "repos")
 
 def repos(external = True, repo_mapping = {}):
     """Adds repositories/archives needed by stout
@@ -38,52 +32,62 @@ def repos(external = True, repo_mapping = {}):
         repo_mapping = repo_mapping,
     )
 
-    stout_atomic_backoff_repos(
+    maybe(
+        http_archive,
+        name = "com_google_absl",
+        urls = ["https://github.com/abseil/abseil-cpp/archive/refs/tags/20211102.0.tar.gz"],
+        strip_prefix = "abseil-cpp-20211102.0",
+        sha256 = "dcf71b9cba8dc0ca9940c4b316a0c796be8fab42b070bb6b7cab62b48f0e66c4",
         repo_mapping = repo_mapping,
     )
 
-    stout_borrowed_ptr_repos(
+    maybe(
+        git_repository,
+        name = "com_github_nelhage_rules_boost",
+        commit = "32164a62e2472077320f48f52b8077207cd0c9c8",
+        remote = "https://github.com/nelhage/rules_boost",
+        shallow_since = "1650381330 -0700",
+    )
+
+    maybe(
+        http_archive,
+        name = "com_github_gflags_gflags",
+        url = "https://github.com/gflags/gflags/archive/v2.2.2.tar.gz",
+        sha256 = "34af2f15cf7367513b352bdcd2493ab14ce43692d2dcd9dfc499492966c64dcf",
+        strip_prefix = "gflags-2.2.2",
+    )
+
+    maybe(
+        http_archive,
+        name = "gtest",
+        sha256 = "9dc9157a9a1551ec7a7e43daea9a694a0bb5fb8bec81235d8a1e6ef64c716dcb",
+        strip_prefix = "googletest-release-1.10.0",
+        url = "https://github.com/google/googletest/archive/release-1.10.0.tar.gz",
+    )    
+
+    maybe(
+        http_archive,
+        name = "com_github_google_glog",
+        url = "https://github.com/google/glog/archive/refs/tags/v0.5.0.tar.gz",
+        sha256 = "eede71f28371bf39aa69b45de23b329d37214016e2055269b3b5e7cfd40b59f5",
+        strip_prefix = "glog-0.5.0",
+    )
+
+    maybe(
+        http_archive,
+        name = "com_google_protobuf",
+        strip_prefix = "protobuf-3.19.1",
+        urls = [
+            "https://mirror.bazel.build/github.com/protocolbuffers/protobuf/archive/v3.19.1.tar.gz",
+            "https://github.com/protocolbuffers/protobuf/archive/v3.19.1.tar.gz",
+        ],
+        sha256 = "87407cd28e7a9c95d9f61a098a53cf031109d451a7763e7dd1253abf8b4df422",
         repo_mapping = repo_mapping,
     )
 
-    stout_flags_repos(
-        repo_mapping = repo_mapping,
-    )
-
-    stout_notification_repos(
-        repo_mapping = repo_mapping,
-    )
-
-    stout_stateful_tally_repos(
-        repo_mapping = repo_mapping,
-    )
-
-    if "com_github_nelhage_rules_boost" not in native.existing_rules():
-        git_repository(
-            name = "com_github_nelhage_rules_boost",
-            commit = "32164a62e2472077320f48f52b8077207cd0c9c8",
-            remote = "https://github.com/nelhage/rules_boost",
-            shallow_since = "1650381330 -0700",
-        )
-
-    if "com_github_gflags_gflags" not in native.existing_rules():
-        http_archive(
-            name = "com_github_gflags_gflags",
-            url = "https://github.com/gflags/gflags/archive/v2.2.2.tar.gz",
-            sha256 = "34af2f15cf7367513b352bdcd2493ab14ce43692d2dcd9dfc499492966c64dcf",
-            strip_prefix = "gflags-2.2.2",
-        )
-
-    if "com_github_google_glog" not in native.existing_rules():
-        http_archive(
-            name = "com_github_google_glog",
-            url = "https://github.com/google/glog/archive/refs/tags/v0.5.0.tar.gz",
-            sha256 = "eede71f28371bf39aa69b45de23b329d37214016e2055269b3b5e7cfd40b59f5",
-            strip_prefix = "glog-0.5.0",
-        )
-
-    if external and "com_github_3rdparty_stout" not in native.existing_rules():
-        git_repository(
+    if external:
+        maybe(
+            git_repository,
             name = "com_github_3rdparty_stout",
             commit = "67e6b9b08f340e223b741130815d97cf20296c08",
             remote = "https://github.com/3rdparty/stout",

@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package stout.v1;
+
+import "google/protobuf/descriptor.proto";
+
+message Flag {
+  repeated string names = 1;
+  repeated string deprecated_names = 2;
+  string help = 3;
+  bool required = 4;
+  // TODO: bool deprecated = 5;
+  // TODO: bool aggregatable = 6;
+  // TODO: bool sensitive = 7;
+}
+
+extend google.protobuf.FieldOptions {
+  optional Flag flag = 12345;
+}
+
+message StandardFlags {
+  bool help = 1 [
+    (stout.v1.flag) = {
+      names: [ "help" ]
+      help: "whether or not to display this help message"
+    }
+  ];
+}
