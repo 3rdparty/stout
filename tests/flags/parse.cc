@@ -179,9 +179,9 @@ TEST(FlagsTest, ModifiedArgcArgv) {
 
   EXPECT_EQ(3, argc);
 
-  EXPECT_EQ("/path/to/program", argv[0]);
-  EXPECT_EQ("one", argv[1]);
-  EXPECT_EQ("two", argv[2]);
+  EXPECT_STREQ("/path/to/program", argv[0]);
+  EXPECT_STREQ("one", argv[1]);
+  EXPECT_STREQ("two", argv[2]);
 }
 
 TEST(FlagsTest, UnknownNonNegatedFlag) {
