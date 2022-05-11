@@ -3,8 +3,8 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
 cc_library(
     name = "atomic-backoff",
     hdrs = [
-        "include/stout/atomic-backoff.hpp",
-        "include/stout/thread.hpp",
+        "include/stout/atomic-backoff.h",
+        "include/stout/thread.h",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],
@@ -12,7 +12,7 @@ cc_library(
 
 cc_library(
     name = "stateful-tally",
-    hdrs = ["include/stout/stateful-tally.hpp"],
+    hdrs = ["include/stout/stateful-tally.h"],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
@@ -24,8 +24,8 @@ cc_library(
 cc_library(
     name = "borrowed-ptr",
     hdrs = [
-        "include/stout/borrowable.hpp",
-        "include/stout/borrowed_ptr.hpp",
+        "include/stout/borrowable.h",
+        "include/stout/borrowed_ptr.h",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],
@@ -37,10 +37,10 @@ cc_library(
 cc_library(
     name = "flags",
     srcs = [
-        "include/stout/flags/flags.cpp",
+        "include/stout/flags/flags.cc",
     ],
     hdrs = [
-        "include/stout/flags/flags.hpp",
+        "include/stout/flags/flags.h",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],
@@ -54,7 +54,7 @@ cc_library(
 
 cc_library(
     name = "notification",
-    hdrs = ["include/stout/notification.hpp"],
+    hdrs = ["include/stout/notification.h"],
     includes = ["include"],
     visibility = ["//visibility:public"],
 )
@@ -67,13 +67,13 @@ cc_library(
             "include/stout/**/*.hpp",
         ],
         [
-            "include/stout/flags/*.hpp",
-            "atomic-backoff.hpp",
-            "borrowable.hpp",
-            "borrowed_ptr.hpp",
-            "notification.hpp",
-            "stateful-tally.hpp",
-            "thread.hpp",
+            "include/stout/flags/*.h",
+            "atomic-backoff.h",
+            "borrowable.h",
+            "borrowed_ptr.h",
+            "notification.h",
+            "stateful-tally.h",
+            "thread.h",
         ],
     ),
     defines = [

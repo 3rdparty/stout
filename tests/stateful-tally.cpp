@@ -1,4 +1,4 @@
-#include "stout/stateful-tally.hpp"
+#include "stout/stateful-tally.h"
 
 #include "gtest/gtest.h"
 

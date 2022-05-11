@@ -1,4 +1,4 @@
-#include "stout/notification.hpp"
+#include "stout/notification.h"
 
 #include <string>
 #include <thread>

@@ -1,4 +1,4 @@
-#include "stout/flags/flags.hpp"
+#include "stout/flags/flags.h"
 
 #include "absl/strings/ascii.h"
 #include "absl/strings/escaping.h"

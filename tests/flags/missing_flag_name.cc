@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "stout/flags/flags.hpp"
+#include "stout/flags/flags.h"
 #include "tests/flags/test.pb.h"
 
 TEST(FlagsTest, MissingFlagName) {
