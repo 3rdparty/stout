@@ -14,10 +14,10 @@
 
 #include <string>
 
-#include "stout/error.hpp"
-#include "stout/stringify.hpp"
-#include "stout/try.hpp"
-#include "stout/windows.hpp"
+#include "stout/error.h"
+#include "stout/stringify.h"
+#include "stout/try.h"
+#include "stout/windows.h"
 
 ////////////////////////////////////////////////////////////////////////
 

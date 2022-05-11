@@ -14,12 +14,12 @@
 
 #include <string>
 
-#include "stout/internal/windows/attributes.hpp"
-#include "stout/internal/windows/longpath.hpp"
-#include "stout/nothing.hpp"
-#include "stout/os/mkdir.hpp"
-#include "stout/try.hpp"
-#include "stout/windows.hpp"
+#include "stout/internal/windows/attributes.h"
+#include "stout/internal/windows/longpath.h"
+#include "stout/nothing.h"
+#include "stout/os/mkdir.h"
+#include "stout/try.h"
+#include "stout/windows.h"
 
 ////////////////////////////////////////////////////////////////////////
 

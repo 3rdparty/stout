@@ -14,11 +14,11 @@
 
 #include <processthreadsapi.h>
 
-#include "stout/error.hpp"
-#include "stout/nothing.hpp"
-#include "stout/os/int_fd.hpp"
-#include "stout/try.hpp"
-#include "stout/windows.hpp"
+#include "stout/error.h"
+#include "stout/nothing.h"
+#include "stout/os/int_fd.h"
+#include "stout/try.h"
+#include "stout/windows.h"
 
 ////////////////////////////////////////////////////////////////////////
 

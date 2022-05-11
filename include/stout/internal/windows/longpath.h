@@ -16,9 +16,9 @@
 
 #include <string>
 
-#include "stout/os/constants.hpp"
-#include "stout/path.hpp"
-#include "stout/stringify.hpp"
+#include "stout/os/constants.h"
+#include "stout/path.h"
+#include "stout/stringify.h"
 
 ////////////////////////////////////////////////////////////////////////
 

@@ -18,7 +18,7 @@
 
 #include <sys/types.h>
 
-#include "stout/windows.hpp"
+#include "stout/windows.h"
 
 ////////////////////////////////////////////////////////////////////////
 

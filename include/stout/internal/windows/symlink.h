@@ -14,10 +14,10 @@
 
 #include <string>
 
-#include "stout/internal/windows/longpath.hpp"
-#include "stout/internal/windows/reparsepoint.hpp"
-#include "stout/try.hpp"
-#include "stout/windows.hpp"
+#include "stout/internal/windows/longpath.h"
+#include "stout/internal/windows/reparsepoint.h"
+#include "stout/try.h"
+#include "stout/windows.h"
 
 ////////////////////////////////////////////////////////////////////////
 

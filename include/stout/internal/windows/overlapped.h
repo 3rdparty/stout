@@ -15,9 +15,9 @@
 #include <climits>
 #include <type_traits>
 
-#include "stout/os/int_fd.hpp"
-#include "stout/result.hpp"
-#include "stout/windows.hpp"
+#include "stout/os/int_fd.h"
+#include "stout/result.h"
+#include "stout/windows.h"
 
 ////////////////////////////////////////////////////////////////////////
 
