@@ -4,7 +4,7 @@
 #include <utility> // For 'std::pair'.
 
 #include "glog/logging.h"
-#include "stout/atomic-backoff.hpp"
+#include "stout/atomic-backoff.h"
 
 ////////////////////////////////////////////////////////////////////////
 

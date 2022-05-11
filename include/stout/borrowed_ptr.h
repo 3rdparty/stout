@@ -3,7 +3,7 @@
 #include <functional>
 
 #include "glog/logging.h"
-#include "stout/stateful-tally.hpp"
+#include "stout/stateful-tally.h"
 
 ////////////////////////////////////////////////////////////////////////
 

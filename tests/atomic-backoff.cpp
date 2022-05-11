@@ -1,4 +1,4 @@
-#include "stout/atomic-backoff.hpp"
+#include "stout/atomic-backoff.h"
 
 #include "gtest/gtest.h"
 

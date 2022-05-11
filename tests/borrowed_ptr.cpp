@@ -1,4 +1,4 @@
-#include "stout/borrowed_ptr.hpp"
+#include "stout/borrowed_ptr.h"
 
 #include <atomic>
 #include <string>
@@ -7,7 +7,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "stout/borrowable.hpp"
+#include "stout/borrowable.h"
 
 using std::atomic;
 using std::function;
