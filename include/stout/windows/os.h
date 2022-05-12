@@ -23,22 +23,22 @@
 #include <string>
 #include <vector>
 
-#include "stout/bytes.hpp"
-#include "stout/duration.hpp"
-#include "stout/none.hpp"
-#include "stout/nothing.hpp"
-#include "stout/option.hpp"
-#include "stout/os/getenv.hpp"
-#include "stout/os/os.hpp"
-#include "stout/os/process.hpp"
-#include "stout/os/raw/environment.hpp"
-#include "stout/os/read.hpp"
-#include "stout/path.hpp"
-#include "stout/stringify.hpp"
-#include "stout/strings.hpp"
-#include "stout/try.hpp"
-#include "stout/version.hpp"
-#include "stout/windows.hpp"
+#include "stout/bytes.h"
+#include "stout/duration.h"
+#include "stout/none.h"
+#include "stout/nothing.h"
+#include "stout/option.h"
+#include "stout/os/getenv.h"
+#include "stout/os/os.h"
+#include "stout/os/process.h"
+#include "stout/os/raw/environment.h"
+#include "stout/os/read.h"
+#include "stout/path.h"
+#include "stout/stringify.h"
+#include "stout/strings.h"
+#include "stout/try.h"
+#include "stout/version.h"
+#include "stout/windows.h"
 
 // NOTE: These system headers must be included after `stout/windows.hpp`
 // as they may include `Windows.h`. See comments in `stout/windows.hpp`

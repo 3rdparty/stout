@@ -14,14 +14,14 @@
 
 #include <string>
 
-#include "stout/bytes.hpp"
-#include "stout/error.hpp"
-#include "stout/internal/windows/longpath.hpp"
-#include "stout/internal/windows/symlink.hpp"
-#include "stout/nothing.hpp"
-#include "stout/os/realpath.hpp"
-#include "stout/try.hpp"
-#include "stout/windows.hpp"
+#include "stout/bytes.h"
+#include "stout/error.h"
+#include "stout/internal/windows/longpath.h"
+#include "stout/internal/windows/symlink.h"
+#include "stout/nothing.h"
+#include "stout/os/realpath.h"
+#include "stout/try.h"
+#include "stout/windows.h"
 
 ////////////////////////////////////////////////////////////////////////
 

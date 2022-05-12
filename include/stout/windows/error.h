@@ -16,8 +16,8 @@
 
 #pragma once
 
-#include "stout/errorbase.hpp"
-#include "stout/windows.hpp"
+#include "stout/errorbase.h"
+#include "stout/windows.h"
 
 ////////////////////////////////////////////////////////////////////////
 

@@ -14,12 +14,12 @@
 
 #include <string>
 
-#include "stout/error.hpp"
-#include "stout/foreach.hpp"
-#include "stout/none.hpp"
-#include "stout/result.hpp"
-#include "stout/try.hpp"
-#include "stout/windows.hpp> // For `iphlpapi.h`.
+#include "stout/error.h"
+#include "stout/foreach.h"
+#include "stout/none.h"
+#include "stout/result.h"
+#include "stout/try.h"
+#include "stout/windows.h" // For `iphlpapi.h`.
 
 ////////////////////////////////////////////////////////////////////////
 

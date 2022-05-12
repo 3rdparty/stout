@@ -16,13 +16,13 @@
 #include <string>
 #include <vector>
 
-#include "stout/error.hpp"
-#include "stout/foreach.hpp"
-#include "stout/nothing.hpp"
-#include "stout/os.hpp"
-#include "stout/stringify.hpp"
-#include "stout/try.hpp"
-#include "stout/windows.hpp" // For `iphlpapi.h`.
+#include "stout/error.h"
+#include "stout/foreach.h"
+#include "stout/nothing.h"
+#include "stout/os.h"
+#include "stout/stringify.h"
+#include "stout/try.h"
+#include "stout/windows.h" // For `iphlpapi.h`.
 
 ////////////////////////////////////////////////////////////////////////
 
