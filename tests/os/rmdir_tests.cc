@@ -15,15 +15,15 @@
 #include <set>
 #include <string>
 
-#include "stout/fs.hpp"
-#include "stout/os.hpp"
-#include "stout/os/getcwd.hpp"
-#include "stout/os/ls.hpp"
-#include "stout/os/mkdir.hpp"
-#include "stout/os/stat.hpp"
-#include "stout/os/touch.hpp"
-#include "stout/path.hpp"
-#include "stout/tests/utils.hpp"
+#include "stout/fs.h"
+#include "stout/os.h"
+#include "stout/os/getcwd.h"
+#include "stout/os/ls.h"
+#include "stout/os/mkdir.h"
+#include "stout/os/stat.h"
+#include "stout/os/touch.h"
+#include "stout/path.h"
+#include "stout/tests/utils.h"
 
 using std::list;
 using std::set;

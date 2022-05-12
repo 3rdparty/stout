@@ -16,8 +16,8 @@
 
 #include <string>
 
-#include "stout/gtest.hpp"
-#include "stout/os.hpp"
+#include "stout/gtest.h"
+#include "stout/os.h"
 
 using std::string;
 

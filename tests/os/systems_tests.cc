@@ -12,7 +12,7 @@
 
 #include <stout/os.hpp>
 
-#include "stout/tests/utils.hpp"
+#include "stout/tests/utils.h"
 
 using std::string;
 

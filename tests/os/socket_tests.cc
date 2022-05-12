@@ -10,9 +10,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
-#include "stout/os/int_fd.hpp"
-#include "stout/os/socket.hpp"
-#include "stout/tests/utils.hpp"
+#include "stout/os/int_fd.h"
+#include "stout/os/socket.h"
+#include "stout/tests/utils.h"
 
 using std::string;
 

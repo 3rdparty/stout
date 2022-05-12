@@ -15,8 +15,8 @@
 
 #include <limits>
 
-#include "stout/os.hpp"
-#include "stout/os/strerror.hpp"
+#include "stout/os.h"
+#include "stout/os/strerror.h"
 
 using std::string;
 

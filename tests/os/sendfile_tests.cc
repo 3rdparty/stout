@@ -15,17 +15,17 @@
 
 #include <string>
 
-#include "stout/gtest.hpp"
-#include "stout/os.hpp"
-#include "stout/path.hpp"
+#include "stout/gtest.h"
+#include "stout/os.h"
+#include "stout/path.h"
 
 #ifdef _WIN32
-#include "stout/windows.hpp"
+#include "stout/windows.h"
 #endif // _WIN32
 
-#include "stout/os/sendfile.hpp"
-#include "stout/os/write.hpp"
-#include "stout/tests/utils.hpp"
+#include "stout/os/sendfile.h"
+#include "stout/os/write.h"
+#include "stout/tests/utils.h"
 
 using std::string;
 
