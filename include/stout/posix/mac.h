@@ -15,10 +15,10 @@
 #include <ifaddrs.h>
 #include <sys/types.h>
 
-#include "stout/error.hpp"
-#include "stout/none.hpp"
-#include "stout/result.hpp"
-#include "stout/stringify.hpp"
+#include "stout/error.h"
+#include "stout/none.h"
+#include "stout/result.h"
+#include "stout/stringify.h"
 
 ////////////////////////////////////////////////////////////////////////
 

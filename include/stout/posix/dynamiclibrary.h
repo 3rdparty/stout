@@ -16,9 +16,9 @@
 
 #include <string>
 
-#include "stout/nothing.hpp"
-#include "stout/option.hpp"
-#include "stout/try.hpp"
+#include "stout/nothing.h"
+#include "stout/option.h"
+#include "stout/try.h"
 
 ////////////////////////////////////////////////////////////////////////
 

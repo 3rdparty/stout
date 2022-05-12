@@ -17,11 +17,11 @@
 
 #include <string>
 
-#include "stout/bytes.hpp"
-#include "stout/error.hpp"
-#include "stout/nothing.hpp"
-#include "stout/os.hpp"
-#include "stout/try.hpp"
+#include "stout/bytes.h"
+#include "stout/error.h"
+#include "stout/nothing.h"
+#include "stout/os.h"
+#include "stout/try.h"
 
 ////////////////////////////////////////////////////////////////////////
 
