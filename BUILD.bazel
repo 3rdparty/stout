@@ -63,8 +63,8 @@ cc_library(
     name = "stout",
     hdrs = glob(
         [
-            "include/stout/*.hpp",
-            "include/stout/**/*.hpp",
+            "include/stout/*.h",
+            "include/stout/**/*.h",
         ],
         [
             "include/stout/flags/*.h",
