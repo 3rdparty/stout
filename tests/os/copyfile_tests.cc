@@ -12,13 +12,13 @@
 
 #include <string>
 
-#include "stout/os.hpp"
-#include "stout/os/copyfile.hpp"
-#include "stout/os/getcwd.hpp"
-#include "stout/os/mkdir.hpp"
-#include "stout/os/write.hpp"
-#include "stout/path.hpp"
-#include "stout/tests/utils.hpp"
+#include "stout/os.h"
+#include "stout/os/copyfile.h"
+#include "stout/os/getcwd.h"
+#include "stout/os/mkdir.h"
+#include "stout/os/write.h"
+#include "stout/path.h"
+#include "stout/tests/utils.h"
 
 using std::string;
 

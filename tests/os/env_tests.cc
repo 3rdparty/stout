@@ -12,9 +12,9 @@
 
 #include <gtest/gtest.h>
 
-#include "stout/os.hpp"
-#include "stout/os/environment.hpp"
-#include "stout/tests/utils.hpp"
+#include "stout/os.h"
+#include "stout/os/environment.h"
+#include "stout/tests/utils.h"
 
 using std::string;
 

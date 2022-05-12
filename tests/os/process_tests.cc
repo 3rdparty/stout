@@ -18,13 +18,13 @@
 
 #include <set>
 
-#include "stout/os.hpp"
+#include "stout/os.h"
 
 #ifndef _WIN32
-#include "stout/os/fork.hpp"
+#include "stout/os/fork.h"
 #endif // _WIN32
-#include "stout/os/pstree.hpp"
-#include "stout/tests/utils.hpp"
+#include "stout/os/pstree.h"
+#include "stout/tests/utils.h"
 
 
 class ProcessTest : public TemporaryDirectoryTest {};
