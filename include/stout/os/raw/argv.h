@@ -17,7 +17,7 @@
 #include <string>
 #include <vector>
 
-#include "stout/foreach.hpp"
+#include "stout/foreach.h"
 
 ////////////////////////////////////////////////////////////////////////
 
