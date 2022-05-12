@@ -16,9 +16,9 @@
 
 #include <string>
 
-#include "stout/foreach.hpp"
-#include "stout/json.hpp"
-#include "stout/stringify.hpp"
+#include "stout/foreach.h"
+#include "stout/json.h"
+#include "stout/stringify.h"
 
 #ifdef __APPLE__
 #include <crt_externs.h> // For _NSGetEnviron().
