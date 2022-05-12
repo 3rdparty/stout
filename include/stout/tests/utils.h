@@ -17,16 +17,16 @@
 #include <filesystem>
 #include <string>
 
-#include "stout/gtest.hpp"
-#include "stout/os/chdir.hpp"
-#include "stout/os/getcwd.hpp"
-#include "stout/os/mkdtemp.hpp"
-#include "stout/os/realpath.hpp"
-#include "stout/os/rmdir.hpp"
-#include "stout/try.hpp"
+#include "stout/gtest.h"
+#include "stout/os/chdir.h"
+#include "stout/os/getcwd.h"
+#include "stout/os/mkdtemp.h"
+#include "stout/os/realpath.h"
+#include "stout/os/rmdir.h"
+#include "stout/try.h"
 
 #if __FreeBSD__
-#include "stout/os/sysctl.hpp"
+#include "stout/os/sysctl.h"
 #endif
 
 ////////////////////////////////////////////////////////////////////////

@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-#include "stout/strings.hpp"
+#include "stout/strings.h"
 
 ////////////////////////////////////////////////////////////////////////
 
