@@ -17,9 +17,9 @@
 #include <set>
 #include <string>
 
-#include "stout/error.hpp"
-#include "stout/nothing.hpp"
-#include "stout/try.hpp"
+#include "stout/error.h"
+#include "stout/nothing.h"
+#include "stout/try.h"
 
 ////////////////////////////////////////////////////////////////////////
 

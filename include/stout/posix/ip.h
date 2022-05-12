@@ -17,10 +17,10 @@
 
 #include <string>
 
-#include "stout/error.hpp"
-#include "stout/none.hpp"
-#include "stout/result.hpp"
-#include "stout/try.hpp"
+#include "stout/error.h"
+#include "stout/none.h"
+#include "stout/result.h"
+#include "stout/try.h"
 
 ////////////////////////////////////////////////////////////////////////
 

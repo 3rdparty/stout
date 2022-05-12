@@ -51,40 +51,40 @@
 #include <string>
 #include <vector>
 
-#include "stout/os/close.hpp"
-#include "stout/os/environment.hpp"
-#include "stout/os/fcntl.hpp"
-#include "stout/os/find.hpp"
-#include "stout/os/fork.hpp"
-#include "stout/os/getcwd.hpp"
-#include "stout/os/killtree.hpp"
+#include "stout/os/close.h"
+#include "stout/os/environment.h"
+#include "stout/os/fcntl.h"
+#include "stout/os/find.h"
+#include "stout/os/fork.h"
+#include "stout/os/getcwd.h"
+#include "stout/os/killtree.h"
 #include "stout/os/os.hpp"
-#include "stout/os/permissions.hpp"
-#include "stout/os/read.hpp"
-#include "stout/os/rename.hpp"
-#include "stout/os/sendfile.hpp"
-#include "stout/os/signals.hpp"
-#include "stout/os/strerror.hpp"
-#include "stout/os/write.hpp"
-#include "stout/synchronized.hpp"
+#include "stout/os/permissions.h"
+#include "stout/os/read.h"
+#include "stout/os/rename.h"
+#include "stout/os/sendfile.h"
+#include "stout/os/signals.h"
+#include "stout/os/strerror.h"
+#include "stout/os/write.h"
+#include "stout/synchronized.h"
 
 #ifdef __FreeBSD__
-#include "stout/os/freebsd.hpp"
+#include "stout/os/freebsd.h"
 #endif
 #ifdef __linux__
-#include "stout/os/linux.hpp"
+#include "stout/os/linux.h"
 #endif // __linux__
-#include "stout/os/open.hpp"
+#include "stout/os/open.h"
 #ifdef __APPLE__
-#include "stout/os/osx.hpp"
+#include "stout/os/osx.h"
 #endif // __APPLE__
 #ifdef __sun
-#include "stout/os/sunos.hpp"
+#include "stout/os/sunos.h"
 #endif // __sun
 
-#include "stout/os/posix/chown.hpp"
-#include "stout/os/raw/environment.hpp"
-#include "stout/os/shell.hpp"
+#include "stout/os/posix/chown.h"
+#include "stout/os/raw/environment.h"
+#include "stout/os/shell.h"
 
 ////////////////////////////////////////////////////////////////////////
 
