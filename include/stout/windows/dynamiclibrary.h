@@ -14,11 +14,11 @@
 
 #include <string>
 
-#include "stout/error.hpp"
-#include "stout/nothing.hpp"
-#include "stout/option.hpp"
-#include "stout/stringify.hpp"
-#include "stout/try.hpp"
+#include "stout/error.h"
+#include "stout/nothing.h"
+#include "stout/option.h"
+#include "stout/stringify.h"
+#include "stout/try.h"
 
 ////////////////////////////////////////////////////////////////////////
 

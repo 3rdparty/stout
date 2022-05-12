@@ -15,11 +15,11 @@
 #include <algorithm>
 #include <vector>
 
-#include "stout/error.hpp"
-#include "stout/none.hpp"
-#include "stout/result.hpp"
-#include "stout/stringify.hpp"
-#include "stout/windows.hpp> // For `iphlpapi.h`.
+#include "stout/error.h"
+#include "stout/none.h"
+#include "stout/result.h"
+#include "stout/stringify.h"
+#include "stout/windows.h" // For `iphlpapi.h`.
 
 ////////////////////////////////////////////////////////////////////////
 
