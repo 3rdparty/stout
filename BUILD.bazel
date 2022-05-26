@@ -71,6 +71,7 @@ cc_library(
             "atomic-backoff.h",
             "borrowable.h",
             "borrowed_ptr.h",
+            "copy.h",
             "notification.h",
             "stateful-tally.h",
             "thread.h",
