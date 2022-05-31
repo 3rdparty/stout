@@ -356,7 +356,7 @@ class borrowed_ref final {
     T* t = nullptr;
     std::swap(borrowable, borrowable_);
     std::swap(t, t_);
-    return borrowed_ptr<U>(borrowable, t);
+    return borrowed_ref<U>(*CHECK_NOTNULL(borrowable), *CHECK_NOTNULL(t));
   }
 
   template <

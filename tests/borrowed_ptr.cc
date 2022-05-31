@@ -206,6 +206,74 @@ TEST(BorrowTest, MultipleConstBorrows) {
 }
 
 
+TEST(BorrowTest, BorrowedRefUpcast) {
+  struct Base {
+    int i = 42;
+  };
+
+  struct Derived : public Base {};
+
+  Borrowable<Derived> derived;
+
+  MockFunction<void()> mock;
+
+  EXPECT_CALL(mock, Call())
+      .Times(1);
+
+  borrowed_ref<Base> base = derived.Borrow();
+
+  base->i++;
+
+  EXPECT_EQ(43, base->i);
+
+  derived.Watch(mock.AsStdFunction());
+}
+
+
+TEST(BorrowTest, BorrowedRefConstUpcast) {
+  struct Base {
+    int i = 42;
+  };
+
+  struct Derived : public Base {};
+
+  Borrowable<Derived> derived;
+
+  MockFunction<void()> mock;
+
+  EXPECT_CALL(mock, Call())
+      .Times(1);
+
+  borrowed_ref<const Base> base = derived.Borrow();
+
+  EXPECT_EQ(42, base->i);
+
+  derived.Watch(mock.AsStdFunction());
+}
+
+
+TEST(BorrowTest, ConstBorrowedRefUpcast) {
+  struct Base {
+    int i = 42;
+  };
+
+  struct Derived : public Base {};
+
+  Borrowable<const Derived> derived;
+
+  MockFunction<void()> mock;
+
+  EXPECT_CALL(mock, Call())
+      .Times(1);
+
+  borrowed_ref<const Base> base = derived.Borrow();
+
+  EXPECT_EQ(42, base->i);
+
+  derived.Watch(mock.AsStdFunction());
+}
+
+
 TEST(BorrowTest, BorrowedPtrUpcast) {
   struct Base {
     int i = 42;
