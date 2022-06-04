@@ -3,7 +3,10 @@ load("@rules_proto//proto:defs.bzl", "proto_library")
 
 proto_library(
     name = "flag_proto",
-    srcs = [":flag.proto"],
+    srcs = [
+        ":flag.proto",
+        ":subcommand.proto",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         # Well known protos should be included as deps in the

@@ -31,6 +31,7 @@ cc_test(
         "missing_flag_name.cc",
         "overload_parsing.cc",
         "parse.cc",
+        "subcommand_flags.cc",
         "validate.cc",
     ],
     deps = [

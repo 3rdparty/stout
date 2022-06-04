@@ -7,7 +7,7 @@
 TEST(FlagsTest, Validate) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags)
+  auto parser = stout::flags::Parser::Builder(flags)
                     .Validate(
                         "'bar' must be true",
                         [](const auto& flags) {

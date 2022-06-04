@@ -7,7 +7,7 @@
 TEST(FlagsTest, Help) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags).Build();
+  auto parser = stout::flags::Parser::Builder(flags).Build();
 
   std::array arguments = {
       "/path/to/program",

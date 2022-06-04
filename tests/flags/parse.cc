@@ -7,7 +7,7 @@
 TEST(FlagsTest, ParseRequired) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags).Build();
+  auto parser = stout::flags::Parser::Builder(flags).Build();
 
   std::array arguments = {
       "/path/to/program",
@@ -30,7 +30,7 @@ TEST(FlagsTest, ParseRequired) {
 TEST(FlagsTest, ParseStringWithSingleQuotes) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags).Build();
+  auto parser = stout::flags::Parser::Builder(flags).Build();
 
   std::array arguments = {
       "/path/to/program",
@@ -48,7 +48,7 @@ TEST(FlagsTest, ParseStringWithSingleQuotes) {
 TEST(FlagsTest, ParseStringWithDoubleQuotes) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags).Build();
+  auto parser = stout::flags::Parser::Builder(flags).Build();
 
   std::array arguments = {
       "/path/to/program",
@@ -66,7 +66,7 @@ TEST(FlagsTest, ParseStringWithDoubleQuotes) {
 TEST(FlagsTest, ParseStringWithoutSingleOrDoubleQuotes) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags).Build();
+  auto parser = stout::flags::Parser::Builder(flags).Build();
 
   std::array arguments = {
       "/path/to/program",
@@ -84,7 +84,7 @@ TEST(FlagsTest, ParseStringWithoutSingleOrDoubleQuotes) {
 TEST(FlagsTest, ParseSpaceStringWithoutAnyQuotes) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags).Build();
+  auto parser = stout::flags::Parser::Builder(flags).Build();
 
   std::array arguments = {
       "/path/to/program",
@@ -102,7 +102,7 @@ TEST(FlagsTest, ParseSpaceStringWithoutAnyQuotes) {
 TEST(FlagsTest, ParseImplicitBoolean) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags).Build();
+  auto parser = stout::flags::Parser::Builder(flags).Build();
 
   std::array arguments = {
       "/path/to/program",
@@ -121,7 +121,7 @@ TEST(FlagsTest, ParseImplicitBoolean) {
 TEST(FlagsTest, ParseExplicitBoolean) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags).Build();
+  auto parser = stout::flags::Parser::Builder(flags).Build();
 
   std::array arguments = {
       "/path/to/program",
@@ -140,7 +140,7 @@ TEST(FlagsTest, ParseExplicitBoolean) {
 TEST(FlagsTest, ParseNegatedBoolean) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags).Build();
+  auto parser = stout::flags::Parser::Builder(flags).Build();
 
   std::array arguments = {
       "/path/to/program",
@@ -159,14 +159,12 @@ TEST(FlagsTest, ParseNegatedBoolean) {
 TEST(FlagsTest, ModifiedArgcArgv) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags).Build();
+  auto parser = stout::flags::Parser::Builder(flags).Build();
 
   std::array arguments = {
       "/path/to/program",
       "--foo='hello world'",
-      "one",
       "--bar",
-      "two",
   };
 
   int argc = arguments.size();
@@ -177,17 +175,15 @@ TEST(FlagsTest, ModifiedArgcArgv) {
   EXPECT_TRUE(flags.bar());
   EXPECT_EQ("'hello world'", flags.foo());
 
-  EXPECT_EQ(3, argc);
+  EXPECT_EQ(1, argc);
 
-  EXPECT_STREQ("/path/to/program", argv[0]);
-  EXPECT_STREQ("one", argv[1]);
-  EXPECT_STREQ("two", argv[2]);
+  EXPECT_EQ("/path/to/program", argv[0]);
 }
 
 TEST(FlagsTest, UnknownNonNegatedFlag) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags).Build();
+  auto parser = stout::flags::Parser::Builder(flags).Build();
 
   std::array arguments = {
       "/path/to/program",
@@ -212,7 +208,7 @@ TEST(FlagsTest, UnknownNonNegatedFlag) {
 TEST(FlagsTest, UnknownNegatedFlag) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags).Build();
+  auto parser = stout::flags::Parser::Builder(flags).Build();
 
   std::array arguments = {
       "/path/to/program",
@@ -237,7 +233,7 @@ TEST(FlagsTest, UnknownNegatedFlag) {
 TEST(FlagsTest, IncorrectNegatedBooleanFlag) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags).Build();
+  auto parser = stout::flags::Parser::Builder(flags).Build();
 
   std::array arguments = {
       "/path/to/program",
@@ -263,7 +259,7 @@ TEST(FlagsTest, IncorrectNegatedBooleanFlag) {
 TEST(FlagsTest, NonBooleanFlagWithPrefix) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags).Build();
+  auto parser = stout::flags::Parser::Builder(flags).Build();
 
   std::array arguments = {
       "/path/to/program",
@@ -289,7 +285,7 @@ TEST(FlagsTest, NonBooleanFlagWithPrefix) {
 TEST(FlagsTest, NonBooleanFlagWithEmptyValue) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags).Build();
+  auto parser = stout::flags::Parser::Builder(flags).Build();
 
   std::array arguments = {
       "/path/to/program",
@@ -315,7 +311,7 @@ TEST(FlagsTest, NonBooleanFlagWithEmptyValue) {
 TEST(FlagsTest, ProtobufTextFormatParserError) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags).Build();
+  auto parser = stout::flags::Parser::Builder(flags).Build();
 
   std::array arguments = {
       "/path/to/program",
