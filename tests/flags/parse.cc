@@ -60,7 +60,7 @@ TEST(FlagsTest, ParseStringWithDoubleQuotes) {
 
   parser.Parse(&argc, &argv);
 
-  EXPECT_EQ("\"hello world\"", flags.foo());
+  EXPECT_STREQ("\"hello world\"", flags.foo().c_str());
 }
 
 TEST(FlagsTest, ParseStringWithoutSingleOrDoubleQuotes) {
@@ -78,7 +78,7 @@ TEST(FlagsTest, ParseStringWithoutSingleOrDoubleQuotes) {
 
   parser.Parse(&argc, &argv);
 
-  EXPECT_EQ("hello", flags.foo());
+  EXPECT_STREQ("hello", flags.foo().c_str());
 }
 
 TEST(FlagsTest, ParseSpaceStringWithoutAnyQuotes) {
@@ -96,7 +96,7 @@ TEST(FlagsTest, ParseSpaceStringWithoutAnyQuotes) {
 
   parser.Parse(&argc, &argv);
 
-  EXPECT_EQ("hello world", flags.foo());
+  EXPECT_STREQ("hello world", flags.foo().c_str());
 }
 
 TEST(FlagsTest, ParseImplicitBoolean) {
@@ -173,11 +173,11 @@ TEST(FlagsTest, ModifiedArgcArgv) {
   parser.Parse(&argc, &argv);
 
   EXPECT_TRUE(flags.bar());
-  EXPECT_EQ("'hello world'", flags.foo());
+  EXPECT_STREQ("'hello world'", flags.foo().c_str());
 
   EXPECT_EQ(1, argc);
 
-  EXPECT_EQ("/path/to/program", argv[0]);
+  EXPECT_STREQ("/path/to/program", argv[0]);
 }
 
 TEST(FlagsTest, UnknownNonNegatedFlag) {

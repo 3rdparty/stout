@@ -156,7 +156,7 @@ void Parser::AddFieldsAndSubcommandsOrExit(google::protobuf::Message& message) {
 
 ////////////////////////////////////////////////////////////////////////
 
-Parser* Parser::TryLookupParserForSubcommand(const std::string& name) {
+Parser* Parser::TryLookupNestedParserForSubcommand(const std::string& name) {
   auto iterator = subcommand_fields_.find(name);
   if (iterator != subcommand_fields_.end()) {
     const google::protobuf::FieldDescriptor* field = iterator->second;
@@ -225,7 +225,7 @@ void Parser::Parse(int* argc, const char*** argv) {
     // argument.
     if (arg.find("--") != 0) {
       // Check if it's a subcommand.
-      Parser* parser = TryLookupParserForSubcommand(arg);
+      Parser* parser = TryLookupNestedParserForSubcommand(arg);
       if (parser != nullptr) {
         // Keep the number of arguments remained before we call 'nested'
         // Parse() function including subcommand name.
