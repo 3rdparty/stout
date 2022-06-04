@@ -47,7 +47,7 @@ class Parser {
   // Helper that fill fields_ and messages_ helpers.
   void AddFieldsAndSubcommandsOrExit(google::protobuf::Message& message);
 
-  Parser* TryLookupParserForSubcommand(const std::string& name);
+  Parser* TryLookupNestedParserForSubcommand(const std::string& name);
 
   // Helper that gets 'google::protobuf::Message*' that we want to
   // populate for the specified field descriptor.
