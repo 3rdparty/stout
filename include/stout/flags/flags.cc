@@ -18,63 +18,185 @@ namespace stout::flags {
 
 ////////////////////////////////////////////////////////////////////////
 
-void Parser::AddAllOrExit(google::protobuf::Message* message) {
-  const auto* descriptor = message->GetDescriptor();
+void Parser::AddFieldsAndSubcommandsOrExit(google::protobuf::Message& message) {
+  const auto* descriptor = message.GetDescriptor();
 
   for (int i = 0; i < descriptor->field_count(); i++) {
     const auto* field = descriptor->field(i);
 
-    const auto& flag = field->options().GetExtension(stout::v1::flag);
+    // We need this descriptor for the subcommand's logic.
+    const google::protobuf::OneofDescriptor* oneof =
+        field->real_containing_oneof();
 
-    if (flag.names().empty()) {
-      std::cerr
-          << "Missing at least one flag name in 'names' for field '"
-          << field->full_name() << "'"
-          << std::endl;
-      std::exit(1);
-    }
+    // Check if the current field of the message is in 'oneof'.
+    if (oneof != nullptr) {
+      // Check if the name of 'oneof' is 'subcommand'. If no then exit
+      // with an error.
+      if (oneof->name() != "subcommand") {
+        std::cerr << "'oneof' field must have 'subcommand' name. "
+                  << "Other names are illegal"
+                  << std::endl;
+        exit(1);
+      } else {
+        // Subcommands must have stout.v1.subcommand option.
+        if (!field->options().HasExtension(stout::v1::subcommand)) {
+          std::cerr << "Every field of the 'oneof subcommand' must "
+                       "be annotated with a stout.v1.subcommand option"
+                    << std::endl;
+          exit(1);
+        } else {
+          // Check for missing 'names' and 'help'.
+          const auto& subcommand =
+              field->options().GetExtension(stout::v1::subcommand);
 
-    if (flag.help().empty()) {
-      std::cerr
-          << "Missing flag 'help' for field '" << field->full_name() << "'"
-          << std::endl;
-      std::exit(1);
-    }
+          if (subcommand.names().empty()) {
+            std::cerr
+                << "Missing at least one subcommand name in 'names' "
+                << "for field '" << field->full_name() << "'"
+                << std::endl;
+            std::exit(1);
+          }
 
-    for (const auto& name : flag.names()) {
-      AddOrExit(name, field, message);
-    }
+          if (subcommand.help().empty()) {
+            std::cerr
+                << "Missing subcommand 'help' for field '"
+                << field->full_name() << "'"
+                << std::endl;
+            std::exit(1);
+          }
 
-    for (const auto& name : flag.deprecated_names()) {
-      AddOrExit(name, field, message);
+          for (const auto& name : subcommand.names()) {
+            auto [_, inserted] = subcommand_fields_.emplace(name, field);
+
+            if (!inserted) {
+              std::cerr << "Encountered duplicate subcommand name "
+                        << "'" << name << "' for message '"
+                        << message.GetTypeName() << "'"
+                        << std::endl;
+              std::exit(1);
+            }
+          }
+
+          for (const auto& name : subcommand.deprecated_names()) {
+            auto [_, inserted] = subcommand_fields_.emplace(name, field);
+
+            if (!inserted) {
+              std::cerr << "Encountered duplicate (deprecated) subcommand name "
+                        << "'" << name << "' for message '"
+                        << message.GetTypeName() << "'"
+                        << std::endl;
+              std::exit(1);
+            }
+          }
+
+          // Create nested parser and store it to the 'nested_parsers_'.
+          auto [_, inserted] = nested_parsers_.emplace(
+              field,
+              std::make_unique<Parser>(
+                  Parser::Builder(
+                      *message.GetReflection()->MutableMessage(&message, field),
+                      true)
+                      .Build()));
+
+          CHECK(inserted);
+        }
+      }
+    } else {
+      if (field->options().HasExtension(stout::v1::subcommand)) {
+        std::cerr << "stout.v1.subcommand option should be annotated"
+                  << " on fields that are only inside 'oneof subcommand'"
+                  << std::endl;
+        exit(1);
+      }
+
+      const auto& flag = field->options().GetExtension(stout::v1::flag);
+
+      if (flag.names().empty()) {
+        std::cerr
+            << "Missing at least one flag name in 'names' for field '"
+            << field->full_name() << "'"
+            << std::endl;
+        std::exit(1);
+      }
+
+      if (flag.help().empty()) {
+        std::cerr
+            << "Missing flag 'help' for field '"
+            << field->full_name() << "'"
+            << std::endl;
+        std::exit(1);
+      }
+
+      for (const auto& name : flag.names()) {
+        auto [_, inserted] = fields_.emplace(name, field);
+
+        if (!inserted) {
+          std::cerr << "Encountered duplicate flag name "
+                    << "'" << name << "' for message '"
+                    << message.GetTypeName() << "'"
+                    << std::endl;
+          std::exit(1);
+        }
+      }
+
+      for (const auto& name : flag.deprecated_names()) {
+        auto [_, inserted] = fields_.emplace(name, field);
+
+        if (!inserted) {
+          std::cerr << "Encountered duplicate (deprecated) flag name "
+                    << "'" << name << "' for message '"
+                    << message.GetTypeName() << "'"
+                    << std::endl;
+          std::exit(1);
+        }
+      }
     }
   }
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-void Parser::AddOrExit(
-    const std::string& name,
-    const google::protobuf::FieldDescriptor* field,
-    google::protobuf::Message* message) {
-  auto [_, inserted] = fields_.emplace(name, field);
-
-  if (!inserted) {
-    std::cerr
-        << "Encountered duplicate flag name '" << name << "' "
-        << "for field '" << field->full_name() << "'"
-        << std::endl;
-    std::exit(1);
+Parser* Parser::TryLookupParserForSubcommand(const std::string& name) {
+  auto iterator = subcommand_fields_.find(name);
+  if (iterator != subcommand_fields_.end()) {
+    const google::protobuf::FieldDescriptor* field = iterator->second;
+    CHECK_NE(nested_parsers_.count(field), 0);
+    return nested_parsers_[field].get();
+  } else {
+    return nullptr;
   }
+}
 
-  messages_.emplace(field, message);
+////////////////////////////////////////////////////////////////////////
+
+google::protobuf::Message& Parser::GetMessageForField(
+    const google::protobuf::FieldDescriptor& field) {
+  if (field.containing_type() == standard_flags_->GetDescriptor()) {
+    return *standard_flags_;
+  } else {
+    return *CHECK_NOTNULL(message_);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+google::protobuf::Message& Parser::GetMessageForSubcommand(
+    const std::string& name) {
+  // NOTE: precondition is that this is a valid subcommand!
+  CHECK_NE(subcommand_fields_.count(name), 0);
+  const google::protobuf::FieldDescriptor* field = subcommand_fields_[name];
+  return *CHECK_NOTNULL(message_)
+              ->GetReflection()
+              ->MutableMessage(message_, field);
 }
 
 ////////////////////////////////////////////////////////////////////////
 
 void Parser::Parse(int* argc, const char*** argv) {
-  // Grab the program name from argv, without removing it.
-  program_name_ = *argc > 0
+  // Save the command. For the top-level parser this will be the
+  // executable "basename". For nested parsers this will be the
+  // subcommand name.
+  command_ = *argc > 0
       ? std::filesystem::path((*argv)[0]).filename().string()
       : "";
 
@@ -99,8 +221,49 @@ void Parser::Parse(int* argc, const char*** argv) {
       break;
     }
 
-    // Skip anything that doesn't look like a flag.
+    // Skip anything that doesn't look like a flag, subcommand or positional
+    // argument.
     if (arg.find("--") != 0) {
+      // Check if it's a subcommand.
+      Parser* parser = TryLookupParserForSubcommand(arg);
+      if (parser != nullptr) {
+        // Keep the number of arguments remained before we call 'nested'
+        // Parse() function including subcommand name.
+        int nested_argc = *argc - i;
+
+        CHECK_GE(nested_argc, 0);
+
+        // Keep subcommand name. Using this pointer we can easily call
+        // Parse(&argc, &argv) function for nested parser.
+        const char** nested_argv = &((*argv)[i]);
+
+        // Current argument is a subcommand. So now we can set
+        // 'google::protobuf::Message*' pointer for nested parser in
+        // order to parse flags for this subcommand.
+        parser->message_ = &GetMessageForSubcommand(arg);
+
+        // Parsing arguments for 'nested' parser.
+        parser->Parse(&nested_argc, &nested_argv);
+
+        // If after 'nested' parsing of arguments there were not any
+        // arguments after '--' just break.
+        if (nested_argc == 1) {
+          break;
+        } else {
+          // Start at '1' to skip arg_to_parse[0] which is the name
+          // of a subcommand.
+          for (int k = 1; k < nested_argc; ++k) {
+            args.push_back(nested_argv[k]);
+          }
+          break;
+        }
+      } else {
+        // It might be a positional argument or an unknown argument.
+        // If unknown - just exit.
+        std::cerr << "Encountered unknown argument '"
+                  << arg << "'" << std::endl;
+        std::exit(1);
+      }
       args.push_back((*argv)[i]);
       continue;
     }
@@ -272,12 +435,11 @@ void Parser::Parse(
 
     // Parse the value using an overloaded parser if provided.
     if (overload_parsing_.count(field->message_type()) > 0) {
-      CHECK(messages_.count(field) != 0);
-      auto* message = messages_[field];
+      auto& message = GetMessageForField(*field);
       std::optional<std::string> error =
           overload_parsing_[field->message_type()](
               text.value(),
-              message->GetReflection()->MutableMessage(message, field));
+              *message.GetReflection()->MutableMessage(&message, field));
 
       if (error) {
         errors.insert(
@@ -315,7 +477,7 @@ void Parser::Parse(
       if (!text_format_parser.ParseFieldValueFromString(
               text.value(),
               field,
-              messages_[field])) {
+              &GetMessageForField(*field))) {
         errors.insert(
             "Failed to parse flag '" + non_negated_name
             + "' from normalized value '" + text.value()
@@ -358,14 +520,14 @@ void Parser::Parse(
 
   // Perform validations.
   for (auto& [error, f] : validate_) {
-    if (!f()) {
+    if (!f(*CHECK_NOTNULL(message_))) {
       errors.insert(error);
     }
   }
 
   if (!errors.empty()) {
     std::cerr
-        << program_name_ << ": "
+        << command_ << ": "
         << "Failed while parsing and validating flags:"
         << std::endl
         << std::endl;
@@ -383,7 +545,7 @@ void Parser::Parse(
 void Parser::PrintHelp() {
   const int PAD = 5;
 
-  std::string help = "Usage: " + program_name_ + " [...]\n\n";
+  std::string help = "Usage: " + command_ + " [...]\n\n";
 
   std::map<std::string, std::string> col1; // key -> col 1 string.
 

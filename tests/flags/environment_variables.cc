@@ -22,14 +22,13 @@ int unsetenv(const char* env_name) {
 TEST(FlagsTest, EnvironmentVariableString) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags)
+  auto parser = stout::flags::Parser::Builder(flags)
                     .IncludeEnvironmentVariablesWithPrefix("STOUT_FLAGS_TEST")
                     .Build();
 
   std::array arguments = {
       "program",
       "--bar",
-      "one",
   };
 
   int argc = arguments.size();
@@ -44,22 +43,20 @@ TEST(FlagsTest, EnvironmentVariableString) {
   unsetenv(env_name);
 
   EXPECT_TRUE(flags.bar());
-  EXPECT_EQ(2, argc);
+  EXPECT_EQ(1, argc);
   EXPECT_EQ("'HELLO world'", flags.foo());
-  EXPECT_STREQ("program", argv[0]);
-  EXPECT_STREQ("one", argv[1]);
+  EXPECT_EQ("program", argv[0]);
 }
 
 TEST(FlagsTest, IncludeEnvironmentVariableWithUnderscoreFailure) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags)
+  auto parser = stout::flags::Parser::Builder(flags)
                     .IncludeEnvironmentVariablesWithPrefix("STOUT_FLAGS_TEST_")
                     .Build();
 
   std::array arguments = {
       "program",
-      "one",
   };
 
   int argc = arguments.size();
@@ -86,13 +83,12 @@ TEST(FlagsTest, IncludeEnvironmentVariableWithUnderscoreFailure) {
 TEST(FlagsTest, EnvironmentVariableWithNoUnderlineInNameFailure) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags)
+  auto parser = stout::flags::Parser::Builder(flags)
                     .IncludeEnvironmentVariablesWithPrefix("STOUT_FLAGS_TEST")
                     .Build();
 
   std::array arguments = {
       "program",
-      "one",
   };
 
   int argc = arguments.size();
@@ -117,14 +113,13 @@ TEST(FlagsTest, EnvironmentVariableWithNoUnderlineInNameFailure) {
 TEST(FlagsTest, EnvironmentVariableWith2Underscores) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags)
+  auto parser = stout::flags::Parser::Builder(flags)
                     .IncludeEnvironmentVariablesWithPrefix("STOUT_FLAGS_TEST_")
                     .Build();
 
   std::array arguments = {
       "program",
       "--foo='hello'",
-      "one",
   };
 
   int argc = arguments.size();
@@ -138,9 +133,8 @@ TEST(FlagsTest, EnvironmentVariableWith2Underscores) {
   parser.Parse(&argc, &argv);
   unsetenv(env_name);
 
-  EXPECT_EQ(2, argc);
+  EXPECT_EQ(1, argc);
   EXPECT_EQ("'HELLO world'", flags._s());
   EXPECT_EQ("'hello'", flags.foo());
-  EXPECT_STREQ("program", argv[0]);
-  EXPECT_STREQ("one", argv[1]);
+  EXPECT_EQ("program", argv[0]);
 }

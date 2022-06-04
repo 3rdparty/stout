@@ -9,6 +9,7 @@
 #include "google/protobuf/io/tokenizer.h"
 #include "google/protobuf/text_format.h"
 #include "stout/flags/v1/flag.pb.h"
+#include "stout/flags/v1/subcommand.pb.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -20,13 +21,14 @@ namespace stout::flags {
 template <typename Flags>
 class ParserBuilder;
 
+
 class Parser {
  public:
   // Returns a builder for a parser based on the specifid flags; see
   // 'ParserBuilder' for more details on what can be modified from the
   // default parser.
   template <typename Flags>
-  static ParserBuilder<Flags> Builder(Flags* flags);
+  static ParserBuilder<Flags> Builder(Flags& flags, bool nested = false);
 
   // Parse flags from 'argc' and 'argv' and modify 'argc' and 'argv'
   // with what ever flags or arguments were not parsed.
@@ -39,17 +41,23 @@ class Parser {
   Parser()
     : standard_flags_(new stout::v1::StandardFlags()) {
     // Add all the "standard flags" first, e.g., --help.
-    AddAllOrExit(standard_flags_.get());
+    AddFieldsAndSubcommandsOrExit(*standard_flags_);
   }
 
-  // Helper that adds all the flags and their descriptors.
-  void AddAllOrExit(google::protobuf::Message* message);
+  // Helper that fill fields_ and messages_ helpers.
+  void AddFieldsAndSubcommandsOrExit(google::protobuf::Message& message);
 
-  // Helper that adds a flag and it's descriptor.
-  void AddOrExit(
-      const std::string& name,
-      const google::protobuf::FieldDescriptor* field,
-      google::protobuf::Message* message);
+  Parser* TryLookupParserForSubcommand(const std::string& name);
+
+  // Helper that gets 'google::protobuf::Message*' that we want to
+  // populate for the specified field descriptor.
+  google::protobuf::Message& GetMessageForField(
+      const google::protobuf::FieldDescriptor& field);
+
+  // Helper that gets 'google::protobuf::Message*' that we want to
+  // populate for the specified subcommand.
+  google::protobuf::Message& GetMessageForSubcommand(
+      const std::string& name);
 
   // Helper for parsing a normalized form of flags.
   void Parse(
@@ -68,12 +76,12 @@ class Parser {
   // Map from flag name to the field descriptor for the flag.
   std::map<std::string, const google::protobuf::FieldDescriptor*> fields_;
 
-  // Map from the field descriptor to the 'google::protobuf::Message'
-  // that we will use to update the flag value via reflection.
-  std::map<
-      const google::protobuf::FieldDescriptor*,
-      google::protobuf::Message*>
-      messages_;
+  // Map from subcommand name to the field descriptor for the flag.
+  //
+  // NOTE: we need to separate 'fields_' and 'subcommand_fields_' to
+  // support flags and subcommands having the same name.
+  std::map<std::string, const google::protobuf::FieldDescriptor*>
+      subcommand_fields_;
 
   // Map from message descriptors to functions that overload the
   // default parsing for that descriptor.
@@ -82,15 +90,18 @@ class Parser {
       std::function<
           std::optional<std::string>(
               const std::string&,
-              google::protobuf::Message*)>>
+              google::protobuf::Message&)>>
       overload_parsing_;
 
   // Map from help string to function that we use to validate the
   // parsed flags.
-  std::map<std::string, std::function<bool()>> validate_;
+  std::map<
+      std::string,
+      std::function<bool(google::protobuf::Message&)>>
+      validate_;
 
-  // Name of the program that we extracted from 'argv'.
-  std::string program_name_;
+  // Command "basename" extracted from 'argv[0]'.
+  std::string command_;
 
   // Helper struct for storing the parsed "name" and normalized
   // protobuf "text" for a flag. This is used for handling possible
@@ -107,16 +118,36 @@ class Parser {
   // Optional for including all environment variables for parsing
   // with specific prefix.
   std::optional<std::string> environment_variable_prefix_;
+
+  // Map from nested parser to it's all possible names. Depending on the
+  // subcommand defined by the users we can grab specific parser and do
+  // parsing for the next arguments in the command line.
+  std::map<const google::protobuf::FieldDescriptor*, std::unique_ptr<Parser>>
+      nested_parsers_;
+
+  // Message to populate when parsing. May be nullptr until parsing
+  // for nested parsers because we won't know the pointer until
+  // parsing in the event the parent parse.
+  google::protobuf::Message* message_ = nullptr;
 };
 
 ////////////////////////////////////////////////////////////////////////
 
+
 template <typename Flags>
 class ParserBuilder {
  public:
-  ParserBuilder(Flags* flags)
-    : flags_(flags) {
-    parser_.AddAllOrExit(flags_);
+  ParserBuilder(Flags& flags, bool nested) {
+    parser_.AddFieldsAndSubcommandsOrExit(flags);
+
+    // When constructing a top-level parser we save the 'flags'
+    // protobuf message to later populate when we call
+    // 'Parse(...)'. We can't save 'flags' for nested parsers because
+    // 'flags' might not be valid if it (or it's "parent") is a oneof
+    // field and thus we need to compute it during the parse.
+    if (!nested) {
+      parser_.message_ = &flags;
+    }
   }
 
   // Overloads the parsing of the specified type 'T' with the
@@ -140,8 +171,9 @@ class ParserBuilder {
   ParserBuilder& Validate(std::string&& help, F&& f) {
     parser_.validate_.emplace(
         std::move(help),
-        [f = std::forward<F>(f), flags = flags_]() {
-          return f(*flags);
+        [f = std::forward<F>(f)](google::protobuf::Message& message) {
+          return f(
+              *google::protobuf::DynamicCastToGenerated<Flags>(&message));
         });
 
     return *this;
@@ -152,15 +184,15 @@ class ParserBuilder {
     // Try to overload parsing of 'google.protobuf.Duration' flag
     // fields and ignore if already overloaded.
     TryOverloadParsing<google::protobuf::Duration>(
-        [](const std::string& value, auto* duration) {
+        [](const std::string& value, auto& duration) {
           absl::Duration d;
           std::string error;
           if (!absl::AbslParseFlag(value, &d, &error)) {
             return std::optional<std::string>(error);
           } else {
-            duration->set_seconds(
+            duration.set_seconds(
                 absl::IDivDuration(d, absl::Seconds(1), &d));
-            duration->set_nanos(
+            duration.set_nanos(
                 absl::IDivDuration(d, absl::Nanoseconds(1), &d));
             return std::optional<std::string>();
           }
@@ -206,8 +238,10 @@ class ParserBuilder {
       parser_.overload_parsing_[descriptor] =
           [f = std::forward<F>(f)](
               const std::string& value,
-              google::protobuf::Message* message) {
-            return f(value, dynamic_cast<T*>(message));
+              google::protobuf::Message& message) {
+            return f(
+                value,
+                *google::protobuf::DynamicCastToGenerated<T>(&message));
           };
       return true;
     } else {
@@ -216,7 +250,6 @@ class ParserBuilder {
   }
 
  private:
-  Flags* flags_ = nullptr;
   Parser parser_;
 };
 
@@ -224,8 +257,8 @@ class ParserBuilder {
 
 // Defined after 'ParserBuilder' to deal with circular dependency.
 template <typename Flags>
-ParserBuilder<Flags> Parser::Builder(Flags* flags) {
-  return ParserBuilder<Flags>(flags);
+ParserBuilder<Flags> Parser::Builder(Flags& flags, bool nested) {
+  return ParserBuilder<Flags>(flags, nested);
 }
 
 ////////////////////////////////////////////////////////////////////////

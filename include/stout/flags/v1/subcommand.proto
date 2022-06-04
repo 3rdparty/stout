@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package stout.v1;
+
+import "google/protobuf/descriptor.proto";
+
+message Subcommand {
+  repeated string names = 1;
+  repeated string deprecated_names = 2;
+  string help = 3;
+  // TODO: bool deprecated = 4;
+}
+
+extend google.protobuf.FieldOptions {
+  optional Subcommand subcommand = 1001;
+}

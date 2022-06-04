@@ -9,7 +9,7 @@
 TEST(FlagsTest, DefaultOverloadParsingDuration) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags)
+  auto parser = stout::flags::Parser::Builder(flags)
                     .Build();
 
   std::array arguments = {
@@ -32,9 +32,9 @@ TEST(FlagsTest, DefaultOverloadParsingDuration) {
 TEST(FlagsTest, OverloadParsingDuration) {
   test::Flags flags;
 
-  auto parser = stout::flags::Parser::Builder(&flags)
+  auto parser = stout::flags::Parser::Builder(flags)
                     .OverloadParsing<google::protobuf::Duration>(
-                        [](const std::string& value, auto* duration) {
+                        [](const std::string& value, auto& duration) {
                           return std::optional<std::string>("unimplemented");
                         })
                     .Build();
@@ -64,13 +64,13 @@ TEST(FlagsTest, MultipleOverloadParsingDuration) {
   test::Flags flags;
 
   auto operation = [&flags]() {
-    auto parser = stout::flags::Parser::Builder(&flags)
+    auto parser = stout::flags::Parser::Builder(flags)
                       .OverloadParsing<google::protobuf::Duration>(
-                          [](const std::string& value, auto* duration) {
+                          [](const std::string& value, auto& duration) {
                             return std::optional<std::string>("unimplemented");
                           })
                       .OverloadParsing<google::protobuf::Duration>(
-                          [](const std::string& value, auto* duration) {
+                          [](const std::string& value, auto& duration) {
                             return std::optional<std::string>("unimplemented");
                           })
                       .Build();
