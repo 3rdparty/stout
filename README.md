@@ -44,7 +44,7 @@ def deps():
 
 Stout is a header-only C++ library. Simply add the `include` folder to your include path (i.e., `-I/path/to/stout/include`) during compilation (eventually we plan to support installation).
 
-There are a handful of data structures provided within the library (including some collections), as well as some namespaced and miscellaneous utilities. Also included are abstractions for [command line flags](#flags).
+There are a handful of data structures provided within the library (including some collections), as well as some namespaced and miscellaneous utilities. Also included are abstractions for [command line flags](#command-line-flags).
 
 Stout provides and heavily leverages some monadic structures including [Option](#option) and [Try](#try).
 
@@ -64,7 +64,7 @@ Note that the library is designed to completely avoid exceptions. See [exception
 * <a href="#proc">proc::</a>
 * <a href="#protobuf">protobuf::</a>
 * <a href="#strings">strings::</a>
-* <a href="#flags">Command Line Flags</a>
+* <a href="#command-line-flags">Command Line Flags</a>
 * <a href="#collections">Collections</a>
 * <a href="#miscellaneous">Miscellaneous</a>
 * <a href="#testing">Testing</a>
