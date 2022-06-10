@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package stout.v1;
+
+import "google/protobuf/descriptor.proto";
+
+message Argument {
+  repeated string names = 1;
+  repeated string deprecated_names = 2;
+  string help = 3;
+  bool required = 4;
+  uint32 position = 5;
+}
+
+extend google.protobuf.FieldOptions {
+  optional Argument argument = 1002;
+}

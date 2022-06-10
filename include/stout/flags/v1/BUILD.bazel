@@ -5,6 +5,7 @@ proto_library(
     name = "flag_proto",
     srcs = [
         ":flag.proto",
+        ":positional_argument.proto",
         ":subcommand.proto",
     ],
     visibility = ["//visibility:public"],
