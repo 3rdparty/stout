@@ -44,7 +44,7 @@ TEST(FlagsTest, EnvironmentVariableString) {
 
   EXPECT_TRUE(flags.bar());
   EXPECT_EQ(1, argc);
-  EXPECT_STREQ("'HELLO world'", flags.foo().c_str());
+  EXPECT_EQ("'HELLO world'", flags.foo());
   EXPECT_STREQ("program", argv[0]);
 }
 
@@ -134,7 +134,7 @@ TEST(FlagsTest, EnvironmentVariableWith2Underscores) {
   unsetenv(env_name);
 
   EXPECT_EQ(1, argc);
-  EXPECT_STREQ("'HELLO world'", flags._s().c_str());
-  EXPECT_STREQ("'hello'", flags.foo().c_str());
+  EXPECT_EQ("'HELLO world'", flags._s());
+  EXPECT_EQ("'hello'", flags.foo());
   EXPECT_STREQ("program", argv[0]);
 }
