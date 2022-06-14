@@ -2,16 +2,68 @@ syntax = "proto3";
 
 package stout.v1;
 
+// For defining our own options.
 import "google/protobuf/descriptor.proto";
 
+// Message which represents a positional argument.
+// NOTE: a positional argument is a bare value, and
+// its position in a list of arguments identifies it.
+// For example:
+//     echo 'hello' ' ' 'world'
+// 'hello', ' ', 'world' - are the positional args
+// from the command line.
+//
+// In our implementation of flags we expect that this
+// arguments will be passed without any name in the same
+// order that they are defined in the user-defined
+// protobuf message (we added string 'name' for
+// printing out the help message and errors).
+// NOTE: this is definition order not field index order:
+// For example:
+//    message RandomIndexFieldOrder{
+//      string str1 = 2 [
+//        (stout.v1.argument) = {
+//          name: "str1"
+//          help: "help"
+//        }
+//      ];
+//
+//      string str2 = 1 [
+//        (stout.v1.argument) = {
+//          name: "str2"
+//          help: "help"
+//        }
+//      ];
+//    }
+//
+// In the example above you can see that user has defined
+// proto message with random field index order (the first
+// positional argument has index '2', the second has index
+// '1'). But anyway the order of positional arguments that
+// we expect from the command line will be the same as the
+// order in which positional arguments are defined in the
+// protobuf message (str1 , str2).
+// Check 'tests/flags/positional_arguments.cc' for more
+// information.
+
+// Positional arguments might be at the end of the command
+// line or even might be intermingled with other flags or
+// subcommands. For example the following below is the
+// valid input in the command line:
+//     ./program --top_level_flag1=1 pos_arg1 subcommand 45 --flag2='hello' 5
+// So 'pos_arg1', '45', '5' - are valid positional
+// arguments.
 message Argument {
-  repeated string names = 1;
-  repeated string deprecated_names = 2;
-  string help = 3;
-  bool required = 4;
-  uint32 position = 5;
+  // For printing out help. We make it be non-optional
+  // cause we want to store this name and field pointer
+  // for printing out help message as well as we use this
+  // name to print out consistent error.
+  string name = 1;
+  // For printing out help.
+  string help = 2;
 }
 
+// Extend a level-field option.
 extend google.protobuf.FieldOptions {
   optional Argument argument = 1002;
 }

@@ -1,9 +1,12 @@
+#pragma once
+
 #include <filesystem>
 #include <map>
 #include <optional>
 #include <string>
 
 #include "absl/time/time.h"
+#include "glog/logging.h"
 #include "google/protobuf/descriptor.h"
 #include "google/protobuf/duration.pb.h"
 #include "google/protobuf/io/tokenizer.h"
@@ -60,9 +63,15 @@ class Parser {
   google::protobuf::Message& GetMessageForSubcommand(
       const std::string& name);
 
+  // Helper struct which stores the argument name and value (if present)
+  // from the command line.
+  struct ArgumentInfo {
+    std::string name;
+    std::optional<std::string> value;
+  };
+
   // Helper for parsing a normalized form of flags.
-  void Parse(
-      const std::multimap<std::string, std::optional<std::string>>& values);
+  void Parse(const std::vector<ArgumentInfo>& values);
 
   // Helper that prints out help for the flags for this parser.
   void PrintHelp();
@@ -83,6 +92,22 @@ class Parser {
   // support flags and subcommands having the same name.
   std::map<std::string, const google::protobuf::FieldDescriptor*>
       subcommand_fields_;
+
+  // Struct which represents a positional argument for
+  // a specific 'protobuf' message field with
+  // stout::v1::argument option.
+  struct PositionalArgument {
+    std::string name;
+    const google::protobuf::FieldDescriptor* field = nullptr;
+  };
+
+  // Vector for positional arguments. Will be populated at the
+  // build phase (AddFieldsAndSubcommandsOrExit()). We expect
+  // that users will define positional arguments in the command
+  // line at the same order in which they are defined in
+  // 'protobuf' message. That's why we use 'vector' instead of
+  // 'map'.
+  std::vector<PositionalArgument> positional_args_;
 
   // Map from message descriptors to functions that overload the
   // default parsing for that descriptor.

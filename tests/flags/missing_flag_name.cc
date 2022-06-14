@@ -20,8 +20,7 @@ TEST(FlagsTest, MissingFlagHelp) {
         auto builder = stout::flags::Parser::Builder(missing_flag_help);
         builder.Build();
       }(),
-      "Missing flag 'help' for "
-      "field 'test.MissingFlagHelp.s'");
+      "Missing 'help' for field 'test.MissingFlagHelp.s'");
 }
 
 TEST(FlagsTest, MissingSubcommandName) {

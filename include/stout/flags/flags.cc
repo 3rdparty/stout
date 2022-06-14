@@ -21,8 +21,11 @@ namespace stout::flags {
 void Parser::AddFieldsAndSubcommandsOrExit(google::protobuf::Message& message) {
   const auto* descriptor = message.GetDescriptor();
 
+  // Iterate over fields in declaration order in the protobuf message.
   for (int i = 0; i < descriptor->field_count(); i++) {
     const auto* field = descriptor->field(i);
+
+    const google::protobuf::FieldOptions& options = field->options();
 
     // We need this descriptor for the subcommand's logic.
     const google::protobuf::OneofDescriptor* oneof =
@@ -39,7 +42,7 @@ void Parser::AddFieldsAndSubcommandsOrExit(google::protobuf::Message& message) {
         exit(1);
       } else {
         // Subcommands must have stout.v1.subcommand option.
-        if (!field->options().HasExtension(stout::v1::subcommand)) {
+        if (!options.HasExtension(stout::v1::subcommand)) {
           std::cerr << "Every field of the 'oneof subcommand' must "
                        "be annotated with a stout.v1.subcommand option"
                     << std::endl;
@@ -47,7 +50,7 @@ void Parser::AddFieldsAndSubcommandsOrExit(google::protobuf::Message& message) {
         } else {
           // Check for missing 'names' and 'help'.
           const auto& subcommand =
-              field->options().GetExtension(stout::v1::subcommand);
+              options.GetExtension(stout::v1::subcommand);
 
           if (subcommand.names().empty()) {
             std::cerr
@@ -102,53 +105,112 @@ void Parser::AddFieldsAndSubcommandsOrExit(google::protobuf::Message& message) {
         }
       }
     } else {
-      if (field->options().HasExtension(stout::v1::subcommand)) {
+      if (options.HasExtension(stout::v1::subcommand)) {
         std::cerr << "stout.v1.subcommand option should be annotated"
                   << " on fields that are only inside 'oneof subcommand'"
                   << std::endl;
         exit(1);
       }
 
-      const auto& flag = field->options().GetExtension(stout::v1::flag);
+      if (options.HasExtension(stout::v1::flag)) {
+        const stout::v1::Flag& flag = options.GetExtension(stout::v1::flag);
 
-      if (flag.names().empty()) {
-        std::cerr
-            << "Missing at least one flag name in 'names' for field '"
-            << field->full_name() << "'"
-            << std::endl;
-        std::exit(1);
+        if (flag.names().empty()) {
+          std::cerr
+              << "Missing at least one flag name in 'names' for field '"
+              << field->full_name() << "'"
+              << std::endl;
+          std::exit(1);
+        }
+
+        // Checking for 'help' existence is mandatory because users
+        // can pass '--help' flag in order to print help message
+        // for all existing flags in the 'google::protobuf::Message'.
+        // (check Parser::PrintHelp()).
+        if (flag.help().empty()) {
+          std::cerr
+              << "Missing 'help' for field '"
+              << field->full_name() << "'"
+              << std::endl;
+          std::exit(1);
+        }
+
+        for (const auto& name : flag.names()) {
+          auto [_, inserted] = fields_.emplace(name, field);
+
+          if (!inserted) {
+            std::cerr << "Encountered duplicate flag name "
+                      << "'" << name << "' for message '"
+                      << message.GetTypeName() << "'"
+                      << std::endl;
+            std::exit(1);
+          }
+        }
+
+        for (const auto& name : flag.deprecated_names()) {
+          auto [_, inserted] = fields_.emplace(name, field);
+
+          if (!inserted) {
+            std::cerr << "Encountered duplicate (deprecated) flag name "
+                      << "'" << name << "' for message '"
+                      << message.GetTypeName() << "'"
+                      << std::endl;
+            std::exit(1);
+          }
+        }
       }
 
-      if (flag.help().empty()) {
-        std::cerr
-            << "Missing flag 'help' for field '"
-            << field->full_name() << "'"
-            << std::endl;
-        std::exit(1);
-      }
+      if (options.HasExtension(stout::v1::argument)) {
+        // Enforce users define only positional arguments of type 'string'
+        // in the protobuf messages.
+        // TODO(artur): is there a way to use positional arguments of
+        // different types?!
+        if (field->type() != google::protobuf::FieldDescriptor::TYPE_STRING) {
+          std::cerr << "Field '" << field->full_name()
+                    << "' with 'stout::v1::argument' extension "
+                    << "must have string type" << std::endl;
+          std::exit(1);
+        }
 
-      for (const auto& name : flag.names()) {
-        auto [_, inserted] = fields_.emplace(name, field);
+        const stout::v1::Argument& argument =
+            options.GetExtension(stout::v1::argument);
 
-        if (!inserted) {
-          std::cerr << "Encountered duplicate flag name "
+        const std::string& name = argument.name();
+
+        // Name option for (stout.v1.argument) extension should not be
+        // empty in order to use it for printing out help or errors.
+        if (name.empty()) {
+          std::cerr
+              << "Missing name for field '"
+              << field->full_name() << "'"
+              << std::endl;
+          std::exit(1);
+        }
+
+        if (argument.help().empty()) {
+          std::cerr
+              << "Missing 'help' for field '"
+              << field->full_name() << "'"
+              << std::endl;
+          std::exit(1);
+        }
+
+        const auto iterator = std::find_if(
+            positional_args_.begin(),
+            positional_args_.end(),
+            [&name](const PositionalArgument& pos_arg) {
+              return pos_arg.name == name;
+            });
+
+        if (iterator != positional_args_.end()) {
+          std::cerr << "Encountered duplicate name "
                     << "'" << name << "' for message '"
                     << message.GetTypeName() << "'"
                     << std::endl;
           std::exit(1);
         }
-      }
 
-      for (const auto& name : flag.deprecated_names()) {
-        auto [_, inserted] = fields_.emplace(name, field);
-
-        if (!inserted) {
-          std::cerr << "Encountered duplicate (deprecated) flag name "
-                    << "'" << name << "' for message '"
-                    << message.GetTypeName() << "'"
-                    << std::endl;
-          std::exit(1);
-        }
+        positional_args_.push_back(PositionalArgument{name, field});
       }
     }
   }
@@ -203,7 +265,9 @@ void Parser::Parse(int* argc, const char*** argv) {
   // Keep the arguments that are not being processed as flags.
   std::vector<const char*> args;
 
-  std::multimap<std::string, std::optional<std::string>> values;
+  // The order of the args from the cmd line is important, that's
+  // why we use std::vector.
+  std::vector<ArgumentInfo> values;
 
   // Read flags from the command line.
   for (int i = 1; i < *argc; i++) {
@@ -220,6 +284,9 @@ void Parser::Parse(int* argc, const char*** argv) {
       }
       break;
     }
+
+    std::string name;
+    std::optional<std::string> value;
 
     // Skip anything that doesn't look like a flag, subcommand or positional
     // argument.
@@ -258,18 +325,14 @@ void Parser::Parse(int* argc, const char*** argv) {
           break;
         }
       } else {
-        // It might be a positional argument or an unknown argument.
-        // If unknown - just exit.
-        std::cerr << "Encountered unknown argument '"
-                  << arg << "'" << std::endl;
-        std::exit(1);
+        // It might be a positional argument. Anyway, we store the name
+        // and empty value in order to try to parse this argument as a
+        // positional one [Parse(values) - function call below].
+        name = arg;
+        values.push_back(ArgumentInfo{name, value});
+        continue;
       }
-      args.push_back((*argv)[i]);
-      continue;
     }
-
-    std::string name;
-    std::optional<std::string> value;
 
     size_t eq = arg.find_first_of('=');
     if (eq == std::string::npos && arg.find("--no-") == 0) { // --no-name
@@ -281,7 +344,7 @@ void Parser::Parse(int* argc, const char*** argv) {
       value = arg.substr(eq + 1);
     }
 
-    values.emplace(name, value);
+    values.push_back(ArgumentInfo{name, value});
   }
 
   // Parse environment variables if environment_variable_prefix_
@@ -319,7 +382,7 @@ void Parser::Parse(int* argc, const char*** argv) {
         // It's possible that users can set variables with upper cases.
         // So we should be sure that names we pass for parsing have
         // only lower-cases symbols.
-        values.emplace(absl::AsciiStrToLower(name), value);
+        values.push_back(ArgumentInfo{absl::AsciiStrToLower(name), value});
       }
     }
   }
@@ -343,27 +406,47 @@ void Parser::Parse(int* argc, const char*** argv) {
 
 ////////////////////////////////////////////////////////////////////////
 
-void Parser::Parse(
-    const std::multimap<std::string, std::optional<std::string>>& values) {
+void Parser::Parse(const std::vector<ArgumentInfo>& values) {
   // NOTE: using a set for errors to avoid duplicates which may
   // happen, e.g., when we have duplicate flags that are unknown or
   // duplicate boolean flags that conflict, etc.
   std::set<std::string> errors;
 
-  for (const auto& [name, value] : values) {
-    bool is_negated = absl::StartsWith(name, "no-");
-    std::string non_negated_name = !is_negated ? name : name.substr(3);
+  // Index for iterating through positional arguments in 'positional_args_'.
+  int32_t pos_arg_index = 0;
+
+  for (const ArgumentInfo& arg : values) {
+    bool is_positional_argument = false;
+
+    bool is_negated = absl::StartsWith(arg.name, "no-");
+
+    std::string non_negated_name = !is_negated ? arg.name : arg.name.substr(3);
 
     auto iterator = fields_.find(non_negated_name);
 
-    if (iterator == fields_.end()) {
-      errors.insert(
-          "Encountered unknown flag '" + non_negated_name + "'"
-          + (!is_negated ? "" : " via '" + name + "'"));
-      continue;
-    }
+    const google::protobuf::FieldDescriptor* field = nullptr;
 
-    const auto* field = iterator->second;
+    if (iterator != fields_.end()) {
+      field = iterator->second;
+    } else {
+      // It might be a positional argument. So get the
+      // field from 'pos_args' vector.
+      if (static_cast<size_t>(pos_arg_index) < positional_args_.size()) {
+        field = positional_args_.at(pos_arg_index).field;
+        is_positional_argument = true;
+        ++pos_arg_index;
+      }
+
+      if (field == nullptr) {
+        errors.insert(
+            "Encountered unknown flag '" + non_negated_name + "'"
+            + (!is_negated ? "" : " via '" + arg.name + "'"));
+        continue;
+      }
+
+      // TODO(artur): add support for variable numbers of positional args,
+      // e.g. like touch which takes 1 or more args.
+    }
 
     // Need to normalize 'value' into protobuf text-format which
     // doesn't have a concept of "no-" prefix or non-empty booleans.
@@ -373,24 +456,26 @@ void Parser::Parse(
         field->type() == google::protobuf::FieldDescriptor::TYPE_BOOL;
 
     if (boolean) {
-      if (!value) {
+      if (!arg.value) {
         text = is_negated ? "false" : "true";
       } else if (is_negated) {
         // Boolean flags with "no-" prefix must have an empty value.
         errors.insert(
-            "Encountered negated boolean flag '" + name
-            + "' with an unexpected value '" + value.value() + "'");
+            "Encountered negated boolean flag '" + arg.name
+            + "' with an unexpected value '" + arg.value.value() + "'");
         continue;
       } else {
-        text = value.value();
+        text = arg.value.value();
       }
     } else if (is_negated) {
       // Non-boolean flags cannot have "no-" prefix.
       errors.insert(
           "Failed to parse non-boolean flag '"
-          + non_negated_name + "' via '" + name + "'");
+          + non_negated_name + "' via '" + arg.name + "'");
       continue;
-    } else if (!value.has_value() || value.value().empty()) {
+    } else if (
+        (!arg.value.has_value() || arg.value.value().empty())
+        && !is_positional_argument) {
       // Non-boolean flags must have a non-empty value.
       errors.insert(
           "Failed to parse non-boolean flag '" + non_negated_name
@@ -398,9 +483,14 @@ void Parser::Parse(
       continue;
     } else {
       if (field->type() != google::protobuf::FieldDescriptor::TYPE_STRING) {
-        text = value.value();
+        text = arg.value.value();
       } else {
-        text = "'" + absl::CEscape(value.value()) + "'";
+        // To support quoted and unquoted string values from the cmd
+        // line we use `absl::CEscape` function.
+        text = "'"
+            + absl::CEscape(
+                   is_positional_argument ? arg.name : arg.value.value())
+            + "'";
       }
     }
 
@@ -498,24 +588,55 @@ void Parser::Parse(
 
   // Ensure required flags are present.
   for (const auto& [_, field] : fields_) {
-    const auto& flag = field->options().GetExtension(stout::v1::flag);
-    if (flag.required() && parsed_.count(field) == 0) {
-      CHECK(!flag.names().empty());
-      std::string names;
-      for (int i = 0; i < flag.names().size(); i++) {
-        if (i == 1) {
-          names += " (aka ";
-        } else if (i > 1) {
-          names += ", ";
-        }
-        names += "'" + flag.names().at(i) + "'";
-      }
-      if (flag.names().size() > 1) {
-        names += ")";
-      }
-      errors.insert(
-          "Flag " + names + " not parsed but required");
+    const stout::v1::Flag& flag =
+        field->options().GetExtension(stout::v1::flag);
+
+    // This field is not required, so just continue.
+    if (!flag.required())
+      continue;
+
+    // Required field has been parsed, so it is present.
+    // All good, just continue.
+    if (parsed_.count(field) > 0)
+      continue;
+
+    if (flag.names().empty()) {
+      std::cerr << "'names' option for the field '"
+                << field->full_name() << "' is empty"
+                << std::endl;
+      std::exit(1);
     }
+
+    // This required field is missing.
+    std::string names;
+
+    for (int i = 0; i < flag.names().size(); i++) {
+      if (i == 1) {
+        names += " (aka ";
+      } else if (i > 1) {
+        names += ", ";
+      }
+      names += "'" + flag.names().at(i) + "'";
+    }
+    if (flag.names().size() > 1) {
+      names += ")";
+    }
+
+    errors.insert("Flag " + names + " not parsed but required");
+  }
+
+  // Ensure all positional arguments from protobuf message have been parsed.
+  for (const PositionalArgument& pos_arg : positional_args_) {
+    const stout::v1::Argument& argument =
+        pos_arg.field->options().GetExtension(stout::v1::argument);
+
+    if (parsed_.count(pos_arg.field) > 0)
+      continue;
+
+    errors.insert(
+        "Positional argument '"
+        + argument.name()
+        + "' not parsed but required");
   }
 
   // Perform validations.
@@ -552,6 +673,7 @@ void Parser::PrintHelp() {
   // Construct string for the first column and store width of column.
   size_t width = 0;
 
+  // TODO(artur): print something about the contents of positional_args_.
   for (const auto& [_, field] : fields_) {
     const auto& flag = field->options().GetExtension(stout::v1::flag);
 

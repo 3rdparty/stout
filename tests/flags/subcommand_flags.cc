@@ -135,7 +135,7 @@ TEST(FlagsTest, SimpleSubcommandInfoSucceed) {
   EXPECT_EQ(1, argc);
   EXPECT_STREQ("program", argv[0]);
   EXPECT_TRUE(flags.b());
-  EXPECT_STREQ("hello world", flags.info_subcommand().info().c_str());
+  EXPECT_EQ("hello world", flags.info_subcommand().info());
 }
 
 TEST(FlagsTest, DuplicateSubcommands) {
@@ -157,7 +157,9 @@ TEST(FlagsTest, DuplicateSubcommands) {
 
   EXPECT_DEATH(
       parser.Parse(&argc, &argv),
-      "Encountered unknown argument 'info_subcommand'");
+      ". Encountered duplicate flag 'info'"
+      "\?\n\?\n"
+      ". Encountered unknown flag 'info_subcommand'");
 }
 
 TEST(FlagsTest, DuplicateSubcommandFlags) {
@@ -224,7 +226,9 @@ TEST(FlagsTest, SubcommandFailSettingTwoOneofFlagsAtOnce) {
 
   EXPECT_DEATH(
       parser.Parse(&argc, &argv),
-      "Encountered unknown argument 'info_subcommand'");
+      ". Encountered unknown flag 'info'"
+      "\?\n\?\n"
+      ". Encountered unknown flag 'info_subcommand'");
 }
 
 TEST(FlagsTest, ComplicatedSubcommandSucceed1) {
@@ -254,9 +258,9 @@ TEST(FlagsTest, ComplicatedSubcommandSucceed1) {
   EXPECT_FALSE(flags.sub1().has_info_subcommand());
   EXPECT_EQ(1, argc);
   EXPECT_STREQ("program", argv[0]);
-  EXPECT_STREQ("hello world", flags.flag().c_str());
-  EXPECT_STREQ("Ben", flags.other().c_str());
-  EXPECT_STREQ("Artur", flags.sub1().another().c_str());
+  EXPECT_EQ("hello world", flags.flag());
+  EXPECT_EQ("Ben", flags.other());
+  EXPECT_EQ("Artur", flags.sub1().another());
   EXPECT_EQ(13, flags.sub1().num());
   EXPECT_EQ(1, flags.sub1().build().other_flag());
 }
@@ -288,11 +292,11 @@ TEST(FlagsTest, ComplicatedSubcommandSucceed2) {
   EXPECT_TRUE(flags.sub1().has_info_subcommand());
   EXPECT_EQ(1, argc);
   EXPECT_STREQ("program", argv[0]);
-  EXPECT_STREQ("hello world", flags.flag().c_str());
-  EXPECT_STREQ("Ben", flags.other().c_str());
-  EXPECT_STREQ("Artur", flags.sub1().another().c_str());
+  EXPECT_EQ("hello world", flags.flag());
+  EXPECT_EQ("Ben", flags.other());
+  EXPECT_EQ("Artur", flags.sub1().another());
   EXPECT_EQ(13, flags.sub1().num());
-  EXPECT_STREQ("ciao", flags.sub1().info_subcommand().info().c_str());
+  EXPECT_EQ("ciao", flags.sub1().info_subcommand().info());
 }
 
 TEST(FlagsTest, ComplicatedSubcommandSucceed3) {
@@ -321,10 +325,10 @@ TEST(FlagsTest, ComplicatedSubcommandSucceed3) {
   EXPECT_TRUE(flags.sub2().has_info_subcommand());
   EXPECT_EQ(1, argc);
   EXPECT_STREQ("program", argv[0]);
-  EXPECT_STREQ("hello world", flags.flag().c_str());
-  EXPECT_STREQ("Ben", flags.other().c_str());
-  EXPECT_STREQ("Artur", flags.sub2().s().c_str());
-  EXPECT_STREQ("some info", flags.sub2().info_subcommand().info().c_str());
+  EXPECT_EQ("hello world", flags.flag());
+  EXPECT_EQ("Ben", flags.other());
+  EXPECT_EQ("Artur", flags.sub2().s());
+  EXPECT_EQ("some info", flags.sub2().info_subcommand().info());
 }
 
 TEST(FlagsTest, ComplicatedSubcommandSucceed4) {
@@ -353,8 +357,8 @@ TEST(FlagsTest, ComplicatedSubcommandSucceed4) {
   EXPECT_FALSE(flags.sub2().has_info_subcommand());
   EXPECT_EQ(1, argc);
   EXPECT_STREQ("program", argv[0]);
-  EXPECT_STREQ("hello world", flags.flag().c_str());
-  EXPECT_STREQ("Ben", flags.other().c_str());
-  EXPECT_STREQ("Artur", flags.sub2().s().c_str());
+  EXPECT_EQ("hello world", flags.flag());
+  EXPECT_EQ("Ben", flags.other());
+  EXPECT_EQ("Artur", flags.sub2().s());
   EXPECT_EQ(13, flags.sub2().build().other_flag());
 }
