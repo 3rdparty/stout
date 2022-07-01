@@ -2,7 +2,7 @@
 
 #include "gtest/gtest.h"
 #include "stout/flags/flags.h"
-#include "tests/flags/test.pb.h"
+#include "tests/flags/test_flags.pb.h"
 
 TEST(FlagsTest, Help) {
   test::Flags flags;

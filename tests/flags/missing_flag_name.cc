@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "stout/flags/flags.h"
-#include "tests/flags/test.pb.h"
+#include "tests/flags/test_flags.pb.h"
 
 TEST(FlagsTest, MissingFlagName) {
   EXPECT_DEATH(
@@ -21,26 +21,4 @@ TEST(FlagsTest, MissingFlagHelp) {
         builder.Build();
       }(),
       "Missing 'help' for field 'test.MissingFlagHelp.s'");
-}
-
-TEST(FlagsTest, MissingSubcommandName) {
-  EXPECT_DEATH(
-      []() {
-        test::FlagsWithSubcommandMissingName flags;
-        auto builder = stout::flags::Parser::Builder(flags);
-        builder.Build();
-      }(),
-      "Missing at least one subcommand name in 'names' for "
-      "field 'test.FlagsWithSubcommandMissingName.build'");
-}
-
-TEST(FlagsTest, MissingSubcommandHelp) {
-  EXPECT_DEATH(
-      []() {
-        test::FlagsWithSubcommandMissingHelp flags;
-        auto builder = stout::flags::Parser::Builder(flags);
-        builder.Build();
-      }(),
-      "Missing subcommand 'help' for "
-      "field 'test.FlagsWithSubcommandMissingHelp.info_subcommand'");
 }
