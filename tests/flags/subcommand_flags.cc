@@ -2,9 +2,32 @@
 
 #include "gtest/gtest.h"
 #include "stout/flags/flags.h"
-#include "tests/flags/test.pb.h"
+#include "tests/flags/test_subcommands.pb.h"
 
-TEST(FlagsTest, MissingSubcommandExtension) {
+TEST(SubcommandsTest, MissingSubcommandName) {
+  EXPECT_DEATH(
+      []() {
+        test::FlagsWithSubcommandMissingName flags;
+        auto builder = stout::flags::Parser::Builder(flags);
+        builder.Build();
+      }(),
+      "Missing at least one subcommand name in 'names' for "
+      "field 'test.FlagsWithSubcommandMissingName.build'");
+}
+
+TEST(SubcommandsTest, MissingSubcommandHelp) {
+  EXPECT_DEATH(
+      []() {
+        test::FlagsWithSubcommandMissingHelp flags;
+        auto builder = stout::flags::Parser::Builder(flags);
+        builder.Build();
+      }(),
+      "Missing subcommand 'help' for field "
+      "'test.FlagsWithSubcommandMissingHelp.info_subcommand'");
+}
+
+
+TEST(SubcommandsTest, MissingSubcommandExtension) {
   EXPECT_DEATH(
       []() {
         test::SubcommandFlagsWithoutExtension flag;
@@ -15,7 +38,7 @@ TEST(FlagsTest, MissingSubcommandExtension) {
       " annotated with a stout.v1.subcommand option");
 }
 
-TEST(FlagsTest, IncorrectSubcommandExtension) {
+TEST(SubcommandsTest, IncorrectSubcommandExtension) {
   EXPECT_DEATH(
       []() {
         test::FlagsWithIncorrectExtension flag;
@@ -26,7 +49,7 @@ TEST(FlagsTest, IncorrectSubcommandExtension) {
       " that are only inside 'oneof subcommand'");
 }
 
-TEST(FlagsTest, IncorrectOneofName) {
+TEST(SubcommandsTest, IncorrectOneofName) {
   EXPECT_DEATH(
       []() {
         test::IncorrectOneofName flag;
@@ -37,7 +60,7 @@ TEST(FlagsTest, IncorrectOneofName) {
       "Other names are illegal");
 }
 
-TEST(FlagsTest, SubcommandFlagExtension) {
+TEST(SubcommandsTest, SubcommandFlagExtension) {
   EXPECT_DEATH(
       []() {
         test::SubcommandFlagExtension flag;
@@ -48,7 +71,7 @@ TEST(FlagsTest, SubcommandFlagExtension) {
       " annotated with a stout.v1.subcommand option");
 }
 
-TEST(FlagsTest, DuplicateSubcommandFields) {
+TEST(SubcommandsTest, DuplicateSubcommandFields) {
   EXPECT_DEATH(
       []() {
         test::DuplicateSubcommandFields flag;
@@ -59,7 +82,7 @@ TEST(FlagsTest, DuplicateSubcommandFields) {
       " for message 'test.DuplicateSubcommandFields'");
 }
 
-TEST(FlagsTest, SubcommandAndUnknownArguments) {
+TEST(SubcommandsTest, SubcommandAndUnknownArguments) {
   test::SimpleSubcommandSucceed flags;
 
   auto parser = stout::flags::Parser::Builder(flags).Build();
@@ -90,7 +113,7 @@ TEST(FlagsTest, SubcommandAndUnknownArguments) {
   EXPECT_EQ(13, flags.build().other_flag());
 }
 
-TEST(FlagsTest, SimpleSubcommandBuildSucceed) {
+TEST(SubcommandsTest, SimpleSubcommandBuildSucceed) {
   test::SimpleSubcommandSucceed flags;
 
   auto parser = stout::flags::Parser::Builder(flags).Build();
@@ -114,7 +137,7 @@ TEST(FlagsTest, SimpleSubcommandBuildSucceed) {
   EXPECT_EQ(13, flags.build().other_flag());
 }
 
-TEST(FlagsTest, SimpleSubcommandInfoSucceed) {
+TEST(SubcommandsTest, SimpleSubcommandInfoSucceed) {
   test::SimpleSubcommandSucceed flags;
 
   auto parser = stout::flags::Parser::Builder(flags).Build();
@@ -138,7 +161,7 @@ TEST(FlagsTest, SimpleSubcommandInfoSucceed) {
   EXPECT_EQ("hello world", flags.info_subcommand().info());
 }
 
-TEST(FlagsTest, DuplicateSubcommands) {
+TEST(SubcommandsTest, DuplicateSubcommands) {
   test::SimpleSubcommandSucceed flags;
 
   auto parser = stout::flags::Parser::Builder(flags).Build();
@@ -162,7 +185,7 @@ TEST(FlagsTest, DuplicateSubcommands) {
       ". Encountered unknown flag 'info_subcommand'");
 }
 
-TEST(FlagsTest, DuplicateSubcommandFlags) {
+TEST(SubcommandsTest, DuplicateSubcommandFlags) {
   test::SimpleSubcommandSucceed flags;
 
   auto parser = stout::flags::Parser::Builder(flags).Build();
@@ -183,7 +206,7 @@ TEST(FlagsTest, DuplicateSubcommandFlags) {
       "Encountered duplicate flag 'other_flag'");
 }
 
-TEST(FlagsTest, DuplicateSubcommandFlagNameForEnclosingLevel) {
+TEST(SubcommandsTest, DuplicateSubcommandFlagNameForEnclosingLevel) {
   test::DuplicateEnclosingFlagName flags;
 
   auto parser = stout::flags::Parser::Builder(flags).Build();
@@ -207,7 +230,7 @@ TEST(FlagsTest, DuplicateSubcommandFlagNameForEnclosingLevel) {
   EXPECT_EQ(2, flags.build().other_flag());
 }
 
-TEST(FlagsTest, SubcommandFailSettingTwoOneofFlagsAtOnce) {
+TEST(SubcommandsTest, SubcommandFailSettingTwoOneofFlagsAtOnce) {
   test::SimpleSubcommandSucceed flags;
 
   auto parser = stout::flags::Parser::Builder(flags).Build();
@@ -231,7 +254,7 @@ TEST(FlagsTest, SubcommandFailSettingTwoOneofFlagsAtOnce) {
       ". Encountered unknown flag 'info_subcommand'");
 }
 
-TEST(FlagsTest, ComplicatedSubcommandSucceed1) {
+TEST(SubcommandsTest, ComplicatedSubcommandSucceed1) {
   test::ComplicatedSubcommandMessage flags;
 
   auto parser = stout::flags::Parser::Builder(flags).Build();
@@ -265,7 +288,7 @@ TEST(FlagsTest, ComplicatedSubcommandSucceed1) {
   EXPECT_EQ(1, flags.sub1().build().other_flag());
 }
 
-TEST(FlagsTest, ComplicatedSubcommandSucceed2) {
+TEST(SubcommandsTest, ComplicatedSubcommandSucceed2) {
   test::ComplicatedSubcommandMessage flags;
 
   auto parser = stout::flags::Parser::Builder(flags).Build();
@@ -299,7 +322,7 @@ TEST(FlagsTest, ComplicatedSubcommandSucceed2) {
   EXPECT_EQ("ciao", flags.sub1().info_subcommand().info());
 }
 
-TEST(FlagsTest, ComplicatedSubcommandSucceed3) {
+TEST(SubcommandsTest, ComplicatedSubcommandSucceed3) {
   test::ComplicatedSubcommandMessage flags;
 
   auto parser = stout::flags::Parser::Builder(flags).Build();
@@ -331,7 +354,7 @@ TEST(FlagsTest, ComplicatedSubcommandSucceed3) {
   EXPECT_EQ("some info", flags.sub2().info_subcommand().info());
 }
 
-TEST(FlagsTest, ComplicatedSubcommandSucceed4) {
+TEST(SubcommandsTest, ComplicatedSubcommandSucceed4) {
   test::ComplicatedSubcommandMessage flags;
 
   auto parser = stout::flags::Parser::Builder(flags).Build();

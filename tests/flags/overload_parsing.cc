@@ -2,7 +2,7 @@
 
 #include "gtest/gtest.h"
 #include "stout/flags/flags.h"
-#include "tests/flags/test.pb.h"
+#include "tests/flags/test_flags.pb.h"
 
 // Tests that by default we'll overload parsing a
 // 'google.protobuf.Duration'.

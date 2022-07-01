@@ -2,9 +2,9 @@
 
 #include "gtest/gtest.h"
 #include "stout/flags/flags.h"
-#include "tests/flags/test.pb.h"
+#include "tests/flags/test_positional_arguments.pb.h"
 
-TEST(PositionalArguments, RenameSucceed) {
+TEST(PositionalArgumentsTest, RenameSucceed) {
   test::Rename rename;
 
   auto parser = stout::flags::Parser::Builder(rename).Build();
@@ -29,7 +29,7 @@ TEST(PositionalArguments, RenameSucceed) {
   EXPECT_EQ("bar.cc", rename.new_file_name());
 }
 
-TEST(PositionalArguments, RenameFailOnMissingRequiredArgument) {
+TEST(PositionalArgumentsTest, RenameFailOnMissingRequiredArgument) {
   test::Rename rename;
 
   auto parser = stout::flags::Parser::Builder(rename).Build();
@@ -49,7 +49,7 @@ TEST(PositionalArguments, RenameFailOnMissingRequiredArgument) {
       ". Positional argument 'new_file' not parsed but required");
 }
 
-TEST(PositionalArguments, BuildFileSucceed) {
+TEST(PositionalArgumentsTest, BuildFileSucceed) {
   test::ProcessFile msg;
 
   auto parser = stout::flags::Parser::Builder(msg).Build();
@@ -74,7 +74,7 @@ TEST(PositionalArguments, BuildFileSucceed) {
   EXPECT_EQ("foo.cc", msg.build().file());
 }
 
-TEST(PositionalArguments, ProcessFileRenameSucceed) {
+TEST(PositionalArgumentsTest, ProcessFileRenameSucceed) {
   test::ProcessFile msg;
 
   auto parser = stout::flags::Parser::Builder(msg).Build();
@@ -99,7 +99,7 @@ TEST(PositionalArguments, ProcessFileRenameSucceed) {
   EXPECT_EQ("bar.cc", msg.rename().new_file_name());
 }
 
-TEST(PositionalArguments, RandomOrderFieldIndexes) {
+TEST(PositionalArgumentsTest, RandomOrderFieldIndexes) {
   test::RandomOrderFieldIndexes msg;
 
   auto parser = stout::flags::Parser::Builder(msg).Build();
@@ -123,7 +123,7 @@ TEST(PositionalArguments, RandomOrderFieldIndexes) {
   EXPECT_EQ("third value", msg.str3());
 }
 
-TEST(PositionalArguments, BuildFileFailOnMissingRequiredArgument) {
+TEST(PositionalArgumentsTest, BuildFileFailOnMissingRequiredArgument) {
   test::ProcessFile msg;
 
   auto parser = stout::flags::Parser::Builder(msg).Build();
@@ -144,7 +144,7 @@ TEST(PositionalArguments, BuildFileFailOnMissingRequiredArgument) {
       ". Positional argument 'file_name' not parsed but required");
 }
 
-TEST(PositionalArguments, RedundantPositionalArguments) {
+TEST(PositionalArgumentsTest, RedundantPositionalArguments) {
   test::ProcessFile msg;
 
   auto parser = stout::flags::Parser::Builder(msg).Build();
@@ -173,7 +173,7 @@ TEST(PositionalArguments, RedundantPositionalArguments) {
       ". Encountered unknown flag 'true'");
 }
 
-TEST(PositionalArguments, IllegalPositionalArgument1) {
+TEST(PositionalArgumentsTest, IllegalPositionalArgument1) {
   test::IllegalPositionalArg1 msg;
 
   EXPECT_DEATH(
@@ -182,7 +182,7 @@ TEST(PositionalArguments, IllegalPositionalArgument1) {
       " extension must have string type");
 }
 
-TEST(PositionalArguments, IllegalPositionalArgument2) {
+TEST(PositionalArgumentsTest, IllegalPositionalArgument2) {
   test::IllegalPositionalArg2 msg;
 
   EXPECT_DEATH(
@@ -190,7 +190,7 @@ TEST(PositionalArguments, IllegalPositionalArgument2) {
       "Missing name for field 'test.IllegalPositionalArg2.str'");
 }
 
-TEST(PositionalArguments, IllegalPositionalArgument3) {
+TEST(PositionalArgumentsTest, IllegalPositionalArgument3) {
   test::IllegalPositionalArg3 msg;
 
   EXPECT_DEATH(
@@ -198,7 +198,7 @@ TEST(PositionalArguments, IllegalPositionalArgument3) {
       "Missing 'help' for field 'test.IllegalPositionalArg3.str'");
 }
 
-TEST(PositionalArguments, MoreComplicatedCase1) {
+TEST(PositionalArgumentsTest, MoreComplicatedCase1) {
   test::TopLevelArguments msg;
 
   auto parser = stout::flags::Parser::Builder(msg).Build();
@@ -231,7 +231,7 @@ TEST(PositionalArguments, MoreComplicatedCase1) {
   EXPECT_EQ("hello world", msg.sub1().sub1_pos_arg());
 }
 
-TEST(PositionalArguments, MoreComplicatedCase2) {
+TEST(PositionalArgumentsTest, MoreComplicatedCase2) {
   test::TopLevelArguments msg;
 
   auto parser = stout::flags::Parser::Builder(msg).Build();

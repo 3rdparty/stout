@@ -1,0 +1,119 @@
+syntax = "proto3";
+
+package test;
+
+import "google/protobuf/duration.proto";
+import "include/stout/flags/v1/flag.proto";
+
+///////////////////////////////////////////////////////////////////////////////
+
+message Flags {
+  string foo = 1 [
+    (stout.v1.flag) = {
+      names: [ "foo" ]
+      help: "help"
+      required: true
+    }
+  ];
+
+  string _s = 2 [
+    (stout.v1.flag) = {
+      names: [ "s" ]
+      help: "help"
+      required: false
+    }
+  ];
+
+  bool bar = 3 [
+    (stout.v1.flag) = {
+      names: [ "bar" ]
+      help: "help"
+    }
+  ];
+
+  int32 baz = 4 [
+    (stout.v1.flag) = {
+      names: [ "baz" ]
+      help: "help"
+    }
+  ];
+
+  google.protobuf.Duration duration = 5 [
+    (stout.v1.flag) = {
+      names: [ "duration" ]
+      help: "help"
+    }
+  ];
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+message MissingFlagName {
+  string s = 1 [
+    (stout.v1.flag) = {
+      help: "help"
+    }
+  ];
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+message MissingFlagHelp {
+  string s = 1 [
+    (stout.v1.flag) = {
+      names: "name"
+    }
+  ];
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+message DuplicateFlagName {
+  string s1 = 1 [
+    (stout.v1.flag) = {
+      names: [ "same" ]
+      help: "help"
+    }
+  ];
+
+  string s2 = 2 [
+    (stout.v1.flag) = {
+      names: [ "other", "same" ]
+      help: "help"
+    }
+  ];
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+message DuplicateFlagsDeath {
+  string s = 1 [
+    (stout.v1.flag) = {
+      names: [ "s" ]
+      help: "help"
+    }
+  ];
+
+  string ss = 2 [
+    (stout.v1.flag) = {
+      names: [ "ss", "ss_alias" ]
+      help: "help"
+    }
+  ];
+
+  bool duplicate = 3 [
+    (stout.v1.flag) = {
+      names: [ "duplicate", "other" ]
+      help: "help"
+    }
+  ];
+
+  bool b = 4 [
+    (stout.v1.flag) = {
+      names: [ "b" ]
+      help: "help"
+    }
+  ];
+}
+
+///////////////////////////////////////////////////////////////////////////////
