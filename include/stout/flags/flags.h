@@ -73,6 +73,20 @@ class Parser {
   // Helper for parsing a normalized form of flags.
   void Parse(const std::vector<ArgumentInfo>& values);
 
+  // Helper that populates the specific protobuf message's field
+  // with some value or just aggregates errors on any failure.
+  void SetFieldMessageOrAggregateErrors(
+      const std::string& value,
+      const std::string& name,
+      const google::protobuf::FieldDescriptor* field,
+      google::protobuf::Message* message,
+      std::set<std::string>& errors);
+
+  // Helper that normalizes default field value if the type is 'string'.
+  std::string GetNormalizedDefaultValue(
+      const std::string& value,
+      const google::protobuf::FieldDescriptor::Type& type);
+
   // Helper that prints out help for the flags for this parser.
   void PrintHelp();
 
