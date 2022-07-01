@@ -1,0 +1,234 @@
+syntax = "proto3";
+
+package test.default_values;
+
+import "include/stout/flags/v1/flag.proto";
+import "include/stout/flags/v1/positional_argument.proto";
+import "include/stout/flags/v1/subcommand.proto";
+
+///////////////////////////////////////////////////////////////////////////////
+
+message Flags {
+  string str1 = 1 [
+    (stout.v1.flag) = {
+      names: [ "str1" ]
+      default: "'some default value'"
+      help: "help"
+      required: false
+    }
+  ];
+
+  string str2 = 2 [
+    (stout.v1.flag) = {
+      names: [ "str2" ]
+      default: "some default value"
+      help: "help"
+      required: false
+    }
+  ];
+
+  string str3 = 3 [
+    (stout.v1.flag) = {
+      names: [ "str3" ]
+      default: "\"some default value\""
+      help: "help"
+      required: false
+    }
+  ];
+
+  bool bar = 4 [
+    (stout.v1.flag) = {
+      names: [ "bar" ]
+      default: "true"
+      help: "help"
+    }
+  ];
+
+  int32 baz = 5 [
+    (stout.v1.flag) = {
+      names: [ "baz" ]
+      default: "1994"
+      help: "help"
+    }
+  ];
+
+  bool bam = 6 [
+    (stout.v1.flag) = {
+      names: [ "bam" ]
+      default: "true"
+      help: "help"
+    }
+  ];
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+message PositionalArgs {
+  string arg1 = 1 [
+    (stout.v1.argument) = {
+      name: "arg1"
+      default: "value1"
+      help: "help"
+    }
+  ];
+
+  string arg2 = 2 [
+    (stout.v1.argument) = {
+      name: "arg2"
+      default: "value2"
+      help: "help"
+    }
+  ];
+
+  string arg3 = 3 [
+    (stout.v1.argument) = {
+      name: "arg3"
+      default: "value3"
+      help: "help"
+    }
+  ];
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+// This message is illegal because it's non-sensical to have both
+// required and default options.
+message IllegalSetup {
+  int32 flag1 = 1 [
+    (stout.v1.flag) = {
+      names: [ "flag1" ]
+      default: "1"
+      required: true
+      help: "help"
+    }
+  ];
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+message IncorrectTypeOfDefaultValue {
+  int32 flag1 = 1 [
+    (stout.v1.flag) = {
+      names: [ "flag1" ]
+      default: "string"
+      required: false
+      help: "help"
+    }
+  ];
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+message PositionalArgumentWithoutDefault {
+  string arg1 = 1 [
+    (stout.v1.argument) = {
+      name: "arg1"
+      default: "1"
+      help: "help"
+    }
+  ];
+
+  string arg2 = 2 [
+    (stout.v1.argument) = {
+      name: "arg2"
+      help: "help"
+    }
+  ];
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+message TopLevelFlagsAndPositionalArgs {
+  int32 top_level_flag1 = 1 [
+    (stout.v1.flag) = {
+      names: [ "top_level_flag1" ]
+      required: false
+      default: "1"
+      help: "help"
+    }
+  ];
+
+  string top_level_flag2 = 2 [
+    (stout.v1.flag) = {
+      names: [ "top_level_flag2" ]
+      required: false
+      default: "value"
+      help: "help"
+    }
+  ];
+
+  string top_pos_arg1 = 3 [
+    (stout.v1.argument) = {
+      name: "top_pos_arg1"
+      default: "hello"
+      help: "help"
+    }
+  ];
+
+  string top_pos_arg2 = 4 [
+    (stout.v1.argument) = {
+      name: "top_pos_arg2"
+      default: "world"
+      help: "help"
+    }
+  ];
+
+  oneof subcommand {
+    Subcommand1 sub1 = 5 [
+      (stout.v1.subcommand) = {
+        names: [ "sub1" ]
+        help: "help"
+      }
+    ];
+    Subcommand2 sub2 = 6 [
+      (stout.v1.subcommand) = {
+        names: [ "sub2" ]
+        help: "help"
+      }
+    ];
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+message Subcommand1 {
+  int32 sub1_flag = 1 [
+    (stout.v1.flag) = {
+      names: [ "sub1_flag" ]
+      required: false
+      default: "1"
+      help: "help"
+    }
+  ];
+
+  string sub1_pos_arg = 2 [
+    (stout.v1.argument) = {
+      name: "sub1_pos_arg1"
+      default: "str"
+      help: "help"
+    }
+  ];
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+message Subcommand2 {
+  int32 sub2_flag = 1 [
+    (stout.v1.flag) = {
+      names: [ "sub2_flag" ]
+      required: false
+      default: "19"
+      help: "help"
+    }
+  ];
+
+  string sub2_pos_arg = 2 [
+    (stout.v1.argument) = {
+      name: "sub2_pos_arg"
+      default: "ciao"
+      help: "help"
+    }
+  ];
+}
+
+///////////////////////////////////////////////////////////////////////////////

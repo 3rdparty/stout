@@ -61,6 +61,8 @@ message Argument {
   string name = 1;
   // For printing out help.
   string help = 2;
+  // Default value.
+  optional string default = 3;
 }
 
 // Extend a level-field option.

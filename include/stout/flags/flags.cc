@@ -135,6 +135,19 @@ void Parser::AddFieldsAndSubcommandsOrExit(google::protobuf::Message& message) {
           std::exit(1);
         }
 
+        // NOTE: for some reason protoc compiler has generated
+        // 'has_default_()' method with underscore, we believe
+        // that this happens because 'default' conflicts with
+        // reserved words.
+        if (flag.required() && flag.has_default_()) {
+          std::cerr
+              << "Error: you can't have default value for required field '"
+              << field->full_name()
+              << "'"
+              << std::endl;
+          std::exit(1);
+        }
+
         for (const auto& name : flag.names()) {
           auto [_, inserted] = fields_.emplace(name, field);
 
@@ -541,42 +554,15 @@ void Parser::Parse(const std::vector<ArgumentInfo>& values) {
         parsed_[field] = {non_negated_name, text.value()};
       }
     } else {
-      // Parse the value using an error collector that aggregates the
-      // error for us to print out later.
-      struct ErrorCollector : public google::protobuf::io::ErrorCollector {
-        void AddError(
-            int /* line */,
-            int /* column */,
-            const std::string& message) override {
-          error += message;
-        }
-
-        void AddWarning(
-            int line,
-            int column,
-            const std::string& message) override {
-          // For now we treat all warnings as errors.
-          AddError(line, column, message);
-        }
-
-        std::string error;
-      } error_collector;
-
-      google::protobuf::TextFormat::Parser text_format_parser;
-      text_format_parser.RecordErrorsTo(&error_collector);
-      if (!text_format_parser.ParseFieldValueFromString(
-              text.value(),
-              field,
-              &GetMessageForField(*field))) {
-        errors.insert(
-            "Failed to parse flag '" + non_negated_name
-            + "' from normalized value '" + text.value()
-            + "' due to protobuf text-format parser error(s): "
-            + error_collector.error);
-      } else {
-        // Successfully parsed!
-        parsed_[field] = {non_negated_name, text.value()};
-      }
+      // Parse the given text as a single field value and store it
+      // into the given field of the given message or just store
+      // errors on any failure for printing them later.
+      SetFieldMessageOrAggregateErrors(
+          text.value(),
+          non_negated_name,
+          field,
+          &GetMessageForField(*field),
+          errors);
     }
   }
 
@@ -587,18 +573,36 @@ void Parser::Parse(const std::vector<ArgumentInfo>& values) {
   }
 
   // Ensure required flags are present.
-  for (const auto& [_, field] : fields_) {
+  for (const auto& [name, field] : fields_) {
+    // The field has been parsed, all good, just continue.
+    if (parsed_.count(field) > 0) {
+      continue;
+    }
+
     const stout::v1::Flag& flag =
         field->options().GetExtension(stout::v1::flag);
 
-    // This field is not required, so just continue.
-    if (!flag.required())
-      continue;
+    // Need to normalize string default value before parsing.
+    // NOTE: for some reason protoc compiler has generated
+    // 'default_()' method with underscore, we believe that
+    // this happens because 'default' conflicts with reserved
+    // words.
+    const std::string normalized_value =
+        GetNormalizedDefaultValue(
+            flag.default_(),
+            field->type());
 
-    // Required field has been parsed, so it is present.
-    // All good, just continue.
-    if (parsed_.count(field) > 0)
+    if (!flag.required()) {
+      if (flag.has_default_()) {
+        SetFieldMessageOrAggregateErrors(
+            normalized_value,
+            name,
+            field,
+            &GetMessageForField(*field),
+            errors);
+      }
       continue;
+    }
 
     if (flag.names().empty()) {
       std::cerr << "'names' option for the field '"
@@ -627,11 +631,27 @@ void Parser::Parse(const std::vector<ArgumentInfo>& values) {
 
   // Ensure all positional arguments from protobuf message have been parsed.
   for (const PositionalArgument& pos_arg : positional_args_) {
+    if (parsed_.count(pos_arg.field) > 0)
+      continue;
+
     const stout::v1::Argument& argument =
         pos_arg.field->options().GetExtension(stout::v1::argument);
 
-    if (parsed_.count(pos_arg.field) > 0)
+    // Need to normalize string default value before parsing.
+    const std::string normalized_value =
+        GetNormalizedDefaultValue(
+            argument.default_(),
+            pos_arg.field->type());
+
+    if (argument.has_default_()) {
+      SetFieldMessageOrAggregateErrors(
+          normalized_value,
+          pos_arg.name,
+          pos_arg.field,
+          &GetMessageForField(*pos_arg.field),
+          errors);
       continue;
+    }
 
     errors.insert(
         "Positional argument '"
@@ -659,6 +679,63 @@ void Parser::Parse(const std::vector<ArgumentInfo>& values) {
     }
     std::exit(1);
   }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+void Parser::SetFieldMessageOrAggregateErrors(
+    const std::string& value,
+    const std::string& name,
+    const google::protobuf::FieldDescriptor* field,
+    google::protobuf::Message* message,
+    std::set<std::string>& errors) {
+  // Parse the value using an error collector that aggregates the
+  // error for us to print out later.
+  struct ErrorCollector : public google::protobuf::io::ErrorCollector {
+    // TODO(artur): include also 'line' and 'column' for easier debugging.
+    void AddError(
+        int /* line */,
+        int /* column */,
+        const std::string& message) override {
+      error += message;
+    }
+
+    void AddWarning(
+        int line,
+        int column,
+        const std::string& message) override {
+      // For now we treat all warnings as errors.
+      AddError(line, column, message);
+    }
+
+    std::string error;
+  } error_collector;
+
+  google::protobuf::TextFormat::Parser text_format_parser;
+  text_format_parser.RecordErrorsTo(&error_collector);
+  if (!text_format_parser.ParseFieldValueFromString(
+          value,
+          field,
+          message)) {
+    errors.insert(
+        "Failed to parse flag '" + name
+        + "' from normalized value '" + value
+        + "' due to protobuf text-format parser error(s): "
+        + error_collector.error);
+  } else {
+    // Successfully parsed!
+    parsed_[field] = {name, value};
+  }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+std::string Parser::GetNormalizedDefaultValue(
+    const std::string& value,
+    const google::protobuf::FieldDescriptor::Type& type) {
+  return (type == google::protobuf::FieldDescriptor::TYPE_STRING)
+      ? ("'" + absl::CEscape(value) + "'")
+      : value;
 }
 
 ////////////////////////////////////////////////////////////////////////

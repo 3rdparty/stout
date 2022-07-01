@@ -4,6 +4,7 @@ load("@rules_proto//proto:defs.bzl", "proto_library")
 proto_library(
     name = "test_proto",
     srcs = [
+        ":test_default_values.proto",
         ":test_flags.proto",
         ":test_positional_arguments.proto",
         ":test_subcommands.proto",
@@ -29,6 +30,7 @@ cc_proto_library(
 cc_test(
     name = "flags",
     srcs = [
+        "default_values.cc",
         "duplicate_flag_name.cc",
         "environment_variables.cc",
         "help.cc",

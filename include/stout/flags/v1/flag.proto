@@ -8,7 +8,10 @@ message Flag {
   repeated string names = 1;
   repeated string deprecated_names = 2;
   string help = 3;
-  bool required = 4;
+  // Default value. Will be validated at a parsing time.
+  optional string default = 4;
+  // Whether or not this flag is required.
+  bool required = 5;
   // TODO: bool deprecated = 5;
   // TODO: bool aggregatable = 6;
   // TODO: bool sensitive = 7;
