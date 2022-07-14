@@ -45,7 +45,6 @@ jobs:
       - name: Build
         run: |
           bazel build \
-            --spawn_strategy=local \
             -c dbg \
             --strip="never" \
             ...
@@ -53,7 +52,6 @@ jobs:
       - name: Test
         run: |
           bazel test \
-            --spawn_strategy=local \
             -c dbg \
             --strip="never" \
             --test_output=errors \
