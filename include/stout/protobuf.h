@@ -30,6 +30,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "fmt/format.h"
 #include "stout/abort.h"
 #include "stout/base64.h"
 #include "stout/error.h"
@@ -46,7 +47,6 @@
 #include "stout/os/write.h"
 #include "stout/representation.h"
 #include "stout/result.h"
-#include "stout/stringify.h"
 #include "stout/try.h"
 
 #ifdef _WIN32
@@ -166,7 +166,7 @@ Try<Nothing> write(const std::string& path, const T& t, bool sync = false) {
   // We propagate `close` failures if `write` on the file was successful.
   if (write.isSome() && close.isError()) {
     return Error(
-        "Failed to close '" + stringify(fd.get()) + "':" + close.error());
+        fmt::format("Failed to close '{}':{}", fd.get(), close.error()));
   }
 
   return write;
@@ -202,7 +202,7 @@ inline Try<Nothing> append(
   // We propagate `close` failures if `write` on the file was successful.
   if (write.isSome() && close.isError()) {
     return Error(
-        "Failed to close '" + stringify(fd.get()) + "':" + close.error());
+        fmt::format("Failed to close '{}':{}", fd.get(), close.error()));
   }
 
   return write;
@@ -314,8 +314,10 @@ struct Read {
         return None();
       }
       return Error(
-          "Failed to read message of size " + stringify(size)
-          + " bytes: hit EOF unexpectedly, possible corruption");
+          fmt::format(
+              "Failed to read message of size {} bytes: "
+              "hit EOF unexpectedly, possible corruption",
+              size));
     }
 
     // Parse the protobuf from the string.
@@ -1034,7 +1036,7 @@ inline Object protobuf(const google::protobuf::Message& message) {
       case google::protobuf::FieldDescriptor::TYPE_GROUP:
         // Deprecated! We abort here instead of using a Try as return value,
         // because we expect this code path to never be taken.
-        ABORT("Unhandled protobuf field type: " + stringify(field->type()));
+        ABORT(fmt::format("Unhandled protobuf field type: {}", field->type()));
     }
 
     UNREACHABLE();
@@ -1162,7 +1164,9 @@ inline Object protobuf(const google::protobuf::Message& message) {
             // Deprecated! We abort here instead of using a Try as return
             // value, because we expect this code path to never be taken.
             ABORT(
-                "Unhandled protobuf field type: " + stringify(field->type()));
+                fmt::format(
+                    "Unhandled protobuf field type: {}",
+                    field->type()));
         }
       }
       object.values[field->name()] = array;

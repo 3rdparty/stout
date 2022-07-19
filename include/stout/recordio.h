@@ -18,11 +18,11 @@
 #include <functional>
 #include <string>
 
+#include "fmt/format.h"
 #include "stout/check.h"
 #include "stout/foreach.h"
 #include "stout/numify.h"
 #include "stout/option.h"
-#include "stout/stringify.h"
 #include "stout/try.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -67,7 +67,7 @@ class Encoder {
    */
   std::string encode(const T& record) const {
     std::string s = serialize(record);
-    return stringify(s.size()) + "\n" + s;
+    return fmt::format("{}\n{}", s.size(), s);
   }
 
  private:

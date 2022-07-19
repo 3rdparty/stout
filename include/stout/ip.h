@@ -47,6 +47,7 @@
 #include <string>
 #include <vector>
 
+#include "fmt/format.h"
 #include "stout/abort.h"
 #include "stout/bits.h"
 #include "stout/check.h"
@@ -56,7 +57,6 @@
 #include "stout/option.h"
 #include "stout/os/strerror.h"
 #include "stout/result.h"
-#include "stout/stringify.h"
 #include "stout/strings.h"
 #include "stout/try.h"
 #include "stout/unreachable.h"
@@ -122,7 +122,8 @@ class IP {
     if (family_ == AF_INET) {
       return storage_.in_;
     } else {
-      return Error("Cannot create in_addr from family: " + stringify(family_));
+      return Error(
+          fmt::format("Cannot create in_addr from family: {}", family_));
     }
   }
 
@@ -132,7 +133,7 @@ class IP {
       return storage_.in6_;
     } else {
       return Error(
-          "Cannot create in6_addr from family: " + stringify(family_));
+          fmt::format("Cannot create in6_addr from family: {}", family_));
     }
   }
 
@@ -425,7 +426,7 @@ inline Try<IP> IP::parse(const std::string& value, int family) {
       return Error("Failed to parse IP as either IPv4 or IPv6:" + value);
     }
     default:
-      return Error("Unsupported family type: " + stringify(family));
+      return Error(fmt::format("Unsupported family type: {}", family));
   }
 }
 
@@ -471,7 +472,8 @@ inline Try<IP> IP::create(const struct sockaddr& addr) {
       return IP(addr6.sin6_addr);
     }
     default: {
-      return Error("Unsupported family type: " + stringify(addr.sa_family));
+      return Error(
+          fmt::format("Unsupported family type: {}", addr.sa_family));
     }
   }
 }
@@ -489,8 +491,10 @@ inline std::ostream& operator<<(std::ostream& stream, const IP& ip) {
         // We do not expect inet_ntop to fail because all parameters
         // passed in are valid.
         ABORT(
-            "Failed to get human-readable IPv4 for "
-            + stringify(ntohl(in.s_addr)) + ": " + os::strerror(errno));
+            fmt::format(
+                "Failed to get human-readable IPv4 for {}:{}",
+                ntohl(in.s_addr),
+                os::strerror(errno)));
       }
       return stream << buffer;
     }
@@ -517,7 +521,7 @@ inline Try<IP::Network> IP::Network::parse(
 
   if (tokens.size() != 2) {
     return Error(
-        "Unexpected number of '/' detected: " + stringify(tokens.size()));
+        fmt::format("Unexpected number of '/' detected: {}", tokens.size()));
   }
 
   // Parse the IP address.
@@ -554,9 +558,11 @@ inline Try<IP::Network> IP::Network::create(
     const IP& netmask) {
   if (address.family() != netmask.family()) {
     return Error(
-        "The network families of the IP address '"
-        + stringify(address.family()) + "' and the IP netmask '"
-        + stringify(netmask.family()) + "' do not match");
+        fmt::format(
+            "The network families of the IP address '{}'"
+            " and the IP netmask '{}' do not match",
+            address.family(),
+            netmask.family()));
   }
 
   switch (address.family()) {

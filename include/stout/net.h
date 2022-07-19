@@ -54,7 +54,6 @@
 #include "stout/os/close.h"
 #include "stout/os/int_fd.h"
 #include "stout/os/open.h"
-#include "stout/stringify.h"
 #include "stout/try.h"
 
 #ifdef _WIN32

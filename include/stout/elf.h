@@ -21,12 +21,13 @@
 #include <string>
 #include <vector>
 
+#include "fmt/format.h"
+#include "fmt/ranges.h"
 #include "stout/error.h"
 #include "stout/foreach.h"
 #include "stout/nothing.h"
 #include "stout/option.h"
 #include "stout/result.h"
-#include "stout/stringify.h"
 #include "stout/strings.h"
 #include "stout/try.h"
 #include "stout/version.h"
@@ -171,9 +172,10 @@ class File {
 
     // The note in a `.note.ABI-tag` section must have `type == 1`.
     if (type != 1) {
-      return Error("Corrupt tag type '" + stringify(type) +
-                   "' from"
-                   " entry in '.note.ABI-tag' section");
+      return Error(
+          fmt::format(
+              "Corrupt tag type '{}' from entry in '.note.ABI-tag' section",
+              type));
     }
 
     // Linux mandates `name == GNU`.
@@ -193,9 +195,10 @@ class File {
         (uint32_t*) ((char*) descriptor + descriptor_size));
 
     if (version.size() != 4 || version[0] != 0) {
-      return Error("Corrupt version '" + stringify(version) +
-                   "'"
-                   " from entry in '.note.ABI-tag' section");
+      return Error(
+          fmt::format(
+              "Corrupt version '[{}]' from entry in '.note.ABI-tag' section",
+              fmt::join(version, ", ")));
     }
 
     return Version(version[1], version[2], version[3]);

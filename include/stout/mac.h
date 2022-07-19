@@ -47,7 +47,6 @@
 #include "stout/error.h"
 #include "stout/none.h"
 #include "stout/result.h"
-#include "stout/stringify.h"
 #include "stout/strings.h"
 #include "stout/try.h"
 
