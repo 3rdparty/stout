@@ -15,7 +15,7 @@
 #include <chrono>
 #include <string>
 
-#include "stout/stringify.h"
+#include "fmt/format.h"
 #include "stout/try.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -42,7 +42,7 @@ inline Try<std::string> bootId() {
                                  boot_time.time_since_epoch())
                                  .count();
 
-  return stringify(boot_time_secs);
+  return fmt::format("{}", boot_time_secs);
 }
 
 ////////////////////////////////////////////////////////////////////////
