@@ -14,9 +14,9 @@
 
 #include <sys/types.h>
 
+#include "fmt/format.h"
 #include "stout/error.h"
 #include "stout/nothing.h"
-#include "stout/stringify.h"
 #include "stout/try.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -28,8 +28,10 @@ namespace os {
 inline Try<Nothing> ftruncate(int fd, off_t length) {
   if (::ftruncate(fd, length) != 0) {
     return ErrnoError(
-        "Failed to truncate file at file descriptor '"
-        + stringify(fd) + "' to " + stringify(length) + " bytes.");
+        fmt::format(
+            "Failed to truncate file at file descriptor '{}' to {} bytes",
+            fd,
+            length));
   }
 
   return Nothing();

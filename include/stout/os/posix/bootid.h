@@ -16,11 +16,12 @@
 
 #include <string>
 
+#include "fmt/format.h"
 #include "stout/error.h"
 #include "stout/os/read.h"
-#include "stout/stringify.h"
 #include "stout/strings.h"
 #include "stout/try.h"
+
 #if defined(__APPLE__) || defined(__FreeBSD__)
 #include "stout/os/sysctl.h"
 #endif // __APPLE__ || __FreeBSD__

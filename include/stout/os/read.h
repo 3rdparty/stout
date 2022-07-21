@@ -28,7 +28,6 @@
 #include "stout/result.h"
 #include "stout/try.h"
 #ifdef _WIN32
-#include "stout/stringify.h"
 #include "stout/windows.h"
 #endif // _WIN32
 

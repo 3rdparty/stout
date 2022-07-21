@@ -14,13 +14,13 @@
 
 #include <string>
 
+#include "fmt/format.h"
 #include "stout/error.h"
 #include "stout/nothing.h"
 #include "stout/option.h"
 #include "stout/os/shell.h"
 #include "stout/os/stat.h"
 #include "stout/path.h"
-#include "stout/stringify.h"
 #include "stout/try.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -67,7 +67,7 @@ inline Try<Nothing> copyfile(
   }
 
   if (!(WIFEXITED(status.get()) && WEXITSTATUS(status.get()) == 0)) {
-    return Error("cp failed with status: " + stringify(status.get()));
+    return Error(fmt::format("cp failed with status: {}", status.get()));
   }
 
   return Nothing();
