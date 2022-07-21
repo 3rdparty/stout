@@ -15,12 +15,12 @@
 #include <list>
 #include <set>
 
+#include "fmt/format.h"
 #include "stout/error.h"
 #include "stout/foreach.h"
 #include "stout/none.h"
 #include "stout/option.h"
 #include "stout/os/process.h"
-#include "stout/stringify.h"
 #include "stout/try.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -56,7 +56,7 @@ inline Try<ProcessTree> pstree(
     }
   }
 
-  return Error("No process found at " + stringify(pid));
+  return Error(fmt::format("No process found at ", pid));
 }
 
 ////////////////////////////////////////////////////////////////////////
