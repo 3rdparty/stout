@@ -13,9 +13,9 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "fmt/format.h"
 #include "stout/duration.h"
 #include "stout/gtest.h"
-#include "stout/stringify.h"
 #include "stout/try.h"
 
 
@@ -49,7 +49,7 @@ TEST(DurationTest, ParseAndTry) {
 
   EXPECT_ERROR(
       Duration::parse(
-          stringify(std::numeric_limits<int64_t>::max()) + "seconds"));
+          fmt::format("{}seconds", std::numeric_limits<int64_t>::max())));
 
   EXPECT_SOME_EQ(Nanoseconds(3141592653), Duration::create(3.141592653));
 
@@ -88,32 +88,32 @@ TEST(DurationTest, Arithmetic) {
 
 
 TEST(DurationTest, OutputFormat) {
-  EXPECT_EQ("1ns", stringify(Nanoseconds(1)));
-  EXPECT_EQ("2ns", stringify(Nanoseconds(2)));
+  EXPECT_EQ("1ns", fmt::format("{}", Nanoseconds(1)));
+  EXPECT_EQ("2ns", fmt::format("{}", Nanoseconds(2)));
 
   // Truncated. Seconds in 15 digits of precision, max of double
   // type's precise digits.
   EXPECT_EQ(
       "3.141592653secs",
-      stringify(Duration::create(3.14159265358979).get()));
-  EXPECT_EQ("3140ms", stringify(Duration::create(3.14).get()));
-  EXPECT_EQ("10hrs", stringify(Hours(10)));
-  EXPECT_EQ("-10hrs", stringify(Hours(-10)));
+      fmt::format("{}", Duration::create(3.14159265358979).get()));
+  EXPECT_EQ("3140ms", fmt::format("{}", Duration::create(3.14).get()));
+  EXPECT_EQ("10hrs", fmt::format("{}", Hours(10)));
+  EXPECT_EQ("-10hrs", fmt::format("{}", Hours(-10)));
 
   // "10days" reads better than "1.42857142857143weeks" so it is
   // printed out in the lower unit.
-  EXPECT_EQ("10days", stringify(Days(10)));
+  EXPECT_EQ("10days", fmt::format("{}", Days(10)));
   // We go one-level down and it is still not a whole number so we
   // print it out using the higher unit.
-  EXPECT_EQ("1.1875days", stringify(Days(1) + Hours(4) + Minutes(30)));
+  EXPECT_EQ("1.1875days", fmt::format("{}", Days(1) + Hours(4) + Minutes(30)));
   // "2weeks" reads better than "14days" so we use the higher unit
   // here.
-  EXPECT_EQ("2weeks", stringify(Days(14)));
+  EXPECT_EQ("2weeks", fmt::format("{}", Days(14)));
 
   // Boundary cases.
-  EXPECT_EQ("0ns", stringify(Duration::zero()));
-  EXPECT_EQ("15250.2844524715weeks", stringify(Duration::max()));
-  EXPECT_EQ("-15250.2844524715weeks", stringify(Duration::min()));
+  EXPECT_EQ("0ns", fmt::format("{}", Duration::zero()));
+  EXPECT_EQ("15250.2844524715weeks", fmt::format("{}", Duration::max()));
+  EXPECT_EQ("-15250.2844524715weeks", fmt::format("{}", Duration::min()));
 }
 
 

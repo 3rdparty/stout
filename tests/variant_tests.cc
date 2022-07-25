@@ -14,8 +14,8 @@
 
 #include <string>
 
+#include "fmt/format.h"
 #include "stout/gtest.h"
-#include "stout/stringify.h"
 #include "stout/variant.h"
 
 
@@ -36,7 +36,7 @@ TEST(VariantTest, Visit) {
   EXPECT_EQ(
       "hello world",
       v1.visit(
-          [](int i) { return stringify(i); },
+          [](int i) { return fmt::format("{}", i); },
           [](const std::string& s) { return s; }));
 
   // NOTE: we're explicitly using `const` here as it tests both that
@@ -56,7 +56,7 @@ TEST(VariantTest, Visit) {
   EXPECT_EQ(
       "42",
       v2.visit(
-          [](int i) { return stringify(i); },
+          [](int i) { return fmt::format("{}", i); },
           [](const std::string& s) { return s; }));
 }
 

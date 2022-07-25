@@ -13,9 +13,9 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "fmt/format.h"
 #include "stout/bytes.h"
 #include "stout/gtest.h"
-#include "stout/stringify.h"
 #include "stout/try.h"
 
 
@@ -62,15 +62,15 @@ TEST(BytesTest, Comparison) {
 TEST(BytesTest, Stringify) {
   EXPECT_NE(Megabytes(1023), Gigabytes(1));
 
-  EXPECT_EQ("0B", stringify(Bytes()));
+  EXPECT_EQ("0B", fmt::format("{}", Bytes()));
 
-  EXPECT_EQ("1KB", stringify(Kilobytes(1)));
-  EXPECT_EQ("1MB", stringify(Megabytes(1)));
-  EXPECT_EQ("1GB", stringify(Gigabytes(1)));
-  EXPECT_EQ("1TB", stringify(Terabytes(1)));
+  EXPECT_EQ("1KB", fmt::format("{}", Kilobytes(1)));
+  EXPECT_EQ("1MB", fmt::format("{}", Megabytes(1)));
+  EXPECT_EQ("1GB", fmt::format("{}", Gigabytes(1)));
+  EXPECT_EQ("1TB", fmt::format("{}", Terabytes(1)));
 
-  EXPECT_EQ("1023B", stringify(Bytes(1023)));
-  EXPECT_EQ("1023KB", stringify(Kilobytes(1023)));
-  EXPECT_EQ("1023MB", stringify(Megabytes(1023)));
-  EXPECT_EQ("1023GB", stringify(Gigabytes(1023)));
+  EXPECT_EQ("1023B", fmt::format("{}", Bytes(1023)));
+  EXPECT_EQ("1023KB", fmt::format("{}", Kilobytes(1023)));
+  EXPECT_EQ("1023MB", fmt::format("{}", Megabytes(1023)));
+  EXPECT_EQ("1023GB", fmt::format("{}", Gigabytes(1023)));
 }

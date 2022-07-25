@@ -17,9 +17,9 @@
 #include <utility>
 #include <vector>
 
+#include "fmt/format.h"
 #include "stout/foreach.h"
 #include "stout/gtest.h"
-#include "stout/stringify.h"
 #include "stout/version.h"
 
 using std::map;
@@ -139,7 +139,7 @@ TEST(VersionTest, ParseValid) {
 
     EXPECT_EQ(std::get<0>(expected), actual.get())
         << "Incorrect parse of input '" << input << "'";
-    EXPECT_EQ(std::get<1>(expected), stringify(actual.get()))
+    EXPECT_EQ(std::get<1>(expected), fmt::format("{}", actual.get()))
         << "Unexpected stringify output for input '" << input << "'";
   }
 }

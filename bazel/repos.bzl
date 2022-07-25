@@ -85,14 +85,14 @@ def repos(external = True, repo_mapping = {}):
         repo_mapping = repo_mapping,
     )
 
-    # Copied and then modified to use 'commit' and 'shallow_since'
+    # Copied and then modified to use the latest 'commit' and 'shallow_since'
     # rather than tracking the 'master' branch from:
     # https://github.com/fmtlib/fmt/tree/master/support/bazel
     maybe(
         git_repository,
         name = "com_github_fmtlib_fmt",
-        commit = "b6f4ceaed0a0a24ccf575fab6c56dd50ccf6f1a9",
-        shallow_since = "1641508515 -0800",
+        commit = "81f1cc74a776581cdef8659d176049d3aeb743c6",
+        shallow_since = "1658588611 -0700",
         remote = "https://github.com/fmtlib/fmt",
         patch_cmds = [
             "mv support/bazel/.bazelrc .bazelrc",
