@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 
+#include "fmt/format.h"
 #include "stout/bytes.h"
 #include "stout/duration.h"
 #include "stout/none.h"
@@ -34,6 +35,12 @@
 #include "stout/os/raw/environment.h"
 #include "stout/os/read.h"
 #include "stout/path.h"
+// Since 'fmt' library doesn't support 'wide' conversion (e.g
+// from 'std::wstring' to 'std::string' and vice versa) we use
+// API from 'include/stout/stringify.h' (e.g:
+// std::string stringify(const std::wstring& wstr) - function).
+// Check the issue for fmt conversion on github:
+// https://github.com/fmtlib/fmt/issues/1116
 #include "stout/stringify.h"
 #include "stout/strings.h"
 #include "stout/try.h"
@@ -261,10 +268,10 @@ inline Result<pid_t> waitpid(long pid, int* status, int options) {
   if (pid <= 0) {
     errno = ENOSYS;
     return ErrnoError(
-        "os::waitpid: Value of pid is '" + stringify(pid)
-        +
-        "'; the Windows implementation currently "
-        "does not allow values <= 0");
+        fmt::format("os::waitpid: Value of pid is '{}';"
+                    " the Windows implementation currently "
+                    "does not allow values <= 0",
+                    pid));
   } else if (options != 0 && options != WNOHANG) {
     // NOTE: We only support `options == 0` or `options == WNOHANG`. On Windows
     // no flags other than `WNOHANG` are supported.
@@ -284,8 +291,7 @@ inline Result<pid_t> waitpid(long pid, int* status, int options) {
 
   if (process == nullptr) {
     return WindowsError(
-        "os::waitpid: Failed to open process for pid '"
-        + stringify(pid) + "'");
+        fmt::format("os::waitpid: Failed to open process for pid '{}'", pid));
   }
 
   SharedHandle scoped_process(process, ::CloseHandle);
@@ -304,10 +310,11 @@ inline Result<pid_t> waitpid(long pid, int* status, int options) {
     // state change in `scoped_process`.
     errno = ECHILD;
     return WindowsError(
-        "os::waitpid: Failed to wait for pid '" + stringify(pid)
-        + "'. `::WaitForSingleObject` should have waited for child process to "
-        + "exit, but returned code '"
-        + stringify(wait_results) + "' instead");
+        fmt::format("os::waitpid: Failed to wait for pid '{}'."
+                    " `::WaitForSingleObject` should have waited for child "
+                    "process to exit, but returned code '{}' instead",
+                    pid,
+                    wait_results));
   } else if (
       wait_for_child && !state_signaled && wait_results != WAIT_TIMEOUT) {
     // If `WNOHANG` is set, then a successful wait should report either a
@@ -315,12 +322,14 @@ inline Result<pid_t> waitpid(long pid, int* status, int options) {
     // change of `scoped_process`. Anything else is an error.
     errno = ECHILD;
     return WindowsError(
-        "os::waitpid: Failed to wait for pid '"
-        + stringify(pid)
-        + "'. `ENOHANG` flag was passed in, so `::WaitForSingleObject` should "
-        + "have either returned `WAIT_OBJECT_0` or `WAIT_TIMEOUT` (the "
-        + "timeout was set to 0, because we are not waiting for the child), "
-        + "but instead returned code '" + stringify(wait_results) + "'");
+        fmt::format("os::waitpid: Failed to wait for pid '{}'."
+                    " `ENOHANG` flag was passed in, so `::WaitForSingleObject`"
+                    " should have either returned `WAIT_OBJECT_0` or"
+                    " `WAIT_TIMEOUT` (the timeout was set to 0, because we are"
+                    "not waiting for the child), but instead returned code "
+                    "'{}'",
+                    pid,
+                    wait_results));
   }
 
   if (!wait_for_child && wait_results == WAIT_TIMEOUT) {
@@ -335,8 +344,9 @@ inline Result<pid_t> waitpid(long pid, int* status, int options) {
   if (!::GetExitCodeProcess(scoped_process.get(), &child_exit_code)) {
     errno = ECHILD;
     return WindowsError(
-        "os::waitpid: Successfully waited on child process with pid '"
-        + std::to_string(pid) + "', but could not retrieve exit code");
+        fmt::format("os::waitpid: Successfully waited on child process with "
+                    "pid '{}', but could not retrieve exit code",
+                    pid));
   }
 
   if (status != nullptr) {

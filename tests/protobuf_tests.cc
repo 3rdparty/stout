@@ -16,12 +16,12 @@
 #include <algorithm>
 #include <string>
 
+#include "fmt/format.h"
 #include "protobuf_tests.pb.h"
 #include "stout/gtest.h"
 #include "stout/json.h"
 #include "stout/jsonify.h"
 #include "stout/protobuf.h"
-#include "stout/stringify.h"
 #include "stout/strings.h"
 #include "stout/uuid.h"
 
@@ -175,7 +175,7 @@ TEST(ProtobufTest, JSON) {
 
   JSON::Object object = JSON::protobuf(message);
 
-  EXPECT_EQ(expected, stringify(object));
+  EXPECT_EQ(expected, fmt::format("{}", object));
 
   // Test parsing too.
   Try<tests::Message> parse = protobuf::parse<tests::Message>(object);
@@ -206,7 +206,7 @@ TEST(ProtobufTest, JSON) {
   EXPECT_EQ(object, JSON::protobuf(parse.get()));
 
   // Now convert JSON to string and parse it back as JSON.
-  ASSERT_SOME_EQ(object, JSON::parse(stringify(object)));
+  ASSERT_SOME_EQ(object, JSON::parse(fmt::format("{}", object)));
 }
 
 
@@ -248,7 +248,7 @@ TEST(ProtobufTest, JSONArray) {
 
   JSON::Array array = JSON::protobuf(arrayMessage.values());
 
-  EXPECT_EQ(expected, stringify(array));
+  EXPECT_EQ(expected, fmt::format("{}", array));
 }
 
 
@@ -313,7 +313,7 @@ TEST(ProtobufTest, JsonLargeIntegers) {
 
   // Check JSON -> String.
   JSON::Object object = JSON::protobuf(message);
-  EXPECT_EQ(expected, stringify(object));
+  EXPECT_EQ(expected, fmt::format("{}", object));
 
   // Check JSON -> Protobuf.
   Try<tests::Message> parse = protobuf::parse<tests::Message>(object);
@@ -823,7 +823,7 @@ TEST(ProtobufTest, JsonifyMap) {
       expected.end());
 
   JSON::Object object = JSON::protobuf(message);
-  EXPECT_EQ(expected, stringify(object));
+  EXPECT_EQ(expected, fmt::format("{}", object));
 
   // Test parsing too.
   Try<tests::MapMessage> parse = protobuf::parse<tests::MapMessage>(object);

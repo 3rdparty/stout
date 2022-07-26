@@ -17,11 +17,18 @@
 #include <set>
 #include <string>
 
+#include "fmt/format.h"
 #include "stout/bytes.h"
 #include "stout/none.h"
 #include "stout/nothing.h"
 #include "stout/os/os.h"
 #include "stout/os/process.h"
+// Since 'fmt' library doesn't support 'wide' conversion (e.g
+// from 'std::wstring' to 'std::string' and vice versa) we use
+// API from 'include/stout/stringify.h' (e.g:
+// std::string stringify(const std::wstring& wstr) - function).
+// Check the issue for fmt conversion on github:
+// https://github.com/fmtlib/fmt/issues/1116
 #include "stout/stringify.h"
 #include "stout/strings.h"
 #include "stout/try.h"

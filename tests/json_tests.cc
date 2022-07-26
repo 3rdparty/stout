@@ -17,9 +17,9 @@
 
 #include <string>
 
+#include "fmt/format.h"
 #include "stout/gtest.h"
 #include "stout/json.h"
-#include "stout/stringify.h"
 #include "stout/strings.h"
 
 using std::string;
@@ -29,7 +29,7 @@ using boost::get;
 
 TEST(JsonTest, DefaultValueIsNull) {
   JSON::Value v;
-  EXPECT_EQ("null", stringify(v));
+  EXPECT_EQ("null", fmt::format("{}", v));
 }
 
 
@@ -41,7 +41,7 @@ TEST(JsonTest, UTF8) {
 
   EXPECT_EQ(
       "\"Hello! \\u0001\\u001F\\\"\\\\ \xF0\x9F\x98\x80\"",
-      stringify(s));
+      fmt::format("{}", s));
 }
 
 
@@ -52,25 +52,27 @@ TEST(JsonTest, InvalidUTF8) {
   // For now, this just gets passed through.
   JSON::String s("\xF0");
 
-  EXPECT_EQ("\"\xF0\"", stringify(s));
+  EXPECT_EQ("\"\xF0\"", fmt::format("{}", s));
 }
 
 
 TEST(JsonTest, NumberFormat) {
   // Test whole numbers (as doubles).
-  EXPECT_EQ("0.0", stringify(JSON::Number(0.0)));
-  EXPECT_EQ("1.0", stringify(JSON::Number(1.0)));
+  EXPECT_EQ("0.0", fmt::format("{}", JSON::Number(0.0)));
+  EXPECT_EQ("1.0", fmt::format("{}", JSON::Number(1.0)));
 
   // Negative.
-  EXPECT_EQ("-1.0", stringify(JSON::Number(-1.0)));
+  EXPECT_EQ("-1.0", fmt::format("{}", JSON::Number(-1.0)));
 
   // Test integers.
-  EXPECT_EQ("0", stringify(JSON::Number(0)));
-  EXPECT_EQ("2", stringify(JSON::Number(2)));
-  EXPECT_EQ("-2", stringify(JSON::Number(-2)));
+  EXPECT_EQ("0", fmt::format("{}", JSON::Number(0)));
+  EXPECT_EQ("2", fmt::format("{}", JSON::Number(2)));
+  EXPECT_EQ("-2", fmt::format("{}", JSON::Number(-2)));
 
   // Expect at least 15 digits of precision.
-  EXPECT_EQ("1234567890.12345", stringify(JSON::Number(1234567890.12345)));
+  EXPECT_EQ(
+      "1234567890.12345",
+      fmt::format("{}", JSON::Number(1234567890.12345)));
 }
 
 
@@ -101,14 +103,14 @@ TEST(JsonTest, NumberComparisons) {
 
 
 TEST(JsonTest, BooleanFormat) {
-  EXPECT_EQ("false", stringify(JSON::False()));
-  EXPECT_EQ("true", stringify(JSON::True()));
+  EXPECT_EQ("false", fmt::format("{}", JSON::False()));
+  EXPECT_EQ("true", fmt::format("{}", JSON::True()));
 
-  EXPECT_EQ("true", stringify(JSON::Boolean(true)));
-  EXPECT_EQ("false", stringify(JSON::Boolean(false)));
+  EXPECT_EQ("true", fmt::format("{}", JSON::Boolean(true)));
+  EXPECT_EQ("false", fmt::format("{}", JSON::Boolean(false)));
 
-  EXPECT_EQ("true", stringify(JSON::Value(true)));
-  EXPECT_EQ("false", stringify(JSON::Value(false)));
+  EXPECT_EQ("true", fmt::format("{}", JSON::Value(true)));
+  EXPECT_EQ("false", fmt::format("{}", JSON::Value(false)));
 }
 
 
@@ -215,18 +217,18 @@ TEST(JsonTest, Parse) {
   JSON::Object nested;
   nested.values["string"] = "string";
 
-  EXPECT_SOME_EQ(nested, JSON::parse<JSON::Object>(stringify(nested)));
+  EXPECT_SOME_EQ(nested, JSON::parse<JSON::Object>(fmt::format("{}", nested)));
 
   object.values["nested"] = nested;
 
   JSON::Array array;
   array.values.push_back(nested);
 
-  EXPECT_SOME_EQ(array, JSON::parse<JSON::Array>(stringify(array)));
+  EXPECT_SOME_EQ(array, JSON::parse<JSON::Array>(fmt::format("{}", array))));
 
   object.values["array"] = array;
 
-  EXPECT_SOME_EQ(object, JSON::parse(stringify(object)));
+  EXPECT_SOME_EQ(object, JSON::parse(fmt::format("{}", object)));
 
   // Test parsing with whitespace before and after a JSON object.
   object = JSON::Object();

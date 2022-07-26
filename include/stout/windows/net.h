@@ -16,10 +16,17 @@
 #include <string>
 #include <vector>
 
+#include "fmt/format.h"
 #include "stout/error.h"
 #include "stout/foreach.h"
 #include "stout/nothing.h"
 #include "stout/os.h"
+// Since 'fmt' library doesn't support 'wide' conversion (e.g
+// from 'std::wstring' to 'std::string' and vice versa) we use
+// API from 'include/stout/stringify.h' (e.g:
+// std::string stringify(const std::wstring& wstr) - function).
+// Check the issue for fmt conversion on github:
+// https://github.com/fmtlib/fmt/issues/1116
 #include "stout/stringify.h"
 #include "stout/try.h"
 #include "stout/windows.h" // For `iphlpapi.h`.
@@ -79,7 +86,7 @@ inline Try<std::string> getHostname(const IP& ip) {
       break;
     }
     default: {
-      ABORT("Unsupported family type: " + stringify(ip.family()));
+      ABORT(fmt::format("Unsupported family type: {}", ip.family()));
     }
   }
 
@@ -91,7 +98,7 @@ inline Try<std::string> getHostname(const IP& ip) {
   } else if (ip.family() == AF_INET6) {
     length = sizeof(struct sockaddr_in6);
   } else {
-    return Error("Unknown address family: " + stringify(ip.family()));
+    return Error(fmt::format("Unknown address family: {}", ip.family()));
   }
 
   int error = GetNameInfoW(

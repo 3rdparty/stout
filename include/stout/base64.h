@@ -16,8 +16,8 @@
 #include <functional>
 #include <string>
 
+#include "fmt/format.h"
 #include "stout/foreach.h"
-#include "stout/stringify.h"
 #include "stout/try.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -126,7 +126,7 @@ inline Try<std::string> decode(
     }
 
     if (!isBase64(c)) {
-      return Error("Invalid character '" + stringify(c) + "'");
+      return Error(fmt::format("Invalid character '{}'", c));
     }
 
     array4[i++] = c;

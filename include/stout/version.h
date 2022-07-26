@@ -19,11 +19,11 @@
 #include <string>
 #include <vector>
 
+#include "fmt/format.h"
 #include "stout/check.h"
 #include "stout/error.h"
 #include "stout/numify.h"
 #include "stout/option.h"
-#include "stout/stringify.h"
 #include "stout/strings.h"
 #include "stout/try.h"
 
@@ -107,9 +107,10 @@ struct Version {
 
     if (numericComponents.size() > maxNumericComponents) {
       return Error(
-          "Version has " + stringify(numericComponents.size())
-          + " components; maximum " + stringify(maxNumericComponents)
-          + " components allowed");
+          fmt::format(
+              "Version has {} components; maximum {} components allowed",
+              numericComponents.size(),
+              maxNumericComponents));
     }
 
     uint32_t versionNumbers[maxNumericComponents] = {0};
@@ -302,9 +303,9 @@ struct Version {
 
     if (firstInvalid != identifier.end()) {
       return Error(
-          "Identifier contains illegal character: "
-          "'"
-          + stringify(*firstInvalid) + "'");
+          fmt::format(
+              "Identifier contains illegal character: '{}'",
+              *firstInvalid));
     }
 
     return None();

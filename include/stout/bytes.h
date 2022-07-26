@@ -21,7 +21,6 @@
 
 #include "stout/abort.h"
 #include "stout/numify.h"
-#include "stout/stringify.h"
 #include "stout/strings.h"
 #include "stout/try.h"
 

@@ -17,12 +17,12 @@
 #include <string>
 #include <vector>
 
+#include "fmt/format.h"
 #include "stout/foreach.h"
 #include "stout/gtest.h"
 #include "stout/ip.h"
 #include "stout/net.h"
 #include "stout/numify.h"
-#include "stout/stringify.h"
 #include "stout/strings.h"
 
 using std::set;
@@ -41,7 +41,7 @@ TEST(NetTest, LinkDevice) {
     EXPECT_FALSE(network.isError());
 
     if (network.isSome()) {
-      string addr = stringify(network.get());
+      string addr = fmt::format("{}", network.get());
       string prefix = addr.substr(addr.find('/') + 1);
       ASSERT_SOME(numify<int>(prefix));
       EXPECT_EQ(network->prefix(), numify<int>(prefix).get());
@@ -179,10 +179,10 @@ TEST(NetTest, ConstructIPv4Network) {
   ASSERT_SOME(network);
   EXPECT_EQ(net::IP(address), network->address());
   EXPECT_EQ(net::IP(netmask), network->netmask());
-  EXPECT_EQ("1.2.3.4/8", stringify(network.get()));
+  EXPECT_EQ("1.2.3.4/8", fmt::format("{}", network.get()));
 
   Try<net::IP::Network> network2 =
-      net::IP::Network::parse(stringify(network.get()));
+      net::IP::Network::parse(fmt::format("{}", network.get()));
 
   ASSERT_SOME(network2);
   EXPECT_EQ(network.get(), network2.get());
@@ -199,7 +199,7 @@ TEST(NetTest, ConstructIPv6Network) {
   EXPECT_ERROR(net::IP::Network::parse("hello moto/8"));
 
   net::IP loopback(::in6addr_loopback);
-  ASSERT_EQ("::1", stringify(loopback));
+  ASSERT_EQ("::1", fmt::format("{}", loopback));
 
   Try<net::IP> address = net::IP::parse("2001:cdba::3257:9652");
   Try<net::IP> netmask1 = net::IP::parse("ff80::"); // 9 bits
@@ -228,10 +228,10 @@ TEST(NetTest, ConstructIPv6Network) {
   ASSERT_SOME(network);
   EXPECT_EQ(address.get(), network->address());
   EXPECT_EQ(netmask1.get(), network->netmask());
-  EXPECT_EQ("2001:cdba::3257:9652/9", stringify(network.get()));
+  EXPECT_EQ("2001:cdba::3257:9652/9", fmt::format("{}", network.get()));
 
   Try<net::IP::Network> network2 =
-      net::IP::Network::parse(stringify(network.get()));
+      net::IP::Network::parse(fmt::format("{}", network.get()));
 
   ASSERT_SOME(network2);
   EXPECT_EQ(network.get(), network2.get());

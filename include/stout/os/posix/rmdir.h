@@ -18,10 +18,10 @@
 
 #include <string>
 
+#include "fmt/format.h"
 #include "stout/error.h"
 #include "stout/nothing.h"
 #include "stout/os/exists.h"
-#include "stout/stringify.h"
 #include "stout/try.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -127,7 +127,7 @@ inline Try<Nothing> rmdir(
   }
 
   if (errorCount > 0) {
-    return Error("Failed to delete " + stringify(errorCount) + " paths");
+    return Error(fmt::format("Failed to delete {} paths", errorCount));
   }
 
   return Nothing();

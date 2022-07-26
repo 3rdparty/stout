@@ -15,10 +15,10 @@
 #include <algorithm>
 #include <vector>
 
+#include "fmt/format.h"
 #include "stout/error.h"
 #include "stout/none.h"
 #include "stout/result.h"
-#include "stout/stringify.h"
 #include "stout/windows.h" // For `iphlpapi.h`.
 
 ////////////////////////////////////////////////////////////////////////
@@ -66,7 +66,7 @@ inline Result<MAC> mac(const std::string& name) {
 
         // Ignore if the address is 0 so that the results are
         // consistent across all platforms.
-        if (stringify(mac) == "00:00:00:00:00:00") {
+        if (fmt::format("{}", mac) == "00:00:00:00:00:00") {
           continue;
         }
 

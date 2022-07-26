@@ -16,8 +16,8 @@
 #include <utility>
 #include <vector>
 
+#include "fmt/format.h"
 #include "stout/os/constants.h"
-#include "stout/stringify.h"
 #include "stout/strings.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -115,7 +115,7 @@ inline std::string join(
     const std::string& path1,
     const std::string& path2,
     const char _separator = os::PATH_SEPARATOR) {
-  const std::string separator = stringify(_separator);
+  const std::string separator = fmt::format("{}", _separator);
   return strings::remove(
              path1,
              separator,
@@ -255,7 +255,7 @@ class Path {
 
       // Paths containing only slashes result into "/".
       if (end == std::string::npos) {
-        return stringify(separator);
+        return fmt::format("{}", separator);
       }
     }
 
@@ -322,7 +322,7 @@ class Path {
 
     // Paths containing only slashes result in "/".
     if (end == 0) {
-      return stringify(separator);
+      return fmt::format("{}", separator);
     }
 
     // 'end' should point towards the last non slash character
@@ -331,7 +331,7 @@ class Path {
 
     // Paths containing no non slash characters result in "/".
     if (end == std::string::npos) {
-      return stringify(separator);
+      return fmt::format("{}", separator);
     }
 
     return value.substr(0, end + 1);

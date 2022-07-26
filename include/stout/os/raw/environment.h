@@ -16,9 +16,9 @@
 
 #include <string>
 
+#include "fmt/format.h"
 #include "stout/foreach.h"
 #include "stout/json.h"
-#include "stout/stringify.h"
 
 #ifdef __APPLE__
 #include <crt_externs.h> // For _NSGetEnviron().
@@ -142,8 +142,8 @@ class Envp {
     size_t index = 0;
 
     for (auto it = map.begin(); it != map.end(); ++it) {
-      environment[stringify(it->first)] = stringify(it->second);
-      std::string entry = stringify(it->first) + "=" + stringify(it->second);
+      environment[fmt::format("{}", it->first)] = fmt::format("{}", it->second);
+      std::string entry = fmt::format("{}={}", it->first, it->second);
       envp[index] = new char[entry.size() + 1];
       ::memcpy(envp[index], entry.c_str(), entry.size() + 1);
       ++index;
@@ -163,7 +163,7 @@ class Envp {
         const std::string& key,
         const JSON::Value& value,
         object.values) {
-      environment[key] = stringify(value.as<JSON::String>().value);
+      environment[key] = fmt::format("{}", value.as<JSON::String>().value);
       std::string entry = key + "=" + value.as<JSON::String>().value;
       envp[index] = new char[entry.size() + 1];
       ::memcpy(envp[index], entry.c_str(), entry.size() + 1);

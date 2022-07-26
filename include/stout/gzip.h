@@ -16,10 +16,10 @@
 
 #include <string>
 
+#include "fmt/format.h"
 #include "stout/abort.h"
 #include "stout/error.h"
 #include "stout/os/strerror.h"
-#include "stout/stringify.h"
 #include "stout/try.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -73,7 +73,7 @@ class GzipError : public Error {
       case Z_MEM_ERROR: return "Z_MEM_ERROR";
       case Z_BUF_ERROR: return "Z_BUF_ERROR";
       case Z_VERSION_ERROR: return "Z_VERSION_ERROR";
-      default: return "Unknown error " + stringify(code);
+      default: return fmt::format("Unknown error {}", code);
     }
   }
 
@@ -188,7 +188,7 @@ inline Try<std::string> compress(
   // Verify the level is within range.
   if (!(level == Z_DEFAULT_COMPRESSION
         || (level >= Z_NO_COMPRESSION && level <= Z_BEST_COMPRESSION))) {
-    return Error("Invalid compression level: " + stringify(level));
+    return Error(fmt::format("Invalid compression level: {}", level));
   }
 
   z_stream_s stream;

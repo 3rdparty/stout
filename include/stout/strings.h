@@ -19,10 +19,10 @@
 #include <string>
 #include <vector>
 
+#include "fmt/format.h"
 #include "foreach.h"
 #include "format.h"
 #include "option.h"
-#include "stringify.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -279,7 +279,7 @@ template <typename T>
 std::stringstream& append(
     std::stringstream& stream,
     T&& value) {
-  stream << ::stringify(std::forward<T>(value));
+  stream << fmt::format("{}", std::forward<T>(value));
   return stream;
 }
 
@@ -358,7 +358,7 @@ inline std::string join(const std::string& separator, const Iterable& i) {
   std::string result;
   typename Iterable::const_iterator iterator = i.begin();
   while (iterator != i.end()) {
-    result += stringify(*iterator);
+    result += fmt::format("{}", *iterator);
     if (++iterator != i.end()) {
       result += separator;
     }

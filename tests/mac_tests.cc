@@ -17,11 +17,11 @@
 #include <string>
 #include <vector>
 
+#include "fmt/format.h"
 #include "stout/foreach.h"
 #include "stout/gtest.h"
 #include "stout/mac.h"
 #include "stout/net.h"
-#include "stout/stringify.h"
 #include "stout/strings.h"
 
 using std::set;
@@ -38,9 +38,9 @@ TEST(NetTest, Mac) {
     EXPECT_FALSE(mac.isError());
 
     if (mac.isSome()) {
-      EXPECT_NE("00:00:00:00:00:00", stringify(mac.get()));
+      EXPECT_NE("00:00:00:00:00:00", fmt::format("{}", mac.get()));
 
-      vector<string> tokens = strings::split(stringify(mac.get()), ":");
+      vector<string> tokens = strings::split(fmt::format("{}", mac.get()), ":");
       EXPECT_EQ(6u, tokens.size());
 
       for (size_t i = 0; i < tokens.size(); i++) {
@@ -61,7 +61,7 @@ TEST(NetTest, Mac) {
 TEST(NetTest, ConstructMAC) {
   uint8_t bytes[6] = {0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc};
 
-  EXPECT_EQ("12:34:56:78:9a:bc", stringify(net::MAC(bytes)));
+  EXPECT_EQ("12:34:56:78:9a:bc", fmt::format("{}", net::MAC(bytes)));
 }
 
 

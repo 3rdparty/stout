@@ -27,6 +27,7 @@
 #include <set>
 #include <string>
 
+#include "fmt/format.h"
 #include "stout/abort.h"
 #include "stout/check.h"
 #include "stout/error.h"
@@ -36,7 +37,6 @@
 #include "stout/os/ftruncate.h"
 #include "stout/os/process.h"
 #include "stout/os/strerror.h"
-#include "stout/stringify.h"
 #include "stout/try.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -283,7 +283,7 @@ struct Fork {
     int instance = forks.fetch_add(1);
 
     std::string name =
-        "/stout-forks-" + stringify(getpid()) + stringify(instance);
+        fmt::format("/stout-forks-{}{}", status.get(), instance);
 
     int fd = shm_open(name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
 

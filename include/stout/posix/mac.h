@@ -15,10 +15,10 @@
 #include <ifaddrs.h>
 #include <sys/types.h>
 
+#include "fmt/format.h"
 #include "stout/error.h"
 #include "stout/none.h"
 #include "stout/result.h"
-#include "stout/stringify.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -54,7 +54,7 @@ inline Result<MAC> mac(const std::string& name) {
 
           // Ignore if the address is 0 so that the results are
           // consistent on both OSX and Linux.
-          if (stringify(mac) == "00:00:00:00:00:00") {
+          if (fmt::format("{}", mac) == "00:00:00:00:00:00") {
             continue;
           }
 
