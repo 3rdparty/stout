@@ -112,6 +112,17 @@ def repos(external = True, repo_mapping = {}):
         ],
     )
 
+    # Get the latest bazel rules for tl::expected.
+    # https://github.com/TartanLlama/expected
+    maybe(
+        git_repository,
+        name = "com_github_3rdparty_bazel_rules_tl_expected",
+        remote = "https://github.com/3rdparty/bazel-rules-expected",
+        commit = "c703632657bf4ec9177d9aea0447166d424b3b74",
+        shallow_since = "1654243887 +0300",
+        repo_mapping = repo_mapping,
+    )
+
     if external:
         maybe(
             git_repository,
