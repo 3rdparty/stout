@@ -349,7 +349,7 @@ TEST(BorrowTest, MoveBorrowable) {
 
   atomic<bool> moving(false);
 
-  auto t = thread([&]() {
+  thread t([&]() {
     moving.store(true);
     Borrowable<string> moved = std::move(s);
     moving.store(false);
