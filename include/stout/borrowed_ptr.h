@@ -245,6 +245,68 @@ class Borrowable : public TypeErasedBorrowable {
 ////////////////////////////////////////////////////////////////////////
 
 template <typename T>
+class Borrowable<std::unique_ptr<T>> : public TypeErasedBorrowable {
+ public:
+  Borrowable(std::unique_ptr<T>&& t)
+    : TypeErasedBorrowable(),
+      t_(std::move(t)) {}
+
+  Borrowable(Borrowable&& that)
+    : TypeErasedBorrowable(std::move(that)),
+      t_(std::move(that.t_)) {}
+
+  borrowed_ref<T> Borrow() {
+    auto state = State::Borrowing;
+    if (tally_.Increment(state)) {
+      return borrowed_ref<T>(*this, *t_);
+    } else {
+      // Why are you borrowing when you shouldn't be?
+      LOG(FATAL) << "Attempting to borrow in state " << state;
+    }
+  }
+
+  template <typename F>
+  borrowed_callable<F> Borrow(F&& f) {
+    auto state = State::Borrowing;
+    if (tally_.Increment(state)) {
+      return borrowed_callable<F>(std::forward<F>(f), this);
+    } else {
+      // Why are you borrowing when you shouldn't be?
+      LOG(FATAL) << "Attempting to borrow in state " << state;
+    }
+  }
+
+  T* get() {
+    return t_.get();
+  }
+
+  const T* get() const {
+    return t_.get();
+  }
+
+  T* operator->() {
+    return get();
+  }
+
+  const T* operator->() const {
+    return get();
+  }
+
+  T& operator*() {
+    return *t_;
+  }
+
+  const T& operator*() const {
+    return *t_;
+  }
+
+ private:
+  std::unique_ptr<T> t_;
+};
+
+////////////////////////////////////////////////////////////////////////
+
+template <typename T>
 class enable_borrowable_from_this : public TypeErasedBorrowable {
  public:
   borrowed_ref<T> Borrow() {
