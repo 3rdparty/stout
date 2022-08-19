@@ -582,18 +582,17 @@ void Parser::Parse(const std::vector<ArgumentInfo>& values) {
     const stout::v1::Flag& flag =
         field->options().GetExtension(stout::v1::flag);
 
-    // Need to normalize string default value before parsing.
-    // NOTE: for some reason protoc compiler has generated
-    // 'default_()' method with underscore, we believe that
-    // this happens because 'default' conflicts with reserved
-    // words.
-    const std::string normalized_value =
-        GetNormalizedDefaultValue(
-            flag.default_(),
-            field->type());
-
     if (!flag.required()) {
       if (flag.has_default_()) {
+        // Need to normalize string default value before parsing.
+        // NOTE: for some reason protoc compiler has generated
+        // 'default_()' method with underscore, we believe that this
+        // happens because 'default' conflicts with reserved words.
+        const std::string normalized_value =
+            GetNormalizedDefaultValue(
+                flag.default_(),
+                field->type());
+
         SetFieldMessageOrAggregateErrors(
             normalized_value,
             name,
@@ -638,12 +637,12 @@ void Parser::Parse(const std::vector<ArgumentInfo>& values) {
         pos_arg.field->options().GetExtension(stout::v1::argument);
 
     // Need to normalize string default value before parsing.
-    const std::string normalized_value =
-        GetNormalizedDefaultValue(
-            argument.default_(),
-            pos_arg.field->type());
-
     if (argument.has_default_()) {
+      const std::string normalized_value =
+          GetNormalizedDefaultValue(
+              argument.default_(),
+              pos_arg.field->type());
+
       SetFieldMessageOrAggregateErrors(
           normalized_value,
           pos_arg.name,
