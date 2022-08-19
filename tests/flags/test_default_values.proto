@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package test.default_values;
 
+import "google/protobuf/duration.proto";
 import "include/stout/flags/v1/flag.proto";
 import "include/stout/flags/v1/positional_argument.proto";
 import "include/stout/flags/v1/subcommand.proto";
@@ -56,6 +57,14 @@ message Flags {
     (stout.v1.flag) = {
       names: [ "bam" ]
       default: "true"
+      help: "help"
+    }
+  ];
+
+  google.protobuf.Duration duration = 7 [
+    (stout.v1.flag) = {
+      names: [ "duration" ]
+      default: "42s"
       help: "help"
     }
   ];
