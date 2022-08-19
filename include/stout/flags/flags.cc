@@ -585,6 +585,7 @@ void Parser::Parse(const std::vector<ArgumentInfo>& values) {
     if (!flag.required()) {
       if (flag.has_default_()) {
         // Need to normalize string default value before parsing.
+        //
         // NOTE: for some reason protoc compiler has generated
         // 'default_()' method with underscore, we believe that this
         // happens because 'default' conflicts with reserved words.
@@ -637,6 +638,10 @@ void Parser::Parse(const std::vector<ArgumentInfo>& values) {
         pos_arg.field->options().GetExtension(stout::v1::argument);
 
     // Need to normalize string default value before parsing.
+    //
+    // NOTE: for some reason protoc compiler has generated
+    // 'default_()' method with underscore, we believe that this
+    // happens because 'default' conflicts with reserved words.
     if (argument.has_default_()) {
       const std::string normalized_value =
           GetNormalizedDefaultValue(
