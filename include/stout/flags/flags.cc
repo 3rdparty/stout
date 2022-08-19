@@ -536,34 +536,15 @@ void Parser::Parse(const std::vector<ArgumentInfo>& values) {
       }
     }
 
-    // Parse the value using an overloaded parser if provided.
-    if (overload_parsing_.count(field->message_type()) > 0) {
-      auto& message = GetMessageForField(*field);
-      std::optional<std::string> error =
-          overload_parsing_[field->message_type()](
-              text.value(),
-              *message.GetReflection()->MutableMessage(&message, field));
-
-      if (error) {
-        errors.insert(
-            "Failed to parse flag '" + non_negated_name
-            + "' from normalized value '" + text.value()
-            + "' due to overloaded parsing error: " + error.value());
-      } else {
-        // Successfully parsed!
-        parsed_[field] = {non_negated_name, text.value()};
-      }
-    } else {
-      // Parse the given text as a single field value and store it
-      // into the given field of the given message or just store
-      // errors on any failure for printing them later.
-      SetFieldMessageOrAggregateErrors(
-          text.value(),
-          non_negated_name,
-          field,
-          &GetMessageForField(*field),
-          errors);
-    }
+    // Parse the given text as a single field value and store it
+    // into the given field of the given message or just store
+    // errors on any failure for printing them later.
+    SetFieldMessageOrAggregateErrors(
+        text.value(),
+        non_negated_name,
+        field,
+        &GetMessageForField(*field),
+        errors);
   }
 
   // Print out help if requested.
@@ -715,20 +696,38 @@ void Parser::SetFieldMessageOrAggregateErrors(
     std::string error;
   } error_collector;
 
-  google::protobuf::TextFormat::Parser text_format_parser;
-  text_format_parser.RecordErrorsTo(&error_collector);
-  if (!text_format_parser.ParseFieldValueFromString(
-          value,
-          field,
-          message)) {
-    errors.insert(
-        "Failed to parse flag '" + name
-        + "' from normalized value '" + value
-        + "' due to protobuf text-format parser error(s): "
-        + error_collector.error);
+  // Parse the value using an overloaded parser if provided.
+  if (overload_parsing_.count(field->message_type()) > 0) {
+    std::optional<std::string> error =
+        overload_parsing_[field->message_type()](
+            value,
+            *message->GetReflection()->MutableMessage(message, field));
+
+    if (error) {
+      errors.insert(
+          "Failed to parse flag '" + name
+          + "' from normalized value '" + value
+          + "' due to overloaded parsing error: " + error.value());
+    } else {
+      // Successfully parsed!
+      parsed_[field] = {name, value};
+    }
   } else {
-    // Successfully parsed!
-    parsed_[field] = {name, value};
+    google::protobuf::TextFormat::Parser text_format_parser;
+    text_format_parser.RecordErrorsTo(&error_collector);
+    if (!text_format_parser.ParseFieldValueFromString(
+            value,
+            field,
+            message)) {
+      errors.insert(
+          "Failed to parse flag '" + name
+          + "' from normalized value '" + value
+          + "' due to protobuf text-format parser error(s): "
+          + error_collector.error);
+    } else {
+      // Successfully parsed!
+      parsed_[field] = {name, value};
+    }
   }
 }
 

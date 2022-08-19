@@ -1,5 +1,6 @@
 #include <array>
 
+#include "google/protobuf/util/time_util.h"
 #include "gtest/gtest.h"
 #include "stout/flags/flags.h"
 #include "tests/flags/test_default_values.pb.h"
@@ -27,6 +28,12 @@ TEST(FlagsTest, FlagsWithDefaultValues) {
   EXPECT_TRUE(flags.bar());
   EXPECT_EQ(1994, flags.baz());
   EXPECT_FALSE(flags.bam());
+  EXPECT_EQ(
+      std::chrono::nanoseconds(
+          ::google::protobuf::util::TimeUtil::DurationToNanoseconds(
+              flags.duration())),
+      std::chrono::nanoseconds(
+          std::chrono::seconds(42)));
 }
 
 TEST(FlagsTest, PositionalArgsWithDefaultValues) {
