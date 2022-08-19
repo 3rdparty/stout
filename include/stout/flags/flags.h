@@ -228,6 +228,11 @@ class ParserBuilder {
           absl::Duration d;
           std::string error;
           if (!absl::AbslParseFlag(value, &d, &error)) {
+            if (error.empty()) {
+              error =
+                  "you need to provide a value with units, e.g., "
+                  "'1m' or '1m30s' or '250ms', etc";
+            }
             return std::optional<std::string>(error);
           } else {
             duration.set_seconds(
