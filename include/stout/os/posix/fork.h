@@ -283,7 +283,7 @@ struct Fork {
     int instance = forks.fetch_add(1);
 
     std::string name =
-        fmt::format("/stout-forks-{}{}", status.get(), instance);
+        fmt::format("/stout-forks-{}-{}", getpid(), instance);
 
     int fd = shm_open(name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
 
