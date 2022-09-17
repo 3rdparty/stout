@@ -14,8 +14,8 @@
 
 #include <string>
 
-#include "stout/error.hpp"
-#include "stout/try.hpp"
+#include "stout/error.h"
+#include "stout/try.h"
 
 #ifdef _WIN32
 #include "stout/internal/windows/longpath.h"

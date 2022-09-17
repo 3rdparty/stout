@@ -58,7 +58,7 @@
 #include "stout/os/fork.h"
 #include "stout/os/getcwd.h"
 #include "stout/os/killtree.h"
-#include "stout/os/os.hpp"
+#include "stout/os/os.h"
 #include "stout/os/permissions.h"
 #include "stout/os/read.h"
 #include "stout/os/rename.h"
