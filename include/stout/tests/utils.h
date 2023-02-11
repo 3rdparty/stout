@@ -108,7 +108,7 @@ class MixinTemporaryDirectoryTest : public T {
     return Nothing();
   }
 
-  std::filesystem::path test_directory_path() {
+  std::filesystem::path test_directory_path() const {
     return sandbox.get();
   }
 
