@@ -92,6 +92,7 @@ cc_library(
         "@boost//:functional",
         "@boost//:get_pointer",
         "@boost//:lexical_cast",
+        "@boost//:uuid",
         "@boost//:variant",
         "@com_github_fmtlib_fmt//:fmt",
         "@com_github_google_glog//:glog",
