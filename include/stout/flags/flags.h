@@ -1,5 +1,10 @@
 #pragma once
 
+// To avoid errors related to defined severity level 'Error' from 'windows.h'.
+#ifdef _WIN32
+#define GLOG_NO_ABBREVIATED_SEVERITIES
+#endif
+
 #include <filesystem>
 #include <map>
 #include <optional>

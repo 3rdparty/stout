@@ -27,7 +27,7 @@ jobs:
       # style checks.
       - uses: actions/checkout@v2
         with:
-          submodules: 'recursive'
+          submodules: "recursive"
 
       # Call the composite action to check files
       # for correct code style. This action (action.yml)

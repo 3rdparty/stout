@@ -2,9 +2,9 @@ version: 1.0.0
 merge_rules:
   labels:
     trigger: mergequeue-ready
-    skip_line: ''
+    skip_line: ""
     merge_failed: mergequeue-failed
-    skip_delete_branch: ''
+    skip_delete_branch: ""
   update_latest: true
   delete_branch: true
   use_rebase: true
@@ -13,10 +13,10 @@ merge_rules:
   preconditions:
     number_of_approvals: 1
     required_checks:
-    - check_code_style (ubuntu-latest)
-    - Build and Test (windows-latest)
-    - Build and Test (ubuntu-latest)
-    - Build and Test (macos-latest)
+      - check_code_style (ubuntu-latest)
+      - Build and Test (windows-latest)
+      - Build and Test (ubuntu-latest)
+      - Build and Test (macos-latest)
     use_github_mergeability: false
     conversation_resolution_required: true
   merge_mode:
@@ -24,7 +24,7 @@ merge_rules:
     parallel_mode: null
   auto_update:
     enabled: false
-    label: ''
+    label: ""
     max_runs_for_update: 0
   merge_commit:
     use_title_and_body: false
@@ -32,5 +32,5 @@ merge_rules:
     name: squash
     override_labels:
       squash: mergequeue-squash
-      merge: ''
+      merge: ""
       rebase: mergequeue-rebase
