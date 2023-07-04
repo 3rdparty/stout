@@ -21,7 +21,7 @@ on:
       # When manually running this workflow:
       # https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow
       debug_enabled:
-        description: 'Enable tmate debugging'
+        description: "Enable tmate debugging"
         type: boolean
         default: false
 
@@ -31,7 +31,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ["macos-latest", "ubuntu-latest", "windows-latest"]
+        # 'windows-latest' (windows-2022) is broken due to a github runner update.
+        # See https://github.com/actions/runner-images/issues/7662 for more details.
+        os: ["macos-latest", "ubuntu-latest", "windows-2019"]
     defaults:
       run:
         shell: bash
@@ -40,7 +42,7 @@ jobs:
       # Checkout the repository under $GITHUB_WORKSPACE.
       - uses: actions/checkout@v2
         with:
-          submodules: 'recursive'
+          submodules: "recursive"
 
       - name: Build
         run: |
