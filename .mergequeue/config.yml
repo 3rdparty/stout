@@ -14,7 +14,7 @@ merge_rules:
     number_of_approvals: 1
     required_checks:
       - check_code_style (ubuntu-latest)
-      - Build and Test (windows-latest)
+      - Build and Test (windows-2019)
       - Build and Test (ubuntu-latest)
       - Build and Test (macos-latest)
     use_github_mergeability: false
