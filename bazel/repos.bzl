@@ -44,9 +44,9 @@ def repos(external = True, repo_mapping = {}):
     maybe(
         git_repository,
         name = "com_github_nelhage_rules_boost",
-        commit = "28a32b81d829e49979475d9c539b297f88712006",
+        commit = "494ddf5db56580eb019479965fa2908ce6548385",
         remote = "https://github.com/nelhage/rules_boost",
-        shallow_since = "1705205029 +0000",
+        shallow_since = "1675669198 -0800",
     )
 
     maybe(
