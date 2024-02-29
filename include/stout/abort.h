@@ -29,14 +29,11 @@
 
 #include "stout/attributes.h"
 
-// NOTE: These macros are already defined in Visual Studio (Windows) headers.
-#ifndef _WIN32
-#define __STRINGIZE(x) #x
-#define _STRINGIZE(x) __STRINGIZE(x)
-#endif // _WIN32
+#define STOUT_STRINGIZE_IMPL(x) #x
+#define STOUT_STRINGIZE(x) STOUT_STRINGIZE_IMPL(x)
 
 // Signal safe abort which prints a message.
-#define _ABORT_PREFIX "ABORT: (" __FILE__ ":" _STRINGIZE(__LINE__) "): "
+#define _ABORT_PREFIX "ABORT: (" __FILE__ ":" STOUT_STRINGIZE(__LINE__) "): "
 
 #define ABORT(...) _Abort(_ABORT_PREFIX, __VA_ARGS__)
 
