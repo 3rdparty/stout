@@ -39,6 +39,7 @@ cc_test(
 cc_test(
     name = "stout",
     srcs = [
+        "expected_tests.cc",
         "stringify_tests.cc",
         "temporary_directory_test_tests.cc",
     ],
