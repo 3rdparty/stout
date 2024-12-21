@@ -34,23 +34,6 @@ def repos(external = True, repo_mapping = {}):
 
     maybe(
         http_archive,
-        name = "com_google_absl",
-        urls = ["https://github.com/abseil/abseil-cpp/archive/refs/tags/20211102.0.tar.gz"],
-        strip_prefix = "abseil-cpp-20211102.0",
-        sha256 = "dcf71b9cba8dc0ca9940c4b316a0c796be8fab42b070bb6b7cab62b48f0e66c4",
-        repo_mapping = repo_mapping,
-    )
-
-    maybe(
-        git_repository,
-        name = "com_github_nelhage_rules_boost",
-        commit = "494ddf5db56580eb019479965fa2908ce6548385",
-        remote = "https://github.com/nelhage/rules_boost",
-        shallow_since = "1675669198 -0800",
-    )
-
-    maybe(
-        http_archive,
         name = "com_github_gflags_gflags",
         url = "https://github.com/gflags/gflags/archive/v2.2.2.tar.gz",
         sha256 = "34af2f15cf7367513b352bdcd2493ab14ce43692d2dcd9dfc499492966c64dcf",
@@ -71,18 +54,6 @@ def repos(external = True, repo_mapping = {}):
         url = "https://github.com/google/glog/archive/refs/tags/v0.5.0.tar.gz",
         sha256 = "eede71f28371bf39aa69b45de23b329d37214016e2055269b3b5e7cfd40b59f5",
         strip_prefix = "glog-0.5.0",
-    )
-
-    maybe(
-        http_archive,
-        name = "com_google_protobuf",
-        strip_prefix = "protobuf-3.19.1",
-        urls = [
-            "https://mirror.bazel.build/github.com/protocolbuffers/protobuf/archive/v3.19.1.tar.gz",
-            "https://github.com/protocolbuffers/protobuf/archive/v3.19.1.tar.gz",
-        ],
-        sha256 = "87407cd28e7a9c95d9f61a098a53cf031109d451a7763e7dd1253abf8b4df422",
-        repo_mapping = repo_mapping,
     )
 
     # Copied and then modified to use the latest 'commit' and 'shallow_since'

@@ -1,9 +1,10 @@
+# Enable both `MODULE.bazel` and `WORKSPACE.bzlmod`, not `WORKSPACE`.
+common --enable_bzlmod
+common --enable_workspace
+
 # Specific Bazel build/test options.
-
 build:macos --cxxopt='-std=c++17'
-
 build:linux --cxxopt='-std=c++17'
-
 build:windows --cxxopt="/std:c++17"
 
 build --enable_platform_specific_config
