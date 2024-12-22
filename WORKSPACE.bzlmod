@@ -1,5 +1,3 @@
-workspace(name = "stout")
-
 load("//bazel:repos.bzl", "repos")
 
 repos(external = False)
