@@ -2,7 +2,7 @@ module(name = "stout", version = "0.1")
 
 bazel_dep(name = "abseil-cpp", version = "20240722.0.bcr.2")
 bazel_dep(name = "protobuf", version = "29.2", repo_name = "com_google_protobuf")
-bazel_dep(name = "rules_cc", version = "0.0.17")
+bazel_dep(name = "rules_cc", version = "0.1.0")
 
 # TODO: We also depend on Boost ICL but that is not packaged for BCR yet.
 bazel_dep(name = "boost.circular_buffer", version = "1.83.0.bcr.1")
