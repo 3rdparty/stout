@@ -12,6 +12,17 @@ on:
   pull_request:
     branches:
       - "**"
+  workflow_dispatch:
+    inputs:
+      # Live debug failures using tmate by toggling input parameter
+      # 'debug_enabled':
+      # https://github.com/mxschmitt/action-tmate#manually-triggered-debug
+      # When manually running this workflow:
+      # https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow
+      debug_enabled:
+        description: "Enable tmate debugging"
+        type: boolean
+        default: false
 
 jobs:
   check_code_style:
@@ -38,3 +49,10 @@ jobs:
       - uses: ./dev-tools/check-code-style
         with:
           os: ${{matrix.os}}
+
+      - name: Debug using tmate (if failure)
+        uses: mxschmitt/action-tmate@v3
+        # Optionally enable tmate debugging if the workflow was manually-triggered
+        # with `debug_enabled` set to `true`.
+        # https://github.com/mxschmitt/action-tmate#manually-triggered-debug
+        if: ${{ failure() && github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
