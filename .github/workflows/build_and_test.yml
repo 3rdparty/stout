@@ -31,9 +31,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # 'windows-latest' (windows-2022) is broken due to a github runner update.
-        # See https://github.com/actions/runner-images/issues/7662 for more details.
-        os: ["macos-latest", "ubuntu-latest", "windows-2019"]
+        # TODO: CI on Windows is disabled at the moment, because building
+        # Protobuf with MSVC and Bazel is not well-supported (#80). Re-enable
+        # once we have a better build story on Windows.
+        os: ["macos-latest", "ubuntu-latest"]
     defaults:
       run:
         shell: bash
