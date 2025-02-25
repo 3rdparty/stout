@@ -1,4 +1,4 @@
-# Workflow for building and testing flags on macOS and Ubuntu.
+# Workflow for building and testing stout on macOS and Ubuntu.
 name: Build and Run all tests
 
 # We use action's triggers 'push' and 'pull_request'.
@@ -31,6 +31,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        # TODO: CI on Windows is disabled at the moment, because building
+        # Protobuf with MSVC and Bazel is not well-supported (#80). Re-enable
+        # once we have a better build story on Windows.
         os: ["macos-latest", "ubuntu-latest"]
     defaults:
       run:
