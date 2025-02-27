@@ -29,10 +29,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # dev-tools/check-code-style uses LLVM14, which
-        # isn't easy to install on ubuntu-24.04 (which is
-        # ubuntu-latest as of Feb 2025).
-        os: ["ubuntu-20.04"]
+        os: ["ubuntu-latest"]
 
     steps:
       # We should checkout the repo with submodules
