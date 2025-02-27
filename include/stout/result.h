@@ -68,15 +68,15 @@ class Result {
 
   Result(const Option<T>& option)
     : data(
-        option.isSome() ? Try<Option<T>>(
-            Some(option.get()))
-                        : Try<Option<T>>(None())) {}
+          option.isSome() ? Try<Option<T>>(
+                                Some(option.get()))
+                          : Try<Option<T>>(None())) {}
 
   Result(const Try<T>& _t)
     : data(
-        _t.isSome() ? Try<Option<T>>(
-            Some(_t.get()))
-                    : Try<Option<T>>(Error(_t.error()))) {}
+          _t.isSome() ? Try<Option<T>>(
+                            Some(_t.get()))
+                      : Try<Option<T>>(Error(_t.error()))) {}
 
   Result(const None& none)
     : data(none) {}

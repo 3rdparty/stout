@@ -125,7 +125,7 @@ std::ostream& operator<<(std::ostream& stream, const Interval<T>& interval) {
 ////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-Interval<T> Bound<T>::operator,(const Bound<T>&right) const {
+Interval<T> Bound<T>::operator,(const Bound<T>& right) const {
   if (type == OPEN) {
     if (right.type == OPEN) {
       // For example: (1, 3).

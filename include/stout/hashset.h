@@ -114,7 +114,7 @@ class hashset : public std::unordered_set<Elem, Hash, Equal> {
   // Checks whether there exists an element in this set whose
   // specified member is equal to 'r'.
   template <typename R, typename T>
-  bool exists(R(T::*member), R r) const {
+  bool exists(R(T::* member), R r) const {
     foreach (const Elem& elem, *this) {
       const T* t = boost::get_pointer(elem);
       if (t->*member == r) {
