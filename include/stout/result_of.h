@@ -63,7 +63,9 @@ Fail result_of_test(LessPrefer);
 
 // The generic case where `std::invoke(f, args...)` is well-formed.
 template <typename T>
-struct result_of_impl { using type = T; };
+struct result_of_impl {
+  using type = T;
+};
 
 ////////////////////////////////////////////////////////////////////////
 

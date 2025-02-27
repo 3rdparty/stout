@@ -42,8 +42,7 @@ using namespace std::placeholders;
 ////////////////////////////////////////////////////////////////////////
 
 template <
-    template <typename...>
-    class Iterable,
+    template <typename...> class Iterable,
     typename F,
     typename U,
     typename V = typename result_of<F(U)>::type,
@@ -61,10 +60,8 @@ Iterable<V> map(F&& f, const Iterable<U, Us...>& input) {
 ////////////////////////////////////////////////////////////////////////
 
 template <
-    template <typename...>
-    class OutputIterable,
-    template <typename...>
-    class InputIterable,
+    template <typename...> class OutputIterable,
+    template <typename...> class InputIterable,
     typename F,
     typename U,
     typename V = typename result_of<F(U)>::type,
@@ -82,8 +79,7 @@ OutputIterable<V> map(F&& f, const InputIterable<U, Us...>& input) {
 ////////////////////////////////////////////////////////////////////////
 
 template <
-    template <typename...>
-    class Iterable,
+    template <typename...> class Iterable,
     typename F,
     typename U,
     typename V = typename result_of<F(U)>::type,
@@ -103,8 +99,7 @@ Iterable<V> map(F&& f, Iterable<U, Us...>&& input) {
 ////////////////////////////////////////////////////////////////////////
 
 template <
-    template <typename...>
-    class Iterable,
+    template <typename...> class Iterable,
     typename F,
     typename U,
     typename = typename std::enable_if<
@@ -122,10 +117,8 @@ Iterable<U, Us...>&& map(F&& f, Iterable<U, Us...>&& iterable) {
 ////////////////////////////////////////////////////////////////////////
 
 template <
-    template <typename...>
-    class OutputIterable,
-    template <typename...>
-    class InputIterable,
+    template <typename...> class OutputIterable,
+    template <typename...> class InputIterable,
     typename F,
     typename U,
     typename V = typename result_of<F(U)>::type,
@@ -143,8 +136,7 @@ OutputIterable<V> map(F&& f, InputIterable<U, Us...>&& input) {
 ////////////////////////////////////////////////////////////////////////
 
 template <
-    template <typename...>
-    class OutputIterable,
+    template <typename...> class OutputIterable,
     typename F,
     typename U,
     typename V = typename result_of<F(U)>::type>
@@ -181,12 +173,9 @@ std::vector<V> map(F&& f, std::initializer_list<U> input) {
 // It would be nice to be able to choose between `std::pair` and
 // `std::tuple` or other heterogeneous compilers.
 template <
-    template <typename...>
-    class OutputIterable,
-    template <typename...>
-    class InputIterable1,
-    template <typename...>
-    class InputIterable2,
+    template <typename...> class OutputIterable,
+    template <typename...> class InputIterable1,
+    template <typename...> class InputIterable2,
     typename U1,
     typename U2,
     typename... U1s,
@@ -219,10 +208,8 @@ OutputIterable<std::pair<U1, U2>> zipto(
 // NOTE: by default we zip into a `hashmap`. See the `zip()` overload
 // for zipping into another iterable as `std::pair`.
 template <
-    template <typename...>
-    class InputIterable1,
-    template <typename...>
-    class InputIterable2,
+    template <typename...> class InputIterable1,
+    template <typename...> class InputIterable2,
     typename U1,
     typename U2,
     typename... U1s,
@@ -294,40 +281,40 @@ class Partial {
   F f;
   std::tuple<BoundArgs...> bound_args;
 
-  template <typename T, typename Args>
-  static auto expand(T&& t, Args&& args)
-      RETURN(
-          Expand<std::is_placeholder<typename std::decay<T>::type>::value>{}(
-              std::forward<T>(t),
-              std::forward<Args>(args)))
+ template <typename T, typename Args>
+ static auto expand(T&& t, Args&& args)
+     RETURN(
+         Expand<std::is_placeholder<typename std::decay<T>::type>::value>{}(
+             std::forward<T>(t),
+             std::forward<Args>(args)))
 
-      // Invoke the given function `f` with bound arguments expanded. If a
-      // bound argument is a placeholder, we use the index `I` of the
-      // placeholder to pass the `I`th argument out of `args` along. Otherwise,
-      // we pass the bound argument through preserving its value category. That
-      // is, passing the bound argument as an lvalue-ref or rvalue-ref
-      // depending correspondingly on whether the `Partial` itself is an lvalue
-      // or rvalue.
-      template <
-          typename F_,
-          typename BoundArgs_,
-          typename Args,
-          std::size_t... Is>
-      static auto invoke_expand(
-          F_&& f,
-          BoundArgs_&& bound_args,
-          cpp14::index_sequence<Is...>,
-          Args&& args)
-          RETURN(cpp17::invoke(
-              std::forward<F_>(f),
-              expand(
-                  std::get<Is>(std::forward<BoundArgs_>(bound_args)),
-                  std::forward<Args>(args))...))
+     // Invoke the given function `f` with bound arguments expanded. If a
+     // bound argument is a placeholder, we use the index `I` of the
+     // placeholder to pass the `I`th argument out of `args` along. Otherwise,
+     // we pass the bound argument through preserving its value category. That
+     // is, passing the bound argument as an lvalue-ref or rvalue-ref
+     // depending correspondingly on whether the `Partial` itself is an lvalue
+     // or rvalue.
+     template <
+         typename F_,
+         typename BoundArgs_,
+         typename Args,
+         std::size_t... Is>
+     static auto invoke_expand(
+         F_&& f,
+         BoundArgs_&& bound_args,
+         cpp14::index_sequence<Is...>,
+         Args&& args)
+         RETURN(cpp17::invoke(
+             std::forward<F_>(f),
+             expand(
+                 std::get<Is>(std::forward<BoundArgs_>(bound_args)),
+                 std::forward<Args>(args))...))
 
-              public : template <typename... BoundArgs_>
-                       explicit Partial(const F& f, BoundArgs_&&... args)
-    : f(f),
-      bound_args(std::forward<BoundArgs_>(args)...) {}
+             public : template <typename... BoundArgs_>
+                      explicit Partial(const F& f, BoundArgs_&&... args)
+   : f(f),
+     bound_args(std::forward<BoundArgs_>(args)...) {}
 
   template <typename... BoundArgs_>
   explicit Partial(F&& f, BoundArgs_&&... args)
