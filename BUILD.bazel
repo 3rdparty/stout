@@ -1,4 +1,4 @@
-load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_proto_library")
 
 cc_library(
     name = "atomic-backoff",
@@ -34,6 +34,12 @@ cc_library(
     ],
 )
 
+# TODO: Remove this once we upgrade Protobuf.
+cc_proto_library(
+    name = "duration_cc_proto",
+    deps = ["@com_google_protobuf//:duration_proto"],
+)
+
 cc_library(
     name = "flags",
     srcs = [
@@ -45,11 +51,11 @@ cc_library(
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
+        ":duration_cc_proto",
         "//include/stout/flags/v1:flag",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/time",
-        "@com_google_protobuf//:duration_cc_proto",
     ],
 )
 

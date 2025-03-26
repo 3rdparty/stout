@@ -78,12 +78,16 @@ def repos(external = True, repo_mapping = {}):
     maybe(
         http_archive,
         name = "com_google_protobuf",
-        sha256 = "008a11cc56f9b96679b4c285fd05f46d317d685be3ab524b2a310be0fbad987e",
-        strip_prefix = "protobuf-29.3",
+        sha256 = "ecfeb9f673e63321b4871c1cee6b5adeb0ef711d08a0c5bb1945271767df65bf",
+        strip_prefix = "protobuf-25.6",
         urls = [
-            "https://github.com/protocolbuffers/protobuf/archive/v29.3.tar.gz",
+            "https://github.com/protocolbuffers/protobuf/archive/v25.6.tar.gz",
         ],
-        repo_mapping = repo_mapping,
+        # TODO: Remove this patch once we upgrade Protobuf.
+        patches = [
+            "//bazel:protobuf_time_util.patch",
+        ],
+        patch_args = ["-p1"],
     )
 
     # Copied and then modified to use the latest 'commit' and 'shallow_since'
