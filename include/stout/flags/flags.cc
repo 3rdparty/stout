@@ -678,19 +678,19 @@ void Parser::SetFieldMessageOrAggregateErrors(
   // error for us to print out later.
   struct ErrorCollector : public google::protobuf::io::ErrorCollector {
     // TODO(artur): include also 'line' and 'column' for easier debugging.
-    void AddError(
+    void RecordError(
         int /* line */,
-        int /* column */,
-        const std::string& message) override {
+        google::protobuf::io::ColumnNumber /* column */,
+        absl::string_view message) override {
       error += message;
     }
 
-    void AddWarning(
+    void RecordWarning(
         int line,
-        int column,
-        const std::string& message) override {
+        google::protobuf::io::ColumnNumber column,
+        absl::string_view message) override {
       // For now we treat all warnings as errors.
-      AddError(line, column, message);
+      RecordError(line, column, message);
     }
 
     std::string error;
