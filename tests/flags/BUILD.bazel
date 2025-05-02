@@ -44,6 +44,7 @@ cc_test(
     deps = [
         ":test_proto_library",
         "//:flags",
+        "@com_google_protobuf//:time_util",
         "@gtest//:gtest_main",
     ],
 )

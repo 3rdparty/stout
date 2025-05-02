@@ -35,10 +35,12 @@ def repos(external = True, repo_mapping = {}):
     maybe(
         http_archive,
         name = "com_google_absl",
-        urls = ["https://github.com/abseil/abseil-cpp/archive/refs/tags/20211102.0.tar.gz"],
-        strip_prefix = "abseil-cpp-20211102.0",
-        sha256 = "dcf71b9cba8dc0ca9940c4b316a0c796be8fab42b070bb6b7cab62b48f0e66c4",
-        repo_mapping = repo_mapping,
+        sha256 = "f50e5ac311a81382da7fa75b97310e4b9006474f9560ac46f54a9967f07d4ae3",
+        strip_prefix = "abseil-cpp-20240722.0",
+        urls = [
+            "https://storage.googleapis.com/grpc-bazel-mirror/github.com/abseil/abseil-cpp/archive/20240722.0.tar.gz",
+            "https://github.com/abseil/abseil-cpp/archive/20240722.0.tar.gz",
+        ],
     )
 
     maybe(
@@ -76,13 +78,16 @@ def repos(external = True, repo_mapping = {}):
     maybe(
         http_archive,
         name = "com_google_protobuf",
-        strip_prefix = "protobuf-3.19.1",
+        sha256 = "ecfeb9f673e63321b4871c1cee6b5adeb0ef711d08a0c5bb1945271767df65bf",
+        strip_prefix = "protobuf-25.6",
         urls = [
-            "https://mirror.bazel.build/github.com/protocolbuffers/protobuf/archive/v3.19.1.tar.gz",
-            "https://github.com/protocolbuffers/protobuf/archive/v3.19.1.tar.gz",
+            "https://github.com/protocolbuffers/protobuf/archive/v25.6.tar.gz",
         ],
-        sha256 = "87407cd28e7a9c95d9f61a098a53cf031109d451a7763e7dd1253abf8b4df422",
-        repo_mapping = repo_mapping,
+        # TODO: Remove this patch once we upgrade Protobuf.
+        patches = [
+            "//bazel:protobuf_time_util.patch",
+        ],
+        patch_args = ["-p1"],
     )
 
     # Copied and then modified to use the latest 'commit' and 'shallow_since'
