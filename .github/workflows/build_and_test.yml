@@ -1,4 +1,4 @@
-# Workflow for building and testing flags on macOS, Ubuntu and Windows.
+# Workflow for building and testing flags on macOS and Ubuntu.
 name: Build and Run all tests
 
 # We use action's triggers 'push' and 'pull_request'.
@@ -31,9 +31,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # 'windows-latest' (windows-2022) is broken due to a github runner update.
-        # See https://github.com/actions/runner-images/issues/7662 for more details.
-        os: ["macos-latest", "ubuntu-latest", "windows-2019"]
+        os: ["macos-latest", "ubuntu-latest"]
     defaults:
       run:
         shell: bash
