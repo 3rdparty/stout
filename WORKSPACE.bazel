@@ -1,4 +1,4 @@
-workspace(name = "stout")
+workspace(name = "com_github_3rdparty_stout")
 
 load("//bazel:repos.bzl", "repos")
 

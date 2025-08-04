@@ -44,9 +44,14 @@ def repos(external = True, repo_mapping = {}):
     maybe(
         git_repository,
         name = "com_github_nelhage_rules_boost",
-        commit = "c7188946ed60d0f637e0de9d1d0713cb7fa29e29",
+        # That is the last commit before the rules_boost repository was
+        # ported to use bzlmod, so we will apply a patch to use GitHub
+        # based url link for boost dependencies.
+        patches = ["@com_github_3rdparty_stout//bazel:github_url_for_lzma.patch"],
+        patch_args = ["-p1"],
+        commit = "5d04542e52164931841d06d5a6b3fd2f43c436d0",
         remote = "https://github.com/nelhage/rules_boost",
-        shallow_since = "1707638092 +0000",
+        shallow_since = "1715450458 +0200",
     )
 
     maybe(
