@@ -1,3 +1,6 @@
+# Disable Bazel modules (for now).
+common --enable_bzlmod=false
+
 # Specific Bazel build/test options.
 build:macos --cxxopt='-std=c++17' --host_cxxopt='-std=c++17'
 
