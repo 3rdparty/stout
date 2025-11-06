@@ -2,7 +2,11 @@ workspace(name = "com_github_3rdparty_stout")
 
 load("//bazel:repos.bzl", "repos")
 
-repos(external = False)
+repos()
+
+load("@rules_python//python:repositories.bzl", "py_repositories")
+
+py_repositories()
 
 load("//bazel:deps.bzl", "deps")
 
