@@ -15,22 +15,22 @@ load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("//3rdparty/bazel-rules-picojson:repos.bzl", picojson_repos = "repos")
 load("//3rdparty/bazel-rules-rapidjson:repos.bzl", rapidjson_repos = "repos")
 
-def repos(external = True, repo_mapping = {}):
-    """Adds repositories/archives needed by stout
+def repos():
+    """Adds repositories/archives needed by stout."""
 
-    Args:
-          external: whether or not we're invoking this function as though
-            though we're an external dependency
-          repo_mapping: passed through to all other functions that expect/use
-            repo_mapping, e.g., 'git_repository'
-    """
-    picojson_repos(
-        repo_mapping = repo_mapping,
+    # Official Python rules for Bazel. Required by protobuf
+    # 29.x which loads from rules_python internally.
+    maybe(
+        http_archive,
+        name = "rules_python",
+        sha256 = "4f7e2aa1eb9aa722d96498f5ef514f426c1f55161c3c9ae628c857a7128ceb07",
+        url = "https://github.com/bazelbuild/rules_python/releases/download/1.0.0/rules_python-1.0.0.tar.gz",
+        strip_prefix = "rules_python-1.0.0",
     )
 
-    rapidjson_repos(
-        repo_mapping = repo_mapping,
-    )
+    picojson_repos()
+
+    rapidjson_repos()
 
     maybe(
         http_archive,
@@ -75,24 +75,24 @@ def repos(external = True, repo_mapping = {}):
     maybe(
         http_archive,
         name = "com_github_google_glog",
-        url = "https://github.com/google/glog/archive/refs/tags/v0.5.0.tar.gz",
-        sha256 = "eede71f28371bf39aa69b45de23b329d37214016e2055269b3b5e7cfd40b59f5",
-        strip_prefix = "glog-0.5.0",
+        url = "https://github.com/google/glog/archive/refs/tags/v0.7.1.tar.gz",
+        sha256 = "00e4a87e87b7e7612f519a41e491f16623b12423620006f59f5688bfd8d13b08",
+        strip_prefix = "glog-0.7.1",
     )
 
     maybe(
         http_archive,
         name = "com_google_protobuf",
-        sha256 = "008a11cc56f9b96679b4c285fd05f46d317d685be3ab524b2a310be0fbad987e",
-        strip_prefix = "protobuf-29.3",
+        sha256 = "955ef3235be41120db4d367be81efe6891c9544b3a71194d80c3055865b26e09",
+        strip_prefix = "protobuf-29.5",
         urls = [
-            "https://github.com/protocolbuffers/protobuf/archive/v29.3.tar.gz",
+            "https://github.com/protocolbuffers/protobuf/archive/v29.5.tar.gz",
         ],
-        repo_mapping = repo_mapping,
     )
 
-    # Copied and then modified to use the latest 'commit' and 'shallow_since'
-    # rather than tracking the 'master' branch from:
+    # Copied and then modified to use the latest 'commit' and
+    # 'shallow_since' rather than tracking the 'master' branch
+    # from:
     # https://github.com/fmtlib/fmt/tree/master/support/bazel
     maybe(
         git_repository,
@@ -106,10 +106,13 @@ def repos(external = True, repo_mapping = {}):
             "mv support/bazel/BUILD.bazel BUILD.bazel",
             "mv support/bazel/WORKSPACE.bazel WORKSPACE.bazel",
         ],
-        # Windows-related patch commands are only needed in the case MSYS2 is not installed.
-        # More details about the installation process of MSYS2 on Windows systems can be found here:
+        # Windows-related patch commands are only needed in the
+        # case MSYS2 is not installed. More details about the
+        # installation process of MSYS2 on Windows systems can be
+        # found here:
         # https://docs.bazel.build/versions/main/install-windows.html#installing-compilers-and-language-runtimes
-        # Even if MSYS2 is installed the Windows related patch commands can still be used.
+        # Even if MSYS2 is installed the Windows related patch
+        # commands can still be used.
         patch_cmds_win = [
             "Move-Item -Path support/bazel/.bazelrc -Destination .bazelrc",
             "Move-Item -Path support/bazel/.bazelversion -Destination .bazelversion",
@@ -117,12 +120,3 @@ def repos(external = True, repo_mapping = {}):
             "Move-Item -Path support/bazel/WORKSPACE.bazel -Destination WORKSPACE.bazel",
         ],
     )
-
-    if external:
-        maybe(
-            git_repository,
-            name = "com_github_3rdparty_stout",
-            commit = "67e6b9b08f340e223b741130815d97cf20296c08",
-            remote = "https://github.com/3rdparty/stout",
-            shallow_since = "1637367065 -0800",
-        )
