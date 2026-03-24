@@ -218,7 +218,7 @@ class ParserBuilder {
         std::move(help),
         [f = std::forward<F>(f)](google::protobuf::Message& message) {
           return f(
-              *google::protobuf::DynamicCastToGenerated<Flags>(&message));
+              *google::protobuf::DynamicCastMessage<Flags>(&message));
         });
 
     return *this;
@@ -291,7 +291,7 @@ class ParserBuilder {
               google::protobuf::Message& message) {
             return f(
                 value,
-                *google::protobuf::DynamicCastToGenerated<T>(&message));
+                *google::protobuf::DynamicCastMessage<T>(&message));
           };
       return true;
     } else {
