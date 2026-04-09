@@ -1,4 +1,5 @@
 common --enable_bzlmod=false
+common --enable_workspace=true
 
 # Specific Bazel build/test options.
 build:macos --cxxopt='-std=c++17' --host_cxxopt='-std=c++17'
