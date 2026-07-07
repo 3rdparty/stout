@@ -1,6 +1,7 @@
 #include "stout/borrowed_ptr.h"
 
 #include <atomic>
+#include <memory>
 #include <string>
 #include <thread>
 #include <vector>
@@ -422,6 +423,9 @@ TEST(BorrowTest, EnableBorrowableFromThis) {
    public:
     Foo(int i)
       : i(i) {}
+    ~Foo() {
+      DestructingAndWait();
+    }
     int i = 0;
   };
 
@@ -442,6 +446,10 @@ TEST(BorrowTest, EnableBorrowableFromThisMove) {
    public:
     Foo(int i)
       : i(i) {}
+    Foo(Foo&& that) = default;
+    ~Foo() {
+      DestructingAndWait();
+    }
     int i = 0;
   };
 
@@ -464,6 +472,9 @@ TEST(BorrowTest, EnableBorrowableFromThisCopy) {
    public:
     Foo(int i)
       : i(i) {}
+    ~Foo() {
+      DestructingAndWait();
+    }
     int i = 0;
   };
 
@@ -478,4 +489,113 @@ TEST(BorrowTest, EnableBorrowableFromThisCopy) {
   EXPECT_EQ(copy.borrows(), 1);
 
   EXPECT_EQ(borrowed->i, 42);
+}
+
+
+TEST(BorrowTest, DestructWaitsForBorrows) {
+  auto* s = new Borrowable<string>("hello world");
+
+  borrowed_ref<string> borrowed = s->Borrow();
+
+  atomic<bool> destructed(false);
+
+  thread t([&]() {
+    // Waits for 'borrowed' to be relinquished.
+    delete s;
+    destructed.store(true);
+  });
+
+  // The destructor must wait for our borrow to be relinquished
+  // before destroying the borrowed object, so this read is safe no
+  // matter how far 'delete' has gotten on the other thread.
+  EXPECT_EQ("hello world", *borrowed);
+
+  EXPECT_FALSE(destructed.load());
+
+  {
+    borrowed_ref<string> relinquished = std::move(borrowed);
+  }
+
+  t.join();
+
+  EXPECT_TRUE(destructed.load());
+}
+
+
+TEST(BorrowTest, DestructWaitsForBorrowsUniquePtr) {
+  auto* s = new Borrowable<unique_ptr<string>>(
+      std::make_unique<string>("hello world"));
+
+  borrowed_ref<string> borrowed = s->Borrow();
+
+  atomic<bool> destructed(false);
+
+  thread t([&]() {
+    // Waits for 'borrowed' to be relinquished.
+    delete s;
+    destructed.store(true);
+  });
+
+  // The destructor must wait for our borrow to be relinquished
+  // before destroying the borrowed object, so this read is safe no
+  // matter how far 'delete' has gotten on the other thread.
+  EXPECT_EQ("hello world", *borrowed);
+
+  EXPECT_FALSE(destructed.load());
+
+  {
+    borrowed_ref<string> relinquished = std::move(borrowed);
+  }
+
+  t.join();
+
+  EXPECT_TRUE(destructed.load());
+}
+
+
+TEST(BorrowTest, EnableBorrowableFromThisDestructWaitsForBorrows) {
+  class Foo : public enable_borrowable_from_this<Foo> {
+   public:
+    Foo(int i)
+      : i(i) {}
+    ~Foo() {
+      DestructingAndWait();
+    }
+    int i = 0;
+  };
+
+  auto* foo = new Foo(42);
+
+  borrowed_ptr<Foo> borrowed = foo->Borrow();
+
+  atomic<bool> destructed(false);
+
+  thread t([&]() {
+    // 'DestructingAndWait()' waits for 'borrowed' to be relinquished.
+    delete foo;
+    destructed.store(true);
+  });
+
+  // 'Foo's destructor calls 'DestructingAndWait()' before its members
+  // are destroyed, so this read is safe no matter how far 'delete'
+  // has gotten on the other thread.
+  EXPECT_EQ(borrowed->i, 42);
+
+  EXPECT_FALSE(destructed.load());
+
+  borrowed.relinquish();
+
+  t.join();
+
+  EXPECT_TRUE(destructed.load());
+}
+
+
+TEST(BorrowDeathTest, EnableBorrowableFromThisDestructingAndWaitContract) {
+  class Foo : public enable_borrowable_from_this<Foo> {};
+
+  // Destroying a type deriving from 'enable_borrowable_from_this'
+  // whose destructor did not call 'DestructingAndWait()' violates the
+  // contract checked by '~enable_borrowable_from_this()'.
+  EXPECT_DEATH({ Foo foo; }, "must call 'DestructingAndWait");
 }

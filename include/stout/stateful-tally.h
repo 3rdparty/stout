@@ -30,6 +30,17 @@ struct StatefulTally {
     return S(value.load() >> ((sizeof(size_t) - 1) * 8));
   }
 
+  // Returns the current (state, count) pair decoded from a single
+  // atomic load, i.e., a consistent snapshot of both.
+  std::pair<S, size_t> Load() const {
+    size_t loaded = value.load();
+
+    size_t count = (loaded << 8) >> 8;
+    size_t state = loaded >> ((sizeof(size_t) - 1) * 8);
+
+    return std::make_pair(S(state), count);
+  }
+
   template <typename Predicate>
   std::pair<S, size_t> Wait(Predicate&& predicate) {
     for (AtomicBackoff b;; b.pause()) {
