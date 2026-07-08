@@ -96,11 +96,12 @@ class TypeErasedBorrowable {
   // being taken, and then waits for all outstanding borrows to be
   // relinquished.
   //
-  // Types that derive from 'enable_borrowable_from_this' must call
-  // this at the beginning of their most-derived destructor: by the
-  // time '~enable_borrowable_from_this()' runs their members have
-  // already been destroyed, which is too late to wait for borrowers
-  // that might still be using them.
+  // Every type deriving from 'TypeErasedBorrowable' must call this in
+  // its destructor before its members are destroyed: by the time
+  // '~TypeErasedBorrowable()' runs those members have already been
+  // destroyed, which is too late to wait for borrowers that might
+  // still be using them ('~TypeErasedBorrowable()' checks this
+  // contract and fails fast if it has not been followed).
   void DestructingAndWait() {
     auto state = State::Borrowing;
     if (!tally_.Update(state, State::Destructing)) {
@@ -124,18 +125,18 @@ class TypeErasedBorrowable {
   }
 
   virtual ~TypeErasedBorrowable() {
-    auto state = State::Borrowing;
-    if (tally_.Update(state, State::Destructing)) {
-      // NOTE: it's possible that we'll block forever if exceptions
-      // were thrown and destruction was not successful.
-      // if (!std::uncaught_exceptions() > 0) {
-      WaitUntilBorrowsEquals(0);
-      // }
-    } else if (state != State::Destructing) {
-      LOG(FATAL) << "Unable to transition to Destructing from state " << state;
-    }
-    // If the state is already 'Destructing' then 'DestructingAndWait()'
-    // has already run and all borrows have been relinquished.
+    // Check the contract that the destructor of the deriving type has
+    // already called 'DestructingAndWait()', i.e., that we have
+    // transitioned to 'Destructing' and that all borrows have been
+    // relinquished: the members of the deriving type have already
+    // been destroyed by the time we get here, which is too late to
+    // wait for borrowers that might still be using them.
+    auto [state, count] = tally_.Load();
+    CHECK(state == State::Destructing && count == 0)
+        << "The destructor of a type deriving from "
+           "'TypeErasedBorrowable' must call 'DestructingAndWait()' "
+           "(state: "
+        << state << ", outstanding borrows: " << count << ")";
   }
 
   enum class State : uint8_t {
@@ -214,9 +215,8 @@ class Borrowable : public TypeErasedBorrowable {
 
   ~Borrowable() {
     // Wait for all borrows to be relinquished before 't_', the object
-    // that they refer to, gets destroyed; the wait in
-    // '~TypeErasedBorrowable()' happens after members are destroyed,
-    // which is too late.
+    // that they refer to, gets destroyed; we need to wait here because
+    // this is where the actual data gets destroyed, which is too late.
     DestructingAndWait();
   }
 
@@ -284,8 +284,8 @@ class Borrowable<std::unique_ptr<T>> : public TypeErasedBorrowable {
 
   ~Borrowable() {
     // Wait for all borrows to be relinquished before 't_', and with it
-    // the object that they refer to, gets destroyed; the wait in
-    // '~TypeErasedBorrowable()' happens after members are destroyed,
+    // the object that they refer to, gets destroyed; we need to wait here
+    // because this is where the actual data gets destroyed,
     // which is too late.
     DestructingAndWait();
   }
@@ -344,31 +344,6 @@ class Borrowable<std::unique_ptr<T>> : public TypeErasedBorrowable {
 template <typename T>
 class enable_borrowable_from_this : public TypeErasedBorrowable {
  public:
-  // Declaring a destructor suppresses the implicitly-generated
-  // constructors, so default them to keep this type (and types
-  // deriving from it) copyable and moveable as before.
-  enable_borrowable_from_this() = default;
-
-  enable_borrowable_from_this(const enable_borrowable_from_this& that) =
-      default;
-
-  enable_borrowable_from_this(enable_borrowable_from_this&& that) = default;
-
-  ~enable_borrowable_from_this() {
-    // Check the contract that the destructor of the derived type 'T'
-    // has already called 'DestructingAndWait()', i.e., that we have
-    // transitioned to 'Destructing' and that all borrows have been
-    // relinquished: the members of 'T' have already been destroyed by
-    // the time we get here, which is too late to wait for borrowers
-    // that might still be using them.
-    auto [state, count] = tally_.Load();
-    CHECK(state == State::Destructing && count == 0)
-        << "The destructor of a type deriving from "
-           "'enable_borrowable_from_this' must call "
-           "'DestructingAndWait()' (state: "
-        << state << ", outstanding borrows: " << count << ")";
-  }
-
   borrowed_ref<T> Borrow() {
     static_assert(
         std::is_base_of_v<enable_borrowable_from_this<T>, T>,
