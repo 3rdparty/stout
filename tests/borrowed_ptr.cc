@@ -596,6 +596,6 @@ TEST(BorrowDeathTest, EnableBorrowableFromThisDestructingAndWaitContract) {
 
   // Destroying a type deriving from 'enable_borrowable_from_this'
   // whose destructor did not call 'DestructingAndWait()' violates the
-  // contract checked by '~enable_borrowable_from_this()'.
+  // contract checked by '~TypeErasedBorrowable()'.
   EXPECT_DEATH({ Foo foo; }, "must call 'DestructingAndWait");
 }
