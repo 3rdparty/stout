@@ -43,6 +43,21 @@ def repos(external = True, repo_mapping = {}):
         ],
     )
 
+    # `boost_deps()` below claims the `bazel_skylib` name for 1.6.1,
+    # but under Bazel 8 `proto_library` comes from Protobuf's own
+    # Starlark implementation, which calls `paths.is_normalized()` -
+    # added in `bazel_skylib` 1.7.0. Declare 1.7.1 first.
+    maybe(
+        http_archive,
+        name = "bazel_skylib",
+        sha256 = "bc283cdfcd526a52c3201279cda4bc298652efa898b10b4db0837dc51652756f",
+        urls = [
+            "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.7.1/bazel-skylib-1.7.1.tar.gz",
+            "https://github.com/bazelbuild/bazel-skylib/releases/download/1.7.1/bazel-skylib-1.7.1.tar.gz",
+        ],
+        repo_mapping = repo_mapping,
+    )
+
     maybe(
         git_repository,
         name = "com_github_nelhage_rules_boost",
