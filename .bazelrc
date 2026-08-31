@@ -1,3 +1,8 @@
+# Bazel 8 enables Bzlmod and disables `WORKSPACE` by default. We are
+# not ready to migrate to Bzlmod, so keep using `WORKSPACE`.
+common --enable_bzlmod=false
+common --enable_workspace=true
+
 # Specific Bazel build/test options.
 build:macos --cxxopt='-std=c++17' --host_cxxopt='-std=c++17'
 
