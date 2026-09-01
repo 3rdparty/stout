@@ -95,22 +95,11 @@ def repos(external = True, repo_mapping = {}):
         strip_prefix = "glog-0.5.0",
     )
 
-    # Bazel 8's WORKSPACE suffix runs
-    # `@rules_java//java:rules_java_deps.bzl%rules_java_dependencies`,
-    # which only exists from `rules_java` 8.0.0 on. Our
-    # `protobuf_deps()` call below would otherwise claim the
-    # `rules_java` name for 7.12.2, so declare 8.12.0 - the version
-    # Bazel 8.7.0's own suffix declares - first.
-    #
-    # A newer `rules_java` costs more than it is worth. From 8.16.1
-    # its `rules_java_deps.bzl` `load()`s `@bazel_features` without
-    # declaring it, and `@bazel_features//private:util.bzl` in turn
-    # `load()`s a `@bazel_features_version` repository that only
-    # `bazel_features_deps()` generates - so we would have to both
-    # declare `bazel_features` here and call `bazel_features_deps()`
-    # from the WORKSPACE, ahead of the suffix. We have no Java
-    # targets at all; `rules_java` is here purely to satisfy the
-    # suffix, so its version buys us nothing.
+    # We have no Java targets; this is only here because Bazel 8 runs
+    # `rules_java_dependencies()` from its built-in WORKSPACE suffix,
+    # and would otherwise get the 7.12.2 that `protobuf_deps()` pulls
+    # in, which predates that function. 8.12.0 is what Bazel 8.7.0's
+    # own suffix declares.
     maybe(
         http_archive,
         name = "rules_java",
